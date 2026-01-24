@@ -58,6 +58,12 @@ jobs:
       - name: Start wp-env
         run: npm run env:start
 
+      - name: Activate WooCommerce
+        run: npx wp-env run cli wp plugin activate woocommerce
+
+      - name: Activate Plugin
+        run: npx wp-env run cli wp plugin activate zbooks-for-woocommerce
+
       - name: Wait for WordPress
         run: |
           echo "Waiting for WordPress to be ready..."
