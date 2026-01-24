@@ -20,7 +20,7 @@ export default defineConfig({
 	/**
 	 * Directory containing test files.
 	 */
-	testDir: './tests/e2e',
+	testDir: './tests/E2E',
 
 	/**
 	 * Test file matching pattern.
@@ -205,12 +205,12 @@ export default defineConfig({
 	/**
 	 * Global setup file - runs once before all tests.
 	 */
-	globalSetup: './tests/e2e/global-setup.ts',
+	globalSetup: './tests/E2E/global-setup.ts',
 
 	/**
 	 * Global teardown file - runs once after all tests.
 	 */
-	globalTeardown: './tests/e2e/global-teardown.ts',
+	globalTeardown: './tests/E2E/global-teardown.ts',
 });
 
 /**
