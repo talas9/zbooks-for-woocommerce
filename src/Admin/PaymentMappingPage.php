@@ -199,6 +199,37 @@ class PaymentMappingPage {
                                            data-gateway="<?php echo esc_attr($gateway_id); ?>"
                                            value="<?php echo esc_attr($mapping['zoho_account_name'] ?? ''); ?>">
                                 </td>
+                                <td style="padding: 8px 15px;">
+                                    <div style="display: flex; gap: 5px; align-items: center; flex-wrap: wrap;">
+                                        <input type="number"
+                                               name="zbooks_payment_mapping[<?php echo esc_attr($gateway_id); ?>][fee_percentage]"
+                                               value="<?php echo esc_attr($mapping['fee_percentage'] ?? ''); ?>"
+                                               step="0.01" min="0" max="100"
+                                               style="width: 70px;"
+                                               placeholder="0">
+                                        <span>%</span>
+                                        <span>+</span>
+                                        <input type="number"
+                                               name="zbooks_payment_mapping[<?php echo esc_attr($gateway_id); ?>][fee_fixed]"
+                                               value="<?php echo esc_attr($mapping['fee_fixed'] ?? ''); ?>"
+                                               step="0.01" min="0"
+                                               style="width: 70px;"
+                                               placeholder="0.00">
+                                    </div>
+                                    <select name="zbooks_payment_mapping[<?php echo esc_attr($gateway_id); ?>][fee_account_id]"
+                                            style="width: 100%; max-width: 200px; margin-top: 5px;">
+                                        <option value=""><?php esc_html_e('-- Fee Account --', 'zbooks-for-woocommerce'); ?></option>
+                                        <?php
+                                        $expense_accounts = $this->get_expense_accounts();
+                                        foreach ($expense_accounts as $account) :
+                                        ?>
+                                            <option value="<?php echo esc_attr($account['account_id']); ?>"
+                                                <?php selected($mapping['fee_account_id'] ?? '', $account['account_id']); ?>>
+                                                <?php echo esc_html($account['account_name']); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -431,6 +462,66 @@ class PaymentMappingPage {
         $this->logger->debug('Fetched Zoho deposit accounts', [
             'count' => count($accounts),
         ]);
+
+        return $accounts;
+    }
+
+    /**
+     * Get Zoho Books expense accounts for fee recording.
+     *
+     * @return array Array of expense accounts.
+     */
+    private function get_expense_accounts(): array {
+        // Check cache first.
+        $cached = get_transient('zbooks_zoho_expense_accounts');
+        if ($cached !== false) {
+            return $cached;
+        }
+
+        if (!$this->zoho_client->is_configured()) {
+            return [];
+        }
+
+        $accounts = [];
+
+        try {
+            $response = $this->zoho_client->request(function ($client) {
+                return $client->chartofaccounts->getList([
+                    'account_type' => 'expense',
+                    'filter_by' => 'AccountType.Active',
+                ]);
+            });
+
+            $coa_data = [];
+            if (is_array($response)) {
+                $coa_data = $response['chartofaccounts'] ?? $response;
+            } elseif (method_exists($response, 'toArray')) {
+                $coa_data = $response->toArray();
+            }
+
+            foreach ($coa_data as $account) {
+                $account_id = $account['account_id'] ?? '';
+                if ($account_id) {
+                    $accounts[] = [
+                        'account_id' => $account_id,
+                        'account_name' => $account['account_name'] ?? '',
+                        'account_code' => $account['account_code'] ?? '',
+                    ];
+                }
+            }
+
+            // Sort by name.
+            usort($accounts, function ($a, $b) {
+                return strcasecmp($a['account_name'], $b['account_name']);
+            });
+
+            // Cache for 1 hour.
+            set_transient('zbooks_zoho_expense_accounts', $accounts, HOUR_IN_SECONDS);
+        } catch (\Exception $e) {
+            $this->logger->warning('Failed to fetch expense accounts', [
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         return $accounts;
     }

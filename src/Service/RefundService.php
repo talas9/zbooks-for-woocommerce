@@ -386,8 +386,8 @@ class RefundService {
             if (empty($account_id)) {
                 $payment_method = $order->get_payment_method();
                 $payment_mappings = get_option('zbooks_payment_method_mappings', []);
-                if (isset($payment_mappings[$payment_method]['account_id'])) {
-                    $account_id = $payment_mappings[$payment_method]['account_id'];
+                if (!empty($payment_mappings[$payment_method]['zoho_account_id'])) {
+                    $account_id = $payment_mappings[$payment_method]['zoho_account_id'];
                 }
             }
 
