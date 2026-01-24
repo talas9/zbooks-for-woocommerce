@@ -128,8 +128,9 @@ class InvoiceService {
             $invoice_response = $response['invoice'] ?? $response;
             $invoice_id = (string) ($invoice_response['invoice_id'] ?? '');
 
-            // Mark as sent if not draft.
-            if (!$as_draft) {
+            // Mark as sent if not draft and setting is enabled.
+            $should_mark_sent = !$as_draft && $this->should_mark_as_sent();
+            if ($should_mark_sent) {
                 $this->mark_as_sent($invoice_id);
             }
 
@@ -251,6 +252,22 @@ class InvoiceService {
         ]);
 
         return !empty($settings['use_reference_number']);
+    }
+
+    /**
+     * Check if invoices should be marked as sent after creation.
+     *
+     * When disabled, invoices remain as drafts which prevents Zoho from
+     * sending automatic email notifications to customers.
+     *
+     * @return bool
+     */
+    private function should_mark_as_sent(): bool {
+        $settings = get_option('zbooks_invoice_numbering', [
+            'mark_as_sent' => true,
+        ]);
+
+        return $settings['mark_as_sent'] ?? true;
     }
 
     /**

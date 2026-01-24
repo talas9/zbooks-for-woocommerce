@@ -809,8 +809,10 @@ class SettingsPage {
     public function render_invoice_numbering_field(): void {
         $settings = get_option('zbooks_invoice_numbering', [
             'use_reference_number' => true,
+            'mark_as_sent' => true,
         ]);
         $use_reference = !empty($settings['use_reference_number']);
+        $mark_as_sent = $settings['mark_as_sent'] ?? true;
         ?>
         <fieldset>
             <label style="display: block; margin-bottom: 10px;">
@@ -837,6 +839,22 @@ class SettingsPage {
                     <?php esc_html_e('Using order numbers as invoice numbers may create gaps in your invoice sequence (e.g., if orders are cancelled or deleted). This can cause issues during tax audits in some jurisdictions where sequential invoice numbering is legally required.', 'zbooks-for-woocommerce'); ?>
                 </p>
             </div>
+
+            <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
+
+            <label style="display: block; margin-bottom: 10px;">
+                <input type="checkbox" name="zbooks_invoice_numbering[mark_as_sent]" value="1"
+                    id="zbooks_mark_as_sent"
+                    <?php checked($mark_as_sent); ?>>
+                <?php esc_html_e('Mark invoices as "Sent" in Zoho Books', 'zbooks-for-woocommerce'); ?>
+            </label>
+            <p class="description">
+                <?php esc_html_e('When enabled, invoices are marked as "Sent" after creation. When disabled, invoices remain as "Draft".', 'zbooks-for-woocommerce'); ?>
+            </p>
+            <p class="description" style="margin-top: 8px;">
+                <strong><?php esc_html_e('Note:', 'zbooks-for-woocommerce'); ?></strong>
+                <?php esc_html_e('If Zoho Books is sending email notifications when invoices are created, disable this option to keep invoices as drafts. You can also disable auto-email in Zoho Books: Settings → Email Templates → Invoice Notification Settings.', 'zbooks-for-woocommerce'); ?>
+            </p>
         </fieldset>
         <script>
         jQuery(document).ready(function($) {
@@ -981,6 +999,7 @@ class SettingsPage {
     public function sanitize_invoice_numbering(array $input): array {
         return [
             'use_reference_number' => !empty($input['use_reference_number']),
+            'mark_as_sent' => !empty($input['mark_as_sent']),
         ];
     }
 
