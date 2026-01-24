@@ -149,6 +149,9 @@ class AjaxHandlers {
         try {
             $success = $zoho_client->test_connection();
 
+            // Update connection health cache.
+            set_transient('zbooks_connection_healthy', $success ? 'yes' : 'no', 5 * MINUTE_IN_SECONDS);
+
             if ($success) {
                 wp_send_json_success([
                     'message' => __('Connection successful!', 'zbooks-for-woocommerce'),

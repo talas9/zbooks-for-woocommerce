@@ -999,24 +999,34 @@ class ProductMetaBox {
         $items = [];
 
         // Handle different response types.
-        if (is_object($response) && method_exists($response, 'toArray')) {
-            $items = $response->toArray();
-        } elseif (is_array($response)) {
+        if (is_object($response)) {
+            if (method_exists($response, 'toArray')) {
+                $response = $response->toArray();
+            } else {
+                $response = json_decode(wp_json_encode($response), true);
+            }
+        }
+
+        if (is_array($response)) {
             $items = $response['items'] ?? $response;
         }
 
         // Format items for display.
         $formatted = [];
-        foreach ($items as $item) {
-            $item_data = is_object($item) && method_exists($item, 'toArray') ? $item->toArray() : (array) $item;
+        if (is_array($items)) {
+            foreach ($items as $item) {
+                $item_data = is_object($item) && method_exists($item, 'toArray') ? $item->toArray() : (array) $item;
 
-            $formatted[] = [
-                'item_id' => $item_data['item_id'] ?? '',
-                'name' => $item_data['name'] ?? '',
-                'sku' => $item_data['sku'] ?? '',
-                'rate' => $item_data['rate'] ?? 0,
-                'status' => $item_data['status'] ?? '',
-            ];
+                if (isset($item_data['item_id'], $item_data['name'])) {
+                    $formatted[] = [
+                        'item_id' => $item_data['item_id'],
+                        'name' => $item_data['name'],
+                        'sku' => $item_data['sku'] ?? '',
+                        'rate' => $item_data['rate'] ?? 0,
+                        'status' => $item_data['status'] ?? '',
+                    ];
+                }
+            }
         }
 
         return array_slice($formatted, 0, 10); // Limit to 10 results.

@@ -130,10 +130,11 @@ class LogViewer {
                     <?php wp_nonce_field('zbooks_clear_logs', 'zbooks_nonce'); ?>
                     <button type="button" class="button" onclick="zbooksClearLogs()">
                         <?php
+                        $retention_days = absint( $this->logger->get_retention_days() );
                         printf(
                             /* translators: %d: number of days */
-                            esc_html__('Clear Old Logs (%d+ days)', 'zbooks-for-woocommerce'),
-                            (int) $this->logger->get_retention_days()
+                            esc_html__( 'Clear Old Logs (%d+ days)', 'zbooks-for-woocommerce' ),
+                            $retention_days
                         );
                         ?>
                     </button>
@@ -448,8 +449,12 @@ class LogViewer {
 
             function zbooksClearLogs() {
                 <?php
-                /* translators: %d: number of days for log retention */
-                $confirm_message = sprintf(__('Delete log files older than %d days?', 'zbooks-for-woocommerce'), (int) $this->logger->get_retention_days());
+                $log_retention_days = absint( $this->logger->get_retention_days() );
+                $confirm_message    = sprintf(
+                    /* translators: %d: number of days for log retention */
+                    esc_html__( 'Delete log files older than %d days?', 'zbooks-for-woocommerce' ),
+                    $log_retention_days
+                );
                 ?>
                 if (!confirm('<?php echo esc_js($confirm_message); ?>')) {
                     return;

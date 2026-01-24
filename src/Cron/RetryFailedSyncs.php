@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Zbooks\Cron;
 
+use Zbooks\Api\ZohoClient;
 use Zbooks\Logger\SyncLogger;
 use Zbooks\Repository\OrderMetaRepository;
 use Zbooks\Service\SyncOrchestrator;
@@ -29,6 +30,13 @@ class RetryFailedSyncs {
      * Maximum orders to process per cron run.
      */
     private const BATCH_LIMIT = 10;
+
+    /**
+     * Zoho API client.
+     *
+     * @var ZohoClient
+     */
+    private ZohoClient $zoho_client;
 
     /**
      * Sync orchestrator.
@@ -54,15 +62,18 @@ class RetryFailedSyncs {
     /**
      * Constructor.
      *
+     * @param ZohoClient          $zoho_client  Zoho API client.
      * @param SyncOrchestrator    $orchestrator Sync orchestrator.
      * @param OrderMetaRepository $repository   Order meta repository.
      * @param SyncLogger          $logger       Logger.
      */
     public function __construct(
+        ZohoClient $zoho_client,
         SyncOrchestrator $orchestrator,
         OrderMetaRepository $repository,
         SyncLogger $logger
     ) {
+        $this->zoho_client = $zoho_client;
         $this->orchestrator = $orchestrator;
         $this->repository = $repository;
         $this->logger = $logger;
@@ -84,6 +95,18 @@ class RetryFailedSyncs {
      * based on settings and exponential backoff, then attempts to resync.
      */
     public function run(): void {
+        // Skip if connection is not configured.
+        if (!$this->zoho_client->is_configured()) {
+            $this->logger->debug('Retry cron skipped: Zoho connection not configured');
+            return;
+        }
+
+        // Skip if connection is not healthy.
+        if (!$this->is_connection_healthy()) {
+            $this->logger->debug('Retry cron skipped: Zoho connection not healthy');
+            return;
+        }
+
         $settings = $this->get_retry_settings();
 
         // Skip if manual mode is enabled.
@@ -222,5 +245,42 @@ class RetryFailedSyncs {
         $settings = get_option('zbooks_retry_settings', $defaults);
 
         return array_merge($defaults, $settings);
+    }
+
+    /**
+     * Check if the Zoho connection is healthy.
+     *
+     * Uses a cached result to avoid excessive API calls.
+     * Cache expires after 5 minutes or when manually cleared.
+     *
+     * @return bool
+     */
+    private function is_connection_healthy(): bool {
+        $cache_key = 'zbooks_connection_healthy';
+        $cached = get_transient($cache_key);
+
+        // Return cached result if available.
+        if ($cached !== false) {
+            return $cached === 'yes';
+        }
+
+        // Test the connection.
+        try {
+            $healthy = $this->zoho_client->test_connection();
+
+            // Cache result for 5 minutes.
+            set_transient($cache_key, $healthy ? 'yes' : 'no', 5 * MINUTE_IN_SECONDS);
+
+            return $healthy;
+        } catch (\Exception $e) {
+            $this->logger->warning('Connection health check failed', [
+                'error' => $e->getMessage(),
+            ]);
+
+            // Cache failure for 5 minutes.
+            set_transient($cache_key, 'no', 5 * MINUTE_IN_SECONDS);
+
+            return false;
+        }
     }
 }

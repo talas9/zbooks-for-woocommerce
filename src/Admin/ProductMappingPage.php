@@ -576,15 +576,25 @@ class ProductMappingPage {
             });
 
             $items = [];
+
+            // Convert object to array if needed.
+            if (is_object($response)) {
+                $response = json_decode(wp_json_encode($response), true);
+            }
+
             if (is_array($response)) {
                 $items_data = $response['items'] ?? $response;
-                foreach ($items_data as $item) {
-                    $items[] = [
-                        'item_id' => $item['item_id'],
-                        'name' => $item['name'],
-                        'sku' => $item['sku'] ?? '',
-                        'rate' => $item['rate'] ?? 0,
-                    ];
+                if (is_array($items_data)) {
+                    foreach ($items_data as $item) {
+                        if (is_array($item) && isset($item['item_id'], $item['name'])) {
+                            $items[] = [
+                                'item_id' => $item['item_id'],
+                                'name' => $item['name'],
+                                'sku' => $item['sku'] ?? '',
+                                'rate' => $item['rate'] ?? 0,
+                            ];
+                        }
+                    }
                 }
             }
 

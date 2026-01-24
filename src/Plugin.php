@@ -221,6 +221,7 @@ final class Plugin {
 
         // Cron.
         $this->services['retry_failed_syncs'] = new RetryFailedSyncs(
+            $this->get_service('zoho_client'),
             $this->get_service('sync_orchestrator'),
             $this->get_service('order_meta_repository'),
             $this->get_service('logger')
@@ -274,6 +275,16 @@ final class Plugin {
             ZBOOKS_VERSION
         );
 
+        // Load RTL styles if needed.
+        if ( is_rtl() ) {
+            wp_enqueue_style(
+                'zbooks-admin-rtl',
+                ZBOOKS_PLUGIN_URL . 'assets/css/admin-rtl.css',
+                [ 'zbooks-admin' ],
+                ZBOOKS_VERSION
+            );
+        }
+
         wp_enqueue_script(
             'zbooks-admin',
             ZBOOKS_PLUGIN_URL . 'assets/js/admin.js',
@@ -303,7 +314,7 @@ final class Plugin {
     public function add_settings_link(array $links): array {
         $settings_link = sprintf(
             '<a href="%s">%s</a>',
-            admin_url('admin.php?page=zbooks-settings'),
+            admin_url('admin.php?page=zbooks'),
             __('Settings', 'zbooks-for-woocommerce')
         );
         array_unshift($links, $settings_link);

@@ -139,12 +139,13 @@ class PaymentMappingPage {
             <form method="post" action="">
                 <?php wp_nonce_field('zbooks_save_payment_mapping', 'zbooks_payment_mapping_nonce'); ?>
 
-                <table class="widefat striped" style="max-width: 900px; margin-top: 20px;">
+                <table class="widefat striped" style="max-width: 1200px; margin-top: 20px;">
                     <thead>
                         <tr>
                             <th style="padding: 10px 15px;"><?php esc_html_e('WooCommerce Payment Method', 'zbooks-for-woocommerce'); ?></th>
                             <th style="padding: 10px 15px;"><?php esc_html_e('Zoho Payment Mode', 'zbooks-for-woocommerce'); ?></th>
                             <th style="padding: 10px 15px;"><?php esc_html_e('Deposit To (Bank/Cash Account)', 'zbooks-for-woocommerce'); ?></th>
+                            <th style="padding: 10px 15px;"><?php esc_html_e('Processing Fees', 'zbooks-for-woocommerce'); ?></th>
                         </tr>
                     </thead>
                     <tbody>

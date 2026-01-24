@@ -162,6 +162,10 @@ class SettingsPage {
             'type' => 'array',
             'sanitize_callback' => [$this, 'sanitize_invoice_numbering'],
         ]);
+        register_setting('zbooks_settings_sync', 'zbooks_shipping_settings', [
+            'type' => 'array',
+            'sanitize_callback' => [$this, 'sanitize_shipping_settings'],
+        ]);
 
         register_setting('zbooks_settings_advanced', 'zbooks_retry_settings', [
             'type' => 'array',
@@ -305,6 +309,22 @@ class SettingsPage {
             'zbooks_invoice_numbering_section'
         );
 
+        // Shipping settings section.
+        add_settings_section(
+            'zbooks_shipping_section',
+            __('Shipping Settings', 'zbooks-for-woocommerce'),
+            [$this, 'render_shipping_section'],
+            'zbooks-settings-sync'
+        );
+
+        add_settings_field(
+            'zbooks_shipping_settings',
+            __('Shipping Account', 'zbooks-for-woocommerce'),
+            [$this, 'render_shipping_settings_field'],
+            'zbooks-settings-sync',
+            'zbooks_shipping_section'
+        );
+
         // Currency info section.
         add_settings_section(
             'zbooks_currency_section',
@@ -358,7 +378,11 @@ class SettingsPage {
         $current_tab = $this->get_current_tab();
         ?>
         <div class="wrap zbooks-settings">
-            <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
+            <h1 class="wp-heading-inline"><?php echo esc_html(get_admin_page_title()); ?></h1>
+            <a href="<?php echo esc_url(admin_url('admin.php?page=zbooks-setup')); ?>" class="page-title-action">
+                <?php esc_html_e('Run Setup Wizard', 'zbooks-for-woocommerce'); ?>
+            </a>
+            <hr class="wp-header-end">
 
             <?php settings_errors('zbooks_settings'); ?>
 
@@ -464,6 +488,76 @@ class SettingsPage {
     public function render_log_section(): void {
         ?>
         <p><?php esc_html_e('Configure logging behavior and error notifications.', 'zbooks-for-woocommerce'); ?></p>
+        <?php
+    }
+
+    /**
+     * Render shipping section description.
+     */
+    public function render_shipping_section(): void {
+        ?>
+        <p><?php esc_html_e('Configure how shipping charges are recorded in Zoho Books invoices.', 'zbooks-for-woocommerce'); ?></p>
+        <?php
+    }
+
+    /**
+     * Render shipping settings field.
+     */
+    public function render_shipping_settings_field(): void {
+        $settings = get_option('zbooks_shipping_settings', [
+            'account_id' => '',
+        ]);
+        $accounts = [];
+
+        if ($this->client->is_configured()) {
+            try {
+                // Fetch income accounts from Zoho Books.
+                $response = $this->client->request(function ($client) {
+                    return $client->chartofaccounts->getList([
+                        'account_type' => 'income',
+                        'filter_by' => 'AccountType.Active',
+                    ]);
+                });
+
+                // Convert object to array if needed.
+                if (is_object($response)) {
+                    $response = json_decode(wp_json_encode($response), true);
+                }
+
+                $accounts = $response['chartofaccounts'] ?? $response ?? [];
+            } catch (\Exception $e) {
+                // Ignore - will show empty dropdown.
+            }
+        }
+        ?>
+        <fieldset>
+            <select name="zbooks_shipping_settings[account_id]" id="zbooks_shipping_account">
+                <option value=""><?php esc_html_e('Use default (Shipping Charge)', 'zbooks-for-woocommerce'); ?></option>
+                <?php foreach ($accounts as $account) :
+                    $account_id = $account['account_id'] ?? '';
+                    $account_name = $account['account_name'] ?? '';
+                    if (empty($account_id)) {
+                        continue;
+                    }
+                    ?>
+                    <option value="<?php echo esc_attr($account_id); ?>" <?php selected($settings['account_id'], $account_id); ?>>
+                        <?php echo esc_html($account_name); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+            <p class="description">
+                <?php esc_html_e('Select the income account to record shipping charges. Leave empty to use Zoho\'s default "Shipping Charge" account.', 'zbooks-for-woocommerce'); ?>
+            </p>
+            <?php if (empty($accounts) && $this->client->is_configured()) : ?>
+                <p class="description" style="color: #d63638;">
+                    <?php esc_html_e('Could not load accounts from Zoho Books. Save settings and refresh the page.', 'zbooks-for-woocommerce'); ?>
+                </p>
+            <?php elseif (!$this->client->is_configured()) : ?>
+                <p class="description">
+                    <?php esc_html_e('Configure Zoho connection first to load accounts.', 'zbooks-for-woocommerce'); ?>
+                </p>
+            <?php endif; ?>
+        </fieldset>
         <?php
     }
 
@@ -770,6 +864,13 @@ class SettingsPage {
      * @return array
      */
     public function sanitize_credentials(array $input): array {
+        // Pass through unchanged if TokenManager is saving directly.
+        // This prevents interference when credentials are saved programmatically
+        // (e.g., from SetupWizard) rather than from the settings form.
+        if (TokenManager::is_saving()) {
+            return $input;
+        }
+
         // Only process if this is an actual form submission with credential fields.
         if (!isset($input['client_id']) && !isset($input['client_secret']) && !isset($input['refresh_token'])) {
             return [];
@@ -880,6 +981,18 @@ class SettingsPage {
     public function sanitize_invoice_numbering(array $input): array {
         return [
             'use_reference_number' => !empty($input['use_reference_number']),
+        ];
+    }
+
+    /**
+     * Sanitize shipping settings.
+     *
+     * @param array $input Input data.
+     * @return array
+     */
+    public function sanitize_shipping_settings(array $input): array {
+        return [
+            'account_id' => sanitize_text_field($input['account_id'] ?? ''),
         ];
     }
 

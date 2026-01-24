@@ -36,6 +36,17 @@ class TokenManager {
     private static bool $saving_credentials = false;
 
     /**
+     * Check if TokenManager is currently saving credentials.
+     *
+     * Used by SettingsPage to skip sanitize callback when TokenManager is handling storage directly.
+     *
+     * @return bool
+     */
+    public static function is_saving(): bool {
+        return self::$saving_credentials;
+    }
+
+    /**
      * Get OAuth credentials.
      *
      * @return array{client_id: string, client_secret: string, refresh_token: string}|null

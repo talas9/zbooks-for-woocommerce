@@ -101,11 +101,16 @@ class PaymentService {
 
         $payment_data = $this->map_order_to_payment($order, $invoice_id, $contact_id);
 
+        // Calculate bank fees if configured.
+        $wc_method = $order->get_payment_method();
+        $bank_charges = $this->mapping_repository->calculate_fee($wc_method, $amount);
+
         $this->logger->info('Applying payment to invoice', [
             'order_id' => $order_id,
             'order_number' => $order->get_order_number(),
             'invoice_id' => $invoice_id,
             'amount' => $amount,
+            'bank_charges' => $bank_charges,
             'payment_method' => $order->get_payment_method_title(),
         ]);
 
@@ -195,20 +200,34 @@ class PaymentService {
             $payment_date = $order->get_date_completed() ?? $order->get_date_created();
         }
 
+        $amount = (float) $order->get_total();
+        $wc_method = $order->get_payment_method();
+
         $payment = [
             'customer_id' => $contact_id,
             'date' => $payment_date->format('Y-m-d'),
-            'amount' => (float) $order->get_total(),
+            'amount' => $amount,
             'invoices' => [
                 [
                     'invoice_id' => $invoice_id,
-                    'amount_applied' => (float) $order->get_total(),
+                    'amount_applied' => $amount,
                 ],
             ],
         ];
 
+        // Add bank charges (processing fees) if configured.
+        $bank_charges = $this->mapping_repository->calculate_fee($wc_method, $amount);
+        if ($bank_charges > 0) {
+            $payment['bank_charges'] = $bank_charges;
+
+            // Add bank charges account if configured.
+            $fee_account_id = $this->mapping_repository->get_fee_account_id($wc_method);
+            if (!empty($fee_account_id)) {
+                $payment['bank_charges_account_id'] = $fee_account_id;
+            }
+        }
+
         // Add payment method info.
-        $wc_method = $order->get_payment_method();
         $payment_method = $order->get_payment_method_title();
 
         if (!empty($payment_method)) {

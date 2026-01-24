@@ -1,0 +1,249 @@
+/**
+ * Zbooks Admin RTL Styles
+ *
+ * Right-to-Left (RTL) support for Arabic and other RTL languages.
+ * This file is loaded automatically when WordPress is in RTL mode.
+ *
+ * @package    Zbooks
+ * @author     talas9
+ * @link       https://github.com/talas9/zbooks-for-woocommerce
+ * @since      1.0.0
+ */
+
+/* ==========================================================================
+   General RTL Adjustments
+   ========================================================================== */
+
+.wrap {
+    direction: rtl;
+    text-align: right;
+}
+
+/* ==========================================================================
+   Meta Box Styles RTL
+   ========================================================================== */
+
+.zbooks-meta-box-label {
+    text-align: right;
+}
+
+.zbooks-meta-box .zbooks-sync-btn {
+    margin-right: 0;
+    margin-left: 8px;
+}
+
+.zbooks-meta-box .spinner {
+    margin: 0 8px 0 0;
+}
+
+/* ==========================================================================
+   Stats Container RTL
+   ========================================================================== */
+
+.zbooks-stats-container {
+    direction: rtl;
+}
+
+/* ==========================================================================
+   Progress Bar RTL
+   ========================================================================== */
+
+.zbooks-progress-fill {
+    border-radius: 10px;
+}
+
+.zbooks-progress-fill::after {
+    animation: zbooks-progress-shine-rtl 1.5s infinite;
+}
+
+@keyframes zbooks-progress-shine-rtl {
+    0% {
+        transform: translateX(100%);
+    }
+    100% {
+        transform: translateX(-100%);
+    }
+}
+
+/* ==========================================================================
+   Message Styles RTL
+   ========================================================================== */
+
+.zbooks-message {
+    flex-direction: row-reverse;
+    border-left-width: 1px;
+    border-right-width: 4px;
+}
+
+.zbooks-message--error {
+    border-left-width: 1px;
+    border-right-width: 4px;
+}
+
+.zbooks-message--success {
+    border-left-width: 1px;
+    border-right-width: 4px;
+}
+
+.zbooks-message--warning {
+    border-left-width: 1px;
+    border-right-width: 4px;
+}
+
+.zbooks-message--info {
+    border-left-width: 1px;
+    border-right-width: 4px;
+}
+
+/* ==========================================================================
+   Bulk Actions RTL
+   ========================================================================== */
+
+.zbooks-bulk-actions {
+    flex-direction: row-reverse;
+}
+
+/* ==========================================================================
+   Test Connection RTL
+   ========================================================================== */
+
+.zbooks-connection-result {
+    margin-left: 0;
+    margin-right: 12px;
+}
+
+/* ==========================================================================
+   Settings Page RTL
+   ========================================================================== */
+
+.zbooks-settings-label {
+    text-align: right;
+}
+
+.zbooks-tabs .nav-tab {
+    margin-left: 4px;
+    margin-right: 0;
+}
+
+.zbooks-tab-content .form-table th {
+    padding-right: 0;
+    padding-left: 10px;
+    text-align: right;
+}
+
+/* ==========================================================================
+   Log Viewer RTL
+   ========================================================================== */
+
+.zbooks-log-controls form {
+    flex-direction: row-reverse;
+}
+
+.zbooks-log-controls form[style*="margin-left"] {
+    margin-left: 0 !important;
+    margin-right: 20px !important;
+}
+
+.zbooks-log-stats {
+    direction: rtl;
+}
+
+#zbooks-log-table {
+    direction: rtl;
+}
+
+#zbooks-log-table th,
+#zbooks-log-table td {
+    text-align: right;
+}
+
+/* ==========================================================================
+   Modal RTL
+   ========================================================================== */
+
+.zbooks-modal-header {
+    flex-direction: row-reverse;
+}
+
+.zbooks-modal-footer {
+    flex-direction: row-reverse;
+}
+
+.zbooks-detail-row label {
+    text-align: right;
+}
+
+/* ==========================================================================
+   Info Box RTL
+   ========================================================================== */
+
+.zbooks-info-box {
+    border-left-width: 1px;
+    border-right-width: 4px;
+}
+
+/* ==========================================================================
+   Product Mapping RTL
+   ========================================================================== */
+
+.zbooks-mapping-table {
+    direction: rtl;
+}
+
+.zbooks-mapping-table th,
+.zbooks-mapping-table td {
+    text-align: right;
+}
+
+/* ==========================================================================
+   Field Mapping RTL
+   ========================================================================== */
+
+.zbooks-field-mapping-row {
+    flex-direction: row-reverse;
+}
+
+/* ==========================================================================
+   Setup Wizard RTL
+   ========================================================================== */
+
+.zbooks-wizard-steps {
+    direction: rtl;
+}
+
+.zbooks-wizard-step::before {
+    left: auto;
+    right: 50%;
+}
+
+.zbooks-wizard-step::after {
+    left: auto;
+    right: calc(-50% + 20px);
+}
+
+.zbooks-wizard-content {
+    direction: rtl;
+    text-align: right;
+}
+
+.zbooks-wizard-actions {
+    flex-direction: row-reverse;
+}
+
+/* ==========================================================================
+   Responsive RTL Adjustments
+   ========================================================================== */
+
+@media screen and (max-width: 782px) {
+    .zbooks-meta-box-row {
+        align-items: flex-end;
+    }
+
+    .zbooks-settings-row {
+        align-items: flex-end;
+    }
+
+    .zbooks-bulk-actions {
+        align-items: flex-end;
+    }
+}

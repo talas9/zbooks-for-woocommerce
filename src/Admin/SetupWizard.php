@@ -262,10 +262,6 @@ class SetupWizard {
         $token = sanitize_text_field(wp_unslash($_POST['refresh_token'] ?? ''));
         $datacenter = sanitize_key(wp_unslash($_POST['datacenter'] ?? 'us'));
 
-        // Debug: Log input sizes immediately.
-        // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-        error_log('[ZBooks for WooCommerce] SetupWizard POST input sizes: client_id=' . strlen($client_id) . ', client_secret=' . strlen($client_secret) . ', token=' . strlen($token));
-
         if (empty($client_id) || empty($client_secret) || empty($token)) {
             $this->redirect_with_error('missing_fields');
             return;
@@ -280,25 +276,16 @@ class SetupWizard {
             $this->token_manager->save_credentials($client_id, $client_secret, $token);
 
             try {
-                // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-                error_log('[ZBooks for WooCommerce] Trying token as refresh token...');
+                // Try using the token as a refresh token first.
                 $this->client->refresh_access_token();
-                // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-                error_log('[ZBooks for WooCommerce] Refresh token worked!');
             } catch (\Throwable $refresh_error) {
                 // Refresh failed - might be a grant code, try exchanging it.
-                // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-                error_log('[ZBooks for WooCommerce] Refresh failed, trying as grant code: ' . $refresh_error->getMessage());
-
                 $tokens = $this->client->exchange_grant_code(
                     $client_id,
                     $client_secret,
                     $token,
                     $datacenter
                 );
-
-                // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-                error_log('[ZBooks for WooCommerce] Grant code exchange succeeded');
 
                 // Save the obtained refresh token (overwrites the grant code we saved).
                 $this->token_manager->save_credentials(
@@ -330,11 +317,6 @@ class SetupWizard {
      * @param \Throwable $e The exception.
      */
     private function handle_credentials_error(\Throwable $e): void {
-        // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-        error_log('[ZBooks for WooCommerce] Exception in save_credentials: ' . get_class($e) . ' - ' . $e->getMessage());
-        // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-        error_log('[ZBooks for WooCommerce] Stack trace: ' . $e->getTraceAsString());
-
         $error_message = $e->getMessage();
 
         // Provide more helpful error messages.
@@ -425,8 +407,8 @@ class SetupWizard {
      * Save item mappings.
      */
     private function save_item_mappings(): void {
-        // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Nonce verified in handle_wizard_actions(), sanitized in loop below
-        $mappings = isset($_POST['item_mappings']) ? wp_unslash($_POST['item_mappings']) : [];
+        // Array sanitized in loop below.
+        $mappings = isset($_POST['item_mappings']) && is_array($_POST['item_mappings']) ? wp_unslash($_POST['item_mappings']) : [];
 
         foreach ($mappings as $product_id => $zoho_item_id) {
             $product_id = absint($product_id);
@@ -489,8 +471,7 @@ class SetupWizard {
      */
     public function render_wizard(): void {
         $steps = $this->get_steps();
-        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only display, no state change
-        $current_step = isset($_GET['step']) ? sanitize_key(wp_unslash($_GET['step'])) : 'welcome';
+        $current_step = sanitize_key(wp_unslash($_GET['step'] ?? 'welcome'));
 
         if (!isset($steps[$current_step])) {
             $current_step = 'welcome';
@@ -557,10 +538,8 @@ class SetupWizard {
      * @param string $step Step key.
      */
     private function render_step(string $step): void {
-        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only display, no state change
-        $error = isset($_GET['error']) ? sanitize_key(wp_unslash($_GET['error'])) : '';
-        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only display, no state change
-        $message = isset($_GET['message']) ? sanitize_text_field(wp_unslash(urldecode($_GET['message']))) : '';
+        $error = sanitize_key(wp_unslash($_GET['error'] ?? ''));
+        $message = sanitize_text_field(wp_unslash(urldecode($_GET['message'] ?? '')));
 
         if ($error) {
             $this->render_error($error, $message);
@@ -877,8 +856,7 @@ class SetupWizard {
         ]);
 
         $mappings = $this->item_mapping->get_all();
-        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only display, no state change
-        $auto_mapped = isset($_GET['auto_mapped']) ? absint(wp_unslash($_GET['auto_mapped'])) : 0;
+        $auto_mapped = absint(wp_unslash($_GET['auto_mapped'] ?? 0));
         ?>
         <h2><?php esc_html_e('Map Products to Zoho Items', 'zbooks-for-woocommerce'); ?></h2>
         <p>
@@ -1010,14 +988,24 @@ class SetupWizard {
             });
 
             $items = [];
+
+            // Convert object to array if needed.
+            if (is_object($response)) {
+                $response = json_decode(wp_json_encode($response), true);
+            }
+
             if (is_array($response)) {
                 $items_data = $response['items'] ?? $response;
-                foreach ($items_data as $item) {
-                    $items[] = [
-                        'item_id' => $item['item_id'],
-                        'name' => $item['name'],
-                        'sku' => $item['sku'] ?? '',
-                    ];
+                if (is_array($items_data)) {
+                    foreach ($items_data as $item) {
+                        if (is_array($item) && isset($item['item_id'], $item['name'])) {
+                            $items[] = [
+                                'item_id' => $item['item_id'],
+                                'name' => $item['name'],
+                                'sku' => $item['sku'] ?? '',
+                            ];
+                        }
+                    }
                 }
             }
 

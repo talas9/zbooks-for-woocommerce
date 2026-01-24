@@ -370,4 +370,94 @@ class ZohoClient {
         // They contain two parts separated by a dot after the prefix.
         return preg_match('/^1000\.[a-f0-9]{32}\.[a-f0-9]{32,}$/i', $token) === 1;
     }
+
+    /**
+     * Make a raw API call to Zoho Books.
+     *
+     * Use this for API endpoints not supported by the SDK.
+     *
+     * @param string $method  HTTP method (GET, POST, PUT, DELETE).
+     * @param string $path    API path (e.g., "/creditnotes/{id}/refunds").
+     * @param array  $data    Request data.
+     * @return array Response data.
+     * @throws \RuntimeException If request fails.
+     */
+    public function raw_request(string $method, string $path, array $data = []): array {
+        // Ensure client is initialized.
+        $this->get_client();
+
+        // Check rate limit.
+        if (!$this->rate_limiter->can_make_request()) {
+            $wait_time = $this->rate_limiter->get_seconds_until_reset();
+            $this->logger->warning('Rate limit reached', ['wait_seconds' => $wait_time]);
+
+            if (!$this->rate_limiter->wait_for_availability(30)) {
+                throw new \RuntimeException(
+                    esc_html__('Zoho API rate limit exceeded. Please try again later.', 'zbooks-for-woocommerce')
+                );
+            }
+        }
+
+        $this->rate_limiter->record_request();
+
+        // Build URL.
+        $datacenter = get_option('zbooks_datacenter', 'us');
+        $base_url = self::DATACENTERS[$datacenter] ?? self::DATACENTERS['us'];
+        $org_id = get_option('zbooks_organization_id');
+        $url = $base_url . '/books/v3' . $path . '?organization_id=' . $org_id;
+
+        // Get access token.
+        $access_token = $this->token_manager->get_access_token();
+        if (!$access_token || $this->token_manager->is_token_expired()) {
+            $this->refresh_access_token();
+            $access_token = $this->token_manager->get_access_token();
+        }
+
+        $args = [
+            'method' => strtoupper($method),
+            'headers' => [
+                'Authorization' => 'Zoho-oauthtoken ' . $access_token,
+                'Content-Type' => 'application/json',
+            ],
+            'timeout' => 30,
+        ];
+
+        if (!empty($data) && in_array($method, ['POST', 'PUT', 'PATCH'], true)) {
+            $args['body'] = wp_json_encode($data);
+        }
+
+        $this->logger->debug('Raw API request', [
+            'method' => $method,
+            'path' => $path,
+        ]);
+
+        $response = wp_remote_request($url, $args);
+
+        if (is_wp_error($response)) {
+            $this->logger->error('Raw API request failed', [
+                'error' => $response->get_error_message(),
+            ]);
+            throw new \RuntimeException($response->get_error_message());
+        }
+
+        $body = wp_remote_retrieve_body($response);
+        $result = json_decode($body, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new \RuntimeException('Invalid JSON response from Zoho API');
+        }
+
+        // Check for API errors.
+        $code = $result['code'] ?? 0;
+        if ($code !== 0) {
+            $message = $result['message'] ?? 'Unknown API error';
+            $this->logger->error('Zoho API error', [
+                'code' => $code,
+                'message' => $message,
+            ]);
+            throw new \RuntimeException($message);
+        }
+
+        return $result;
+    }
 }
