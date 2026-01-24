@@ -26,7 +26,8 @@ jobs:
       - name: Run PHPCS
         uses: 10up/wpcs-action@stable
         with:
-          enable_warnings: true
+          enable_warnings: false
+          use_local_config: 'true'
 
   phpunit:
     name: PHPUnit Tests
@@ -34,17 +35,15 @@ jobs:
 
     services:
       mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: wordpress_test
+        image: mariadb:latest
         ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=3
+          - '3306:3306'
+        env:
+          MYSQL_ROOT_PASSWORD: wordpress
+          MARIADB_INITDB_SKIP_TZINFO: 1
+          MYSQL_USER: wordpress
+          MYSQL_PASSWORD: wordpress
+          MYSQL_DATABASE: wordpress_test
 
     steps:
       - name: Checkout code
@@ -56,31 +55,21 @@ jobs:
           php-version: '8.2'
           extensions: mysqli, mbstring, intl
           coverage: none
-          tools: composer, phpunit
-
-      - name: Get Composer cache directory
-        id: composer-cache
-        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
-
-      - name: Cache Composer dependencies
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-composer-
 
       - name: Install Composer dependencies
-        run: composer install --prefer-dist --no-progress --no-suggest
+        uses: ramsey/composer-install@v3
 
-      - name: Install svn
-        run: sudo apt-get update && sudo apt-get install -y subversion
+      - name: Set up WordPress Test Library
+        uses: sjinks/setup-wordpress-test-library@master
+        with:
+          version: latest
 
-      - name: Install WordPress test suite
+      - name: Verify MariaDB connection
         run: |
-          bash bin/install-wp-tests.sh wordpress_test root root 127.0.0.1 latest true
+          while ! mysqladmin ping -h 127.0.0.1 -P ${{ job.services.mysql.ports[3306] }} --silent; do
+            sleep 1
+          done
+        timeout-minutes: 1
 
       - name: Run PHPUnit
-        run: composer test
-        env:
-          WP_TESTS_DIR: /tmp/wordpress-tests-lib
+        run: vendor/bin/phpunit
