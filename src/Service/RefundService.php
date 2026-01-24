@@ -70,6 +70,7 @@ class RefundService {
 
         $this->logger->info('Processing refund', [
             'order_id' => $order->get_id(),
+            'order_number' => $order->get_order_number(),
             'refund_id' => $refund_id,
             'amount' => $refund_amount,
             'invoice_id' => $invoice_id,
@@ -117,7 +118,9 @@ class RefundService {
 
             $this->logger->info('Refund processed successfully', [
                 'order_id' => $order->get_id(),
+                'order_number' => $order->get_order_number(),
                 'refund_id' => $refund_id,
+                'amount' => $refund_amount,
                 'credit_note_id' => $credit_note_id,
                 'zoho_refund_id' => $zoho_refund_id,
             ]);
@@ -131,7 +134,10 @@ class RefundService {
         } catch (\Exception $e) {
             $this->logger->error('Failed to process refund', [
                 'order_id' => $order->get_id(),
+                'order_number' => $order->get_order_number(),
                 'refund_id' => $refund_id,
+                'amount' => $refund_amount,
+                'invoice_id' => $invoice_id,
                 'error' => $e->getMessage(),
             ]);
 
@@ -162,10 +168,9 @@ class RefundService {
         $refund_amount = abs((float) $refund->get_total());
         $refund_reason = $refund->get_reason() ?: __('Refund', 'zbooks-for-woocommerce');
 
-        // Build credit note data.
+        // Build credit note data (let Zoho auto-generate the credit note number).
         $credit_note_data = [
             'customer_id' => $contact_id,
-            'creditnote_number' => sprintf('CN-%s-%d', $order->get_order_number(), $refund->get_id()),
             'reference_number' => sprintf('Refund for Order #%s', $order->get_order_number()),
             'date' => gmdate('Y-m-d'),
             'line_items' => [
@@ -194,7 +199,13 @@ class RefundService {
                 return $client->creditnotes->create($credit_note_data);
             });
 
+            // Convert object to array if needed.
+            if (is_object($response)) {
+                $response = json_decode(wp_json_encode($response), true);
+            }
+
             $credit_note_id = $response['creditnote_id']
+                ?? $response['creditnote']['creditnote_id']
                 ?? $response['credit_note']['creditnote_id']
                 ?? null;
 
@@ -263,6 +274,10 @@ class RefundService {
     /**
      * Apply credit note to an invoice.
      *
+     * Tries two approaches:
+     * 1. POST /invoices/{invoice_id}/credits - requires ZohoBooks.invoices.UPDATE scope
+     * 2. POST /creditnotes/{credit_note_id}/invoices - alternative endpoint
+     *
      * @param string $credit_note_id Credit note ID.
      * @param string $invoice_id     Invoice ID.
      * @param float  $amount         Amount to apply.
@@ -272,30 +287,80 @@ class RefundService {
         string $invoice_id,
         float $amount
     ): void {
-        try {
-            $this->client->request(function ($client) use ($credit_note_id, $invoice_id, $amount) {
-                return $client->creditnotes->applyToInvoices($credit_note_id, [
-                    'invoices' => [
-                        [
-                            'invoice_id' => $invoice_id,
-                            'amount_applied' => $amount,
-                        ],
-                    ],
-                ]);
-            });
+        // Check invoice status first - credits can't be applied to draft/closed/void invoices.
+        $status_check = $this->can_apply_credit_to_invoice($invoice_id);
+        if (!$status_check['can_apply']) {
+            $this->logger->warning('Cannot apply credit note due to invoice status', [
+                'credit_note_id' => $credit_note_id,
+                'invoice_id' => $invoice_id,
+                'invoice_status' => $status_check['status'],
+                'reason' => $status_check['reason'],
+            ]);
+            return;
+        }
 
-            $this->logger->debug('Credit note applied to invoice', [
+        // Try the invoice-centric endpoint first (often has better permissions).
+        try {
+            $this->client->raw_request('POST', '/invoices/' . $invoice_id . '/credits', [
+                'apply_creditnotes' => [
+                    [
+                        'creditnote_id' => $credit_note_id,
+                        'amount_applied' => $amount,
+                    ],
+                ],
+            ]);
+
+            $this->logger->debug('Credit note applied to invoice via invoice endpoint', [
+                'credit_note_id' => $credit_note_id,
+                'invoice_id' => $invoice_id,
+                'amount' => $amount,
+            ]);
+            return;
+        } catch (\Exception $e) {
+            $this->logger->debug('Invoice endpoint failed, trying creditnote endpoint', [
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        // Fallback to credit note endpoint.
+        try {
+            $this->client->raw_request('POST', '/creditnotes/' . $credit_note_id . '/invoices', [
+                'invoices' => [
+                    [
+                        'invoice_id' => $invoice_id,
+                        'amount_applied' => $amount,
+                    ],
+                ],
+            ]);
+
+            $this->logger->debug('Credit note applied to invoice via creditnote endpoint', [
                 'credit_note_id' => $credit_note_id,
                 'invoice_id' => $invoice_id,
                 'amount' => $amount,
             ]);
         } catch (\Exception $e) {
-            $this->logger->warning('Failed to apply credit note to invoice', [
-                'credit_note_id' => $credit_note_id,
-                'invoice_id' => $invoice_id,
-                'error' => $e->getMessage(),
-            ]);
-            // Don't throw - credit note still exists.
+            $error_msg = $e->getMessage();
+
+            // Check for specific error conditions.
+            if (strpos($error_msg, 'not authorized') !== false) {
+                $this->logger->warning('Credit note application requires additional OAuth scopes', [
+                    'credit_note_id' => $credit_note_id,
+                    'invoice_id' => $invoice_id,
+                    'required_scopes' => 'ZohoBooks.invoices.UPDATE, ZohoBooks.creditnotes.UPDATE',
+                    'error' => $error_msg,
+                ]);
+            } elseif (strpos($error_msg, 'draft') !== false) {
+                $this->logger->warning('Cannot apply credit to draft invoice', [
+                    'invoice_id' => $invoice_id,
+                ]);
+            } else {
+                $this->logger->warning('Failed to apply credit note to invoice', [
+                    'credit_note_id' => $credit_note_id,
+                    'invoice_id' => $invoice_id,
+                    'error' => $error_msg,
+                ]);
+            }
+            // Don't throw - credit note still exists and can be applied manually.
         }
     }
 
@@ -313,10 +378,33 @@ class RefundService {
         WC_Order $order
     ): ?string {
         try {
+            // Get default bank account for refunds.
+            $refund_settings = get_option('zbooks_refund_settings', []);
+            $account_id = $refund_settings['refund_account_id'] ?? null;
+
+            // If no account configured, try to get the default from payment mappings.
+            if (empty($account_id)) {
+                $payment_method = $order->get_payment_method();
+                $payment_mappings = get_option('zbooks_payment_method_mappings', []);
+                if (isset($payment_mappings[$payment_method]['account_id'])) {
+                    $account_id = $payment_mappings[$payment_method]['account_id'];
+                }
+            }
+
+            if (empty($account_id)) {
+                $this->logger->debug('No refund account configured, skipping refund record creation', [
+                    'credit_note_id' => $credit_note_id,
+                ]);
+                return null;
+            }
+
+            $refund_mode = $this->map_refund_mode($order->get_payment_method());
+
             $refund_data = [
                 'date' => gmdate('Y-m-d'),
-                'refund_mode' => $this->map_refund_mode($order->get_payment_method()),
+                'refund_mode' => $refund_mode,
                 'amount' => $amount,
+                'account_id' => $account_id,
                 'description' => sprintf(
                     /* translators: %s: Order number */
                     __('Refund for Order #%s', 'zbooks-for-woocommerce'),
@@ -324,19 +412,32 @@ class RefundService {
                 ),
             ];
 
-            $response = $this->client->request(
-                function ($client) use ($credit_note_id, $refund_data) {
-                    return $client->creditnotes->addRefund($credit_note_id, $refund_data);
-                }
+            $this->logger->debug('Creating credit note refund', [
+                'credit_note_id' => $credit_note_id,
+                'amount' => $amount,
+                'account_id' => $account_id,
+            ]);
+
+            $response = $this->client->raw_request(
+                'POST',
+                '/creditnotes/' . $credit_note_id . '/refunds',
+                $refund_data
             );
 
-            $refund_id = $response['creditnote_refund_id']
-                ?? $response['creditnote_refund']['creditnote_refund_id']
+            $refund_id = $response['creditnote_refund']['creditnote_refund_id']
+                ?? $response['refund']['refund_id']
                 ?? null;
+
+            if ($refund_id) {
+                $this->logger->info('Credit note refund created', [
+                    'credit_note_id' => $credit_note_id,
+                    'refund_id' => $refund_id,
+                ]);
+            }
 
             return $refund_id ? (string) $refund_id : null;
         } catch (\Exception $e) {
-            $this->logger->warning('Failed to create refund from credit note', [
+            $this->logger->warning('Failed to create credit note refund', [
                 'credit_note_id' => $credit_note_id,
                 'error' => $e->getMessage(),
             ]);
@@ -364,6 +465,81 @@ class RefundService {
         $mappings = apply_filters('zbooks_refund_mode_mapping', $mappings);
 
         return $mappings[$wc_method] ?? 'Others';
+    }
+
+    /**
+     * Get invoice details from Zoho.
+     *
+     * @param string $invoice_id Zoho invoice ID.
+     * @return array|null Invoice data or null.
+     */
+    private function get_invoice(string $invoice_id): ?array {
+        try {
+            $response = $this->client->request(function ($client) use ($invoice_id) {
+                return $client->invoices->get($invoice_id);
+            });
+
+            if (is_object($response) && method_exists($response, 'toArray')) {
+                return $response->toArray();
+            }
+
+            if (is_array($response)) {
+                return $response['invoice'] ?? $response;
+            }
+
+            return null;
+        } catch (\Exception $e) {
+            $this->logger->warning('Failed to get invoice', [
+                'invoice_id' => $invoice_id,
+                'error' => $e->getMessage(),
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Check if invoice status allows credit note application.
+     *
+     * Credits cannot be applied to draft, closed, or void invoices.
+     *
+     * @param string $invoice_id Invoice ID.
+     * @return array{can_apply: bool, status: string, reason: ?string}
+     */
+    private function can_apply_credit_to_invoice(string $invoice_id): array {
+        $invoice = $this->get_invoice($invoice_id);
+
+        if (!$invoice) {
+            return [
+                'can_apply' => false,
+                'status' => 'unknown',
+                'reason' => 'Could not retrieve invoice details',
+            ];
+        }
+
+        $status = strtolower($invoice['status'] ?? 'unknown');
+
+        // Statuses that don't allow credit application.
+        $blocked_statuses = ['draft', 'closed', 'void'];
+
+        if (in_array($status, $blocked_statuses, true)) {
+            $reasons = [
+                'draft' => 'Credits cannot be applied to draft invoices. Mark the invoice as sent first.',
+                'closed' => 'Credits cannot be applied to closed invoices.',
+                'void' => 'Credits cannot be applied to void invoices.',
+            ];
+
+            return [
+                'can_apply' => false,
+                'status' => $status,
+                'reason' => $reasons[$status] ?? 'Invoice status does not allow credit application',
+            ];
+        }
+
+        return [
+            'can_apply' => true,
+            'status' => $status,
+            'reason' => null,
+        ];
     }
 
     /**

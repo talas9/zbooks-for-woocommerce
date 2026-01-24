@@ -102,17 +102,21 @@ class SyncOrchestrator {
      */
     public function sync_order(WC_Order $order, bool $as_draft = false): SyncResult {
         $order_id = $order->get_id();
+        $order_number = $order->get_order_number();
 
         $this->logger->info('Starting sync for order', [
             'order_id' => $order_id,
+            'order_number' => $order_number,
+            'status' => $order->get_status(),
             'as_draft' => $as_draft,
         ]);
 
         // Check if already synced.
         $existing_invoice_id = $this->repository->get_invoice_id($order);
         if ($existing_invoice_id !== null) {
-            $this->logger->info('Order already synced', [
+            $this->logger->debug('Order already synced', [
                 'order_id' => $order_id,
+                'order_number' => $order_number,
                 'invoice_id' => $existing_invoice_id,
             ]);
 
@@ -146,7 +150,9 @@ class SyncOrchestrator {
             if ($result->success) {
                 $this->logger->info('Order synced successfully', [
                     'order_id' => $order_id,
+                    'order_number' => $order_number,
                     'invoice_id' => $result->invoice_id,
+                    'total' => $order->get_total(),
                 ]);
 
                 /**
@@ -159,6 +165,8 @@ class SyncOrchestrator {
             } else {
                 $this->logger->error('Order sync failed', [
                     'order_id' => $order_id,
+                    'order_number' => $order_number,
+                    'email' => $order->get_billing_email(),
                     'error' => $result->error,
                 ]);
 
@@ -183,6 +191,8 @@ class SyncOrchestrator {
 
             $this->logger->error('Order sync exception', [
                 'order_id' => $order_id,
+                'order_number' => $order_number,
+                'email' => $order->get_billing_email(),
                 'error' => $error,
             ]);
 

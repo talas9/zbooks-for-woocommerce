@@ -191,10 +191,15 @@ class CustomerService {
 
             // Handle different response formats.
             $contacts = [];
-            if (is_array($response)) {
+            if (is_object($response)) {
+                if (method_exists($response, 'toArray')) {
+                    $contacts = $response->toArray();
+                } else {
+                    $response = json_decode(wp_json_encode($response), true);
+                    $contacts = $response['contacts'] ?? $response;
+                }
+            } elseif (is_array($response)) {
                 $contacts = $response['contacts'] ?? $response;
-            } elseif (method_exists($response, 'toArray')) {
-                $contacts = $response->toArray();
             }
 
             if (!empty($contacts) && isset($contacts[0])) {
@@ -224,15 +229,18 @@ class CustomerService {
                 return $client->contacts->get($contact_id);
             });
 
+            if (is_object($response)) {
+                if (method_exists($response, 'toArray')) {
+                    return $response->toArray();
+                }
+                $response = json_decode(wp_json_encode($response), true);
+            }
+
             if (is_array($response)) {
                 return $response['contact'] ?? $response;
             }
 
-            if (method_exists($response, 'toArray')) {
-                return $response->toArray();
-            }
-
-            return $response;
+            return null;
         } catch (\Exception $e) {
             $this->logger->warning('Failed to get contact', [
                 'contact_id' => $contact_id,
@@ -254,7 +262,9 @@ class CustomerService {
         $contact_data = $this->map_order_to_contact($order);
 
         $this->logger->info('Creating new contact', [
+            'order_id' => $order->get_id(),
             'email' => $contact_data['email'],
+            'name' => $contact_data['contact_name'],
         ]);
 
         try {
@@ -262,15 +272,24 @@ class CustomerService {
                 return $client->contacts->create($contact_data);
             });
 
-            $contact_id = (string) $response['contact_id'];
+            // Convert object to array if needed.
+            if (is_object($response)) {
+                $response = json_decode(wp_json_encode($response), true);
+            }
+
+            $contact_data_response = $response['contact'] ?? $response;
+            $contact_id = (string) ($contact_data_response['contact_id'] ?? '');
 
             $this->logger->info('Contact created successfully', [
                 'contact_id' => $contact_id,
+                'email' => $contact_data['email'],
             ]);
 
             return $contact_id;
         } catch (\Exception $e) {
             $this->logger->error('Failed to create contact', [
+                'order_id' => $order->get_id(),
+                'email' => $contact_data['email'],
                 'error' => $e->getMessage(),
             ]);
             throw new \RuntimeException(

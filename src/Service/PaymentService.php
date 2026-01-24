@@ -103,8 +103,10 @@ class PaymentService {
 
         $this->logger->info('Applying payment to invoice', [
             'order_id' => $order_id,
+            'order_number' => $order->get_order_number(),
             'invoice_id' => $invoice_id,
             'amount' => $amount,
+            'payment_method' => $order->get_payment_method_title(),
         ]);
 
         try {
@@ -112,12 +114,19 @@ class PaymentService {
                 return $client->customerpayments->create($payment_data);
             });
 
+            // Convert object to array if needed.
+            if (is_object($response)) {
+                $response = json_decode(wp_json_encode($response), true);
+            }
+
             $payment_id = (string) ($response['payment_id'] ?? $response['payment']['payment_id'] ?? '');
 
             $this->logger->info('Payment applied successfully', [
                 'order_id' => $order_id,
+                'order_number' => $order->get_order_number(),
                 'invoice_id' => $invoice_id,
                 'payment_id' => $payment_id,
+                'amount' => $amount,
             ]);
 
             return [
@@ -128,7 +137,9 @@ class PaymentService {
         } catch (\Exception $e) {
             $this->logger->error('Failed to apply payment', [
                 'order_id' => $order_id,
+                'order_number' => $order->get_order_number(),
                 'invoice_id' => $invoice_id,
+                'amount' => $amount,
                 'error' => $e->getMessage(),
             ]);
 

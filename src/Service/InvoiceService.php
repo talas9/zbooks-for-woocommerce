@@ -108,7 +108,10 @@ class InvoiceService {
 
         $this->logger->info('Creating invoice', [
             'order_id' => $order->get_id(),
+            'order_number' => $order_number,
             'contact_id' => $contact_id,
+            'total' => $order->get_total(),
+            'currency' => $order->get_currency(),
             'as_draft' => $as_draft,
         ]);
 
@@ -117,7 +120,13 @@ class InvoiceService {
                 return $client->invoices->create($invoice_data);
             });
 
-            $invoice_id = (string) $response['invoice_id'];
+            // Convert object to array if needed.
+            if (is_object($response)) {
+                $response = json_decode(wp_json_encode($response), true);
+            }
+
+            $invoice_response = $response['invoice'] ?? $response;
+            $invoice_id = (string) ($invoice_response['invoice_id'] ?? '');
 
             // Mark as sent if not draft.
             if (!$as_draft) {
@@ -127,6 +136,8 @@ class InvoiceService {
             $status = $as_draft ? SyncStatus::DRAFT : SyncStatus::SYNCED;
 
             $this->logger->info('Invoice created successfully', [
+                'order_id' => $order->get_id(),
+                'order_number' => $order_number,
                 'invoice_id' => $invoice_id,
                 'status' => $status->value,
             ]);
@@ -140,6 +151,9 @@ class InvoiceService {
         } catch (\Exception $e) {
             $this->logger->error('Failed to create invoice', [
                 'order_id' => $order->get_id(),
+                'order_number' => $order_number,
+                'email' => $order->get_billing_email(),
+                'total' => $order->get_total(),
                 'error' => $e->getMessage(),
             ]);
 
@@ -293,6 +307,12 @@ class InvoiceService {
         $shipping_total = (float) $order->get_shipping_total();
         if ($shipping_total > 0) {
             $invoice['shipping_charge'] = $shipping_total;
+
+            // Add shipping account if configured.
+            $shipping_settings = get_option('zbooks_shipping_settings', []);
+            if (!empty($shipping_settings['account_id'])) {
+                $invoice['shipping_charge_account_id'] = $shipping_settings['account_id'];
+            }
         }
 
         // Add discount.
