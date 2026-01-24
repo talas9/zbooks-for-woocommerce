@@ -1,0 +1,698 @@
+/**
+ * Zbooks Admin Styles
+ *
+ * Styles for the WordPress admin interface including sync status badges,
+ * meta boxes, bulk sync page, progress bars, and error messages.
+ *
+ * @package    Zbooks
+ * @author     talas9
+ * @link       https://github.com/talas9/zbooks-for-woocommerce
+ * @since      1.0.0
+ */
+
+/* ==========================================================================
+   Sync Status Badges
+   ========================================================================== */
+
+.zbooks-status {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.4;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.zbooks-status-pending {
+    background-color: #f0f0f1;
+    color: #50575e;
+    border: 1px solid #c3c4c7;
+}
+
+.zbooks-status-synced {
+    background-color: #edfaef;
+    color: #1e4620;
+    border: 1px solid #68de7c;
+}
+
+.zbooks-status-failed {
+    background-color: #fcf0f1;
+    color: #8a1e1e;
+    border: 1px solid #d63638;
+}
+
+.zbooks-status-draft {
+    background-color: #fff8e5;
+    color: #614200;
+    border: 1px solid #dba617;
+}
+
+/* ==========================================================================
+   Meta Box Styles
+   ========================================================================== */
+
+.zbooks-meta-box {
+    padding: 12px;
+}
+
+.zbooks-meta-box .inside {
+    margin: 0;
+    padding: 0;
+}
+
+.zbooks-meta-box-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f0f0f1;
+}
+
+.zbooks-meta-box-row:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.zbooks-meta-box-label {
+    flex: 0 0 120px;
+    font-weight: 600;
+    color: #1d2327;
+}
+
+.zbooks-meta-box-value {
+    flex: 1;
+    color: #50575e;
+}
+
+.zbooks-meta-box-actions {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #c3c4c7;
+}
+
+.zbooks-meta-box .zbooks-sync-btn {
+    margin-right: 8px;
+}
+
+.zbooks-meta-box .spinner {
+    float: none;
+    margin: 0 0 0 8px;
+    vertical-align: middle;
+}
+
+.zbooks-last-sync {
+    font-size: 12px;
+    color: #787c82;
+    margin-top: 8px;
+}
+
+.zbooks-sync-id {
+    font-family: monospace;
+    background-color: #f6f7f7;
+    padding: 2px 6px;
+    border-radius: 2px;
+    font-size: 12px;
+}
+
+/* ==========================================================================
+   Bulk Sync Page - Stats Boxes
+   ========================================================================== */
+
+.zbooks-stats-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin: 20px 0;
+}
+
+.zbooks-stat-box {
+    flex: 1;
+    min-width: 150px;
+    max-width: 200px;
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    padding: 16px;
+    text-align: center;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+}
+
+.zbooks-stat-box:hover {
+    border-color: #2271b1;
+}
+
+.zbooks-stat-number {
+    font-size: 32px;
+    font-weight: 600;
+    line-height: 1.2;
+    color: #1d2327;
+}
+
+.zbooks-stat-label {
+    font-size: 13px;
+    color: #50575e;
+    margin-top: 4px;
+}
+
+.zbooks-stat-box--total .zbooks-stat-number {
+    color: #2271b1;
+}
+
+.zbooks-stat-box--synced .zbooks-stat-number {
+    color: #00a32a;
+}
+
+.zbooks-stat-box--pending .zbooks-stat-number {
+    color: #dba617;
+}
+
+.zbooks-stat-box--failed .zbooks-stat-number {
+    color: #d63638;
+}
+
+/* ==========================================================================
+   Progress Bar Styles
+   ========================================================================== */
+
+.zbooks-progress-container {
+    margin: 20px 0;
+    padding: 20px;
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+}
+
+.zbooks-progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.zbooks-progress-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1d2327;
+}
+
+.zbooks-progress-count {
+    font-size: 13px;
+    color: #50575e;
+}
+
+.zbooks-progress-bar {
+    height: 20px;
+    background-color: #f0f0f1;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+}
+
+.zbooks-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #2271b1, #135e96);
+    border-radius: 10px;
+    transition: width 0.3s ease;
+    position: relative;
+}
+
+.zbooks-progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.2) 50%,
+        rgba(255, 255, 255, 0) 100%
+    );
+    animation: zbooks-progress-shine 1.5s infinite;
+}
+
+@keyframes zbooks-progress-shine {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+.zbooks-progress-percentage {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 11px;
+    font-weight: 600;
+    color: #1d2327;
+    text-shadow: 0 0 2px #fff;
+}
+
+.zbooks-progress-status {
+    margin-top: 12px;
+    font-size: 13px;
+    color: #50575e;
+}
+
+.zbooks-progress-status.is-processing {
+    color: #2271b1;
+}
+
+.zbooks-progress-status.is-complete {
+    color: #00a32a;
+}
+
+.zbooks-progress-status.is-error {
+    color: #d63638;
+}
+
+/* ==========================================================================
+   Error & Success Message Styles
+   ========================================================================== */
+
+.zbooks-message {
+    padding: 12px 16px;
+    border-radius: 4px;
+    margin: 16px 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.zbooks-message::before {
+    font-family: dashicons;
+    font-size: 20px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.zbooks-message--error {
+    background-color: #fcf0f1;
+    border: 1px solid #d63638;
+    border-left-width: 4px;
+    color: #8a1e1e;
+}
+
+.zbooks-message--error::before {
+    content: '\f534';
+    color: #d63638;
+}
+
+.zbooks-message--success {
+    background-color: #edfaef;
+    border: 1px solid #00a32a;
+    border-left-width: 4px;
+    color: #1e4620;
+}
+
+.zbooks-message--success::before {
+    content: '\f147';
+    color: #00a32a;
+}
+
+.zbooks-message--warning {
+    background-color: #fff8e5;
+    border: 1px solid #dba617;
+    border-left-width: 4px;
+    color: #614200;
+}
+
+.zbooks-message--warning::before {
+    content: '\f227';
+    color: #dba617;
+}
+
+.zbooks-message--info {
+    background-color: #f0f6fc;
+    border: 1px solid #72aee6;
+    border-left-width: 4px;
+    color: #1d2327;
+}
+
+.zbooks-message--info::before {
+    content: '\f348';
+    color: #72aee6;
+}
+
+.zbooks-message-content {
+    flex: 1;
+}
+
+.zbooks-message-title {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.zbooks-message-text {
+    font-size: 13px;
+}
+
+.zbooks-message-dismiss {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    color: inherit;
+    opacity: 0.7;
+}
+
+.zbooks-message-dismiss:hover {
+    opacity: 1;
+}
+
+/* ==========================================================================
+   Bulk Sync Table & Checkboxes
+   ========================================================================== */
+
+.zbooks-bulk-table {
+    margin-top: 20px;
+}
+
+.zbooks-bulk-table .check-column {
+    width: 40px;
+    padding: 8px 10px;
+}
+
+.zbooks-bulk-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 16px 0;
+    padding: 12px 16px;
+    background: #f6f7f7;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+}
+
+.zbooks-bulk-actions .button {
+    margin: 0;
+}
+
+.zbooks-selected-count {
+    font-size: 13px;
+    color: #50575e;
+}
+
+.zbooks-select-all-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.zbooks-select-all-container label {
+    cursor: pointer;
+    font-size: 13px;
+}
+
+/* ==========================================================================
+   Test Connection Button
+   ========================================================================== */
+
+.zbooks-test-connection {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.zbooks-test-connection .spinner {
+    margin: 0;
+}
+
+.zbooks-connection-result {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 12px;
+    padding: 4px 10px;
+    border-radius: 3px;
+    font-size: 13px;
+}
+
+.zbooks-connection-result--success {
+    background-color: #edfaef;
+    color: #1e4620;
+}
+
+.zbooks-connection-result--error {
+    background-color: #fcf0f1;
+    color: #8a1e1e;
+}
+
+.zbooks-connection-result .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+/* ==========================================================================
+   Loading States
+   ========================================================================== */
+
+.zbooks-loading {
+    position: relative;
+    pointer-events: none;
+}
+
+.zbooks-loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.7);
+    z-index: 10;
+}
+
+.zbooks-btn-loading {
+    position: relative;
+    color: transparent !important;
+}
+
+.zbooks-btn-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    margin: -8px 0 0 -8px;
+    border: 2px solid #f0f0f1;
+    border-top-color: #2271b1;
+    border-radius: 50%;
+    animation: zbooks-spin 0.6s linear infinite;
+}
+
+@keyframes zbooks-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ==========================================================================
+   Settings Page Tabs
+   ========================================================================== */
+
+.zbooks-settings {
+    max-width: 1200px;
+}
+
+.zbooks-tabs {
+    margin-bottom: 0;
+    border-bottom: 1px solid #c3c4c7;
+}
+
+.zbooks-tabs .nav-tab {
+    margin-left: 0;
+    margin-right: 4px;
+    border-bottom: 1px solid #c3c4c7;
+    background: #f0f0f1;
+}
+
+.zbooks-tabs .nav-tab:hover {
+    background: #fff;
+}
+
+.zbooks-tabs .nav-tab-active {
+    border-bottom-color: #fff;
+    background: #fff;
+}
+
+.zbooks-tab-content {
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-top: none;
+    padding: 20px;
+}
+
+.zbooks-tab-content .form-table {
+    margin-top: 0;
+}
+
+.zbooks-tab-content .form-table th {
+    padding-left: 0;
+    width: 220px;
+}
+
+.zbooks-tab-content h2 {
+    font-size: 1.3em;
+    margin: 1.5em 0 0.5em;
+    padding-bottom: 0.5em;
+    border-bottom: 1px solid #f0f0f1;
+}
+
+.zbooks-tab-content h2:first-of-type {
+    margin-top: 0;
+}
+
+/* ==========================================================================
+   Info Box (for currency section)
+   ========================================================================== */
+
+.zbooks-info-box {
+    background: #f0f6fc;
+    border: 1px solid #72aee6;
+    border-left-width: 4px;
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin: 10px 0;
+}
+
+.zbooks-info-box p:first-child {
+    margin-top: 0;
+}
+
+.zbooks-info-box p:last-child {
+    margin-bottom: 0;
+}
+
+.zbooks-info-box ul {
+    margin: 10px 0;
+}
+
+.zbooks-info-box li {
+    margin-bottom: 6px;
+}
+
+/* ==========================================================================
+   Settings Page Styles
+   ========================================================================== */
+
+.zbooks-settings-section {
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.zbooks-settings-section h2 {
+    margin-top: 0;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f0f0f1;
+}
+
+.zbooks-settings-row {
+    display: flex;
+    align-items: flex-start;
+    padding: 16px 0;
+    border-bottom: 1px solid #f0f0f1;
+}
+
+.zbooks-settings-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.zbooks-settings-label {
+    flex: 0 0 200px;
+    font-weight: 600;
+}
+
+.zbooks-settings-field {
+    flex: 1;
+}
+
+.zbooks-settings-field input[type="text"],
+.zbooks-settings-field input[type="url"],
+.zbooks-settings-field input[type="password"] {
+    width: 100%;
+    max-width: 400px;
+}
+
+.zbooks-settings-description {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #787c82;
+}
+
+/* ==========================================================================
+   Responsive Adjustments
+   ========================================================================== */
+
+@media screen and (max-width: 782px) {
+    .zbooks-stats-container {
+        flex-direction: column;
+    }
+
+    .zbooks-stat-box {
+        max-width: none;
+    }
+
+    .zbooks-meta-box-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .zbooks-meta-box-label {
+        flex: none;
+        margin-bottom: 6px;
+    }
+
+    .zbooks-settings-row {
+        flex-direction: column;
+    }
+
+    .zbooks-settings-label {
+        flex: none;
+        margin-bottom: 8px;
+    }
+
+    .zbooks-bulk-actions {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .zbooks-tabs {
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .zbooks-tabs .nav-tab {
+        flex: 1 1 auto;
+        text-align: center;
+        margin-bottom: -1px;
+    }
+
+    .zbooks-tab-content {
+        padding: 15px;
+    }
+
+    .zbooks-tab-content .form-table th {
+        width: auto;
+        display: block;
+        padding-bottom: 5px;
+    }
+
+    .zbooks-tab-content .form-table td {
+        display: block;
+        padding-left: 0;
+    }
+}

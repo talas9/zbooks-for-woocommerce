@@ -1,0 +1,55 @@
+# Dependencies
+/vendor/
+/node_modules/
+
+# Build outputs
+/build/
+/dist/
+
+# IDE and editors
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# WordPress
+wp-content/
+*.log
+
+# Testing
+/coverage/
+.phpunit.result.cache
+/tests/.env
+
+# Environment
+.env
+.env.local
+.env.*.local
+.wp-env.override.json
+
+# Project specific
+.specstory/
+.cursor/
+.cursorindexingignore
+
+# Test scripts with credentials
+test-*.php
+
+# Build artifacts
+*.zip
+
+# Temp/debug files
+zbooks-for-woocommerce*.json
+
+# Composer
+composer.lock
+
+# npm
+package-lock.json
+
+# Debug
+firebase-debug.log
+
+*.tmp
+*.temp

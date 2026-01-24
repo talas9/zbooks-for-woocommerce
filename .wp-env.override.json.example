@@ -1,0 +1,16 @@
+{
+    "$schema": "https://schemas.wp.org/trunk/wp-env.json",
+    "config": {
+        "ZBOOKS_DEV_CLIENT_ID": "your-zoho-client-id",
+        "ZBOOKS_DEV_CLIENT_SECRET": "your-zoho-client-secret",
+        "ZBOOKS_DEV_REFRESH_TOKEN": "your-zoho-refresh-token"
+    },
+    "env": {
+        "development": {
+            "phpExtensions": ["xdebug"]
+        },
+        "tests": {
+            "phpExtensions": ["xdebug"]
+        }
+    }
+}

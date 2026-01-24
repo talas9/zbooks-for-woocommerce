@@ -1,0 +1,105 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer
+
+      - name: Get version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Verify version consistency
+        run: |
+          PLUGIN_VERSION=$(grep -oP "Version:\s*\K[0-9.]+" zbooks-for-woocommerce.php)
+          TAG_VERSION="${{ steps.version.outputs.VERSION }}"
+          if [ "$PLUGIN_VERSION" != "$TAG_VERSION" ]; then
+            echo "Version mismatch: plugin ($PLUGIN_VERSION) != tag ($TAG_VERSION)"
+            exit 1
+          fi
+          echo "Version verified: $PLUGIN_VERSION"
+
+      - name: Install Composer dependencies (production)
+        run: composer install --no-dev --prefer-dist --optimize-autoloader
+
+      - name: Create plugin zip
+        run: |
+          mkdir -p dist
+          zip -r dist/zbooks-for-woocommerce-${{ steps.version.outputs.VERSION }}.zip . \
+            -x "*.git*" \
+            -x "*.github*" \
+            -x ".wordpress-org/*" \
+            -x "node_modules/*" \
+            -x "tests/*" \
+            -x "playwright/*" \
+            -x "playwright-report/*" \
+            -x "test-results/*" \
+            -x ".wp-env*" \
+            -x "phpcs.xml*" \
+            -x "phpunit.xml*" \
+            -x "composer.lock" \
+            -x "package-lock.json" \
+            -x "*.md" \
+            -x "dist/*" \
+            -x "bin/*" \
+            -x ".claude/*" \
+            -x ".cursorignore" \
+            -x "test-*.php"
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Extract changelog for this version from readme.txt
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          CHANGELOG=$(sed -n "/^= $VERSION/,/^= [0-9]/p" readme.txt | head -n -1 | tail -n +2)
+          if [ -z "$CHANGELOG" ]; then
+            CHANGELOG="See readme.txt for changelog."
+          fi
+          echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: ZBooks for WooCommerce v${{ steps.version.outputs.VERSION }}
+          body: |
+            ## ZBooks for WooCommerce v${{ steps.version.outputs.VERSION }}
+
+            ${{ steps.changelog.outputs.CHANGELOG }}
+
+            ### Installation
+
+            1. Download `zbooks-for-woocommerce-${{ steps.version.outputs.VERSION }}.zip`
+            2. Upload to WordPress via Plugins > Add New > Upload Plugin
+            3. Activate and configure at WooCommerce > Settings > ZBooks
+
+            ### Requirements
+
+            - WordPress 6.9+
+            - WooCommerce 10.4+
+            - PHP 8.2+
+          files: |
+            dist/zbooks-for-woocommerce-${{ steps.version.outputs.VERSION }}.zip
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

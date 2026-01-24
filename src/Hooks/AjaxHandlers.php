@@ -1,0 +1,229 @@
+<?php
+/**
+ * AJAX handlers.
+ *
+ * @package Zbooks
+ * @author talas9
+ * @link https://github.com/talas9/zbooks-for-woocommerce
+ */
+
+declare(strict_types=1);
+
+namespace Zbooks\Hooks;
+
+use Zbooks\Service\SyncOrchestrator;
+
+defined('ABSPATH') || exit;
+
+/**
+ * Handles AJAX requests for manual sync.
+ */
+class AjaxHandlers {
+
+    /**
+     * Sync orchestrator.
+     *
+     * @var SyncOrchestrator
+     */
+    private SyncOrchestrator $orchestrator;
+
+    /**
+     * Constructor.
+     *
+     * @param SyncOrchestrator $orchestrator Sync orchestrator.
+     */
+    public function __construct(SyncOrchestrator $orchestrator) {
+        $this->orchestrator = $orchestrator;
+        $this->register_hooks();
+    }
+
+    /**
+     * Register AJAX hooks.
+     */
+    private function register_hooks(): void {
+        add_action('wp_ajax_zbooks_manual_sync', [$this, 'handle_manual_sync']);
+        add_action('wp_ajax_zbooks_bulk_sync', [$this, 'handle_bulk_sync']);
+        add_action('wp_ajax_zbooks_test_connection', [$this, 'handle_test_connection']);
+        add_action('wp_ajax_zbooks_apply_payment', [$this, 'handle_apply_payment']);
+        add_action('wp_ajax_zbooks_refresh_bank_accounts', [$this, 'handle_refresh_bank_accounts']);
+    }
+
+    /**
+     * Handle manual sync AJAX request.
+     */
+    public function handle_manual_sync(): void {
+        check_ajax_referer('zbooks_ajax_nonce', 'nonce');
+
+        if (!current_user_can('edit_shop_orders')) {
+            wp_send_json_error([
+                'message' => __('Permission denied.', 'zbooks-for-woocommerce'),
+            ]);
+        }
+
+        $order_id = isset($_POST['order_id']) ? absint($_POST['order_id']) : 0;
+        $as_draft = isset($_POST['as_draft']) && $_POST['as_draft'] === 'true';
+
+        if (!$order_id) {
+            wp_send_json_error([
+                'message' => __('Invalid order ID.', 'zbooks-for-woocommerce'),
+            ]);
+        }
+
+        $order = wc_get_order($order_id);
+
+        if (!$order) {
+            wp_send_json_error([
+                'message' => __('Order not found.', 'zbooks-for-woocommerce'),
+            ]);
+        }
+
+        $result = $this->orchestrator->sync_order($order, $as_draft);
+
+        if ($result->success) {
+            wp_send_json_success([
+                'message' => __('Order synced successfully!', 'zbooks-for-woocommerce'),
+                'invoice_id' => $result->invoice_id,
+                'status' => $result->status->value,
+            ]);
+        } else {
+            wp_send_json_error([
+                'message' => $result->error ?? __('Sync failed.', 'zbooks-for-woocommerce'),
+            ]);
+        }
+    }
+
+    /**
+     * Handle bulk sync AJAX request.
+     */
+    public function handle_bulk_sync(): void {
+        check_ajax_referer('zbooks_ajax_nonce', 'nonce');
+
+        if (!current_user_can('edit_shop_orders')) {
+            wp_send_json_error([
+                'message' => __('Permission denied.', 'zbooks-for-woocommerce'),
+            ]);
+        }
+
+        $order_ids = isset($_POST['order_ids']) ? array_map('absint', (array) $_POST['order_ids']) : [];
+        $as_draft = isset($_POST['as_draft']) && $_POST['as_draft'] === 'true';
+
+        if (empty($order_ids)) {
+            wp_send_json_error([
+                'message' => __('No orders selected.', 'zbooks-for-woocommerce'),
+            ]);
+        }
+
+        $plugin = \Zbooks\Plugin::get_instance();
+        $bulk_service = $plugin->get_service('bulk_sync_service');
+
+        $results = $bulk_service->sync_orders($order_ids, $as_draft);
+
+        wp_send_json_success([
+            'message' => sprintf(
+                /* translators: 1: Success count, 2: Failed count */
+                __('Synced %1$d orders, %2$d failed.', 'zbooks-for-woocommerce'),
+                $results['success'],
+                $results['failed']
+            ),
+            'success_count' => $results['success'],
+            'failed_count' => $results['failed'],
+            'results' => $results['results'],
+        ]);
+    }
+
+    /**
+     * Handle connection test AJAX request.
+     */
+    public function handle_test_connection(): void {
+        check_ajax_referer('zbooks_ajax_nonce', 'nonce');
+
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error([
+                'message' => __('Permission denied.', 'zbooks-for-woocommerce'),
+            ]);
+        }
+
+        $plugin = \Zbooks\Plugin::get_instance();
+        $zoho_client = $plugin->get_service('zoho_client');
+
+        try {
+            $success = $zoho_client->test_connection();
+
+            if ($success) {
+                wp_send_json_success([
+                    'message' => __('Connection successful!', 'zbooks-for-woocommerce'),
+                ]);
+            } else {
+                wp_send_json_error([
+                    'message' => __('Connection failed. Please check your credentials.', 'zbooks-for-woocommerce'),
+                ]);
+            }
+        } catch (\Exception $e) {
+            wp_send_json_error([
+                'message' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Handle apply payment AJAX request.
+     */
+    public function handle_apply_payment(): void {
+        check_ajax_referer('zbooks_ajax_nonce', 'nonce');
+
+        if (!current_user_can('edit_shop_orders')) {
+            wp_send_json_error([
+                'message' => __('Permission denied.', 'zbooks-for-woocommerce'),
+            ]);
+        }
+
+        $order_id = isset($_POST['order_id']) ? absint($_POST['order_id']) : 0;
+
+        if (!$order_id) {
+            wp_send_json_error([
+                'message' => __('Invalid order ID.', 'zbooks-for-woocommerce'),
+            ]);
+        }
+
+        $order = wc_get_order($order_id);
+
+        if (!$order) {
+            wp_send_json_error([
+                'message' => __('Order not found.', 'zbooks-for-woocommerce'),
+            ]);
+        }
+
+        $result = $this->orchestrator->apply_payment($order);
+
+        if ($result['success']) {
+            wp_send_json_success([
+                'message' => __('Payment applied successfully!', 'zbooks-for-woocommerce'),
+                'payment_id' => $result['payment_id'] ?? null,
+            ]);
+        } else {
+            wp_send_json_error([
+                'message' => $result['error'] ?? __('Failed to apply payment.', 'zbooks-for-woocommerce'),
+            ]);
+        }
+    }
+
+    /**
+     * Handle refresh bank accounts AJAX request.
+     */
+    public function handle_refresh_bank_accounts(): void {
+        check_ajax_referer('zbooks_refresh_accounts', 'nonce');
+
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error([
+                'message' => __('Permission denied.', 'zbooks-for-woocommerce'),
+            ]);
+        }
+
+        // Clear the cached bank accounts.
+        delete_transient('zbooks_zoho_bank_accounts');
+
+        wp_send_json_success([
+            'message' => __('Bank accounts refreshed.', 'zbooks-for-woocommerce'),
+        ]);
+    }
+}

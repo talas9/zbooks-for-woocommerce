@@ -1,0 +1,21 @@
+WordPress.org Plugin Assets
+===========================
+
+This directory contains assets for the WordPress.org plugin repository.
+
+Required Files (add before submission):
+- banner-772x250.png   - Plugin banner image (standard)
+- banner-1544x500.png  - Plugin banner image (high-res/retina)
+- icon-128x128.png     - Plugin icon (standard)
+- icon-256x256.png     - Plugin icon (high-res/retina)
+
+Optional Files:
+- screenshot-1.png     - Settings page
+- screenshot-2.png     - Order sync status
+- screenshot-3.png     - Product linking
+- screenshot-4.png     - Bulk sync interface
+
+Notes:
+- Banner should show plugin name and optionally WooCommerce + Zoho logos
+- Icon should be the plugin logo/branding
+- Screenshots should match those described in readme.txt

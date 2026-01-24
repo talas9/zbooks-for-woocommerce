@@ -1,0 +1,45 @@
+{
+    "name": "zbooks-for-woocommerce",
+    "version": "1.0.0",
+    "description": "Sync WooCommerce orders to Zoho Books",
+    "scripts": {
+        "env:start": "wp-env start",
+        "env:stop": "wp-env stop",
+        "env:destroy": "wp-env destroy",
+        "env:cli": "wp-env run cli",
+        "env:logs": "wp-env logs",
+        "test:e2e": "playwright test",
+        "test:e2e:ui": "playwright test --ui",
+        "lint:js": "eslint assets/js",
+        "lint:css": "stylelint assets/css"
+    },
+    "devDependencies": {
+        "@playwright/test": "^1.40.0",
+        "@wordpress/e2e-test-utils-playwright": "^0.18.0",
+        "@wordpress/env": "^9.0.0",
+        "eslint": "^8.55.0",
+        "stylelint": "^16.0.0",
+        "stylelint-config-standard": "^36.0.0"
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    },
+    "keywords": [
+        "wordpress",
+        "woocommerce",
+        "zoho",
+        "zoho-books",
+        "invoice",
+        "sync"
+    ],
+    "license": "GPL-2.0+",
+    "author": "talas9",
+    "homepage": "https://github.com/talas9/zbooks-for-woocommerce",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/talas9/zbooks-for-woocommerce.git"
+    },
+    "bugs": {
+        "url": "https://github.com/talas9/zbooks-for-woocommerce/issues"
+    }
+}
