@@ -57,6 +57,7 @@ jobs:
 
       - name: Start wp-env
         run: npm run env:start
+        continue-on-error: true
 
       - name: Activate WooCommerce
         run: npx wp-env run cli wp plugin activate woocommerce
