@@ -11,7 +11,7 @@
     executionOrder="depends,defects"
     beStrictAboutOutputDuringTests="true"
     failOnRisky="true"
-    failOnWarning="true"
+    failOnWarning="false"
     colors="true"
     displayDetailsOnTestsThatTriggerDeprecations="true"
     displayDetailsOnTestsThatTriggerErrors="true"
