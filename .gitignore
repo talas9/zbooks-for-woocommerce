@@ -43,10 +43,10 @@ test-*.php
 zbooks-for-woocommerce*.json
 
 # Composer
-composer.lock
+# Note: composer.lock is committed for CI reproducibility
 
 # npm
-package-lock.json
+# Note: package-lock.json is committed for CI reproducibility
 
 # Debug
 firebase-debug.log
