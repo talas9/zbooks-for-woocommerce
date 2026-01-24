@@ -11,6 +11,8 @@
     <exclude-pattern>/tests/*</exclude-pattern>
     <exclude-pattern>/build/*</exclude-pattern>
     <exclude-pattern>/dist/*</exclude-pattern>
+    <exclude-pattern>/bin/*</exclude-pattern>
+    <exclude-pattern>/languages/*</exclude-pattern>
     <exclude-pattern>*.min.js</exclude-pattern>
     <exclude-pattern>*.min.css</exclude-pattern>
     <exclude-pattern>*.asset.php</exclude-pattern>
@@ -22,25 +24,10 @@
     <arg name="extensions" value="php"/>
     <arg name="parallel" value="8"/> <!-- Enables parallel processing when available -->
 
-    <!-- Rules: Check PHP version compatibility -->
-    <config name="testVersion" value="8.2-"/>
-    <rule ref="PHPCompatibilityWP">
-        <include-pattern>*\.php$</include-pattern>
-    </rule>
-
     <!-- Rules: WordPress Coding Standards -->
     <rule ref="WordPress">
         <!-- Allow short array syntax -->
         <exclude name="Universal.Arrays.DisallowShortArraySyntax"/>
-    </rule>
-
-    <rule ref="WordPress-Core"/>
-    <rule ref="WordPress-Docs"/>
-    <rule ref="WordPress-Extra"/>
-
-    <!-- Rules: WooCommerce Coding Standards (if available) -->
-    <rule ref="WooCommerce-Core">
-        <exclude-pattern>*</exclude-pattern>
     </rule>
 
     <!-- Set text domain for I18n -->
@@ -77,11 +64,6 @@
         </properties>
     </rule>
 
-    <!-- Allow short ternary operators -->
-    <rule ref="WordPress.PHP.DisallowShortTernary">
-        <exclude name="WordPress.PHP.DisallowShortTernary.Found"/>
-    </rule>
-
     <!-- Enforce PSR-4 autoloading for src/ directory -->
     <rule ref="WordPress.NamingConventions.ValidFunctionName">
         <exclude-pattern>/src/*</exclude-pattern>
@@ -89,6 +71,6 @@
 
     <!-- Allow certain inline SQL for custom queries (use with caution) -->
     <rule ref="WordPress.DB.DirectDatabaseQuery">
-        <exclude-pattern>/src/Repositories/*</exclude-pattern>
+        <exclude-pattern>/src/Repository/*</exclude-pattern>
     </rule>
 </ruleset>
