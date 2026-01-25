@@ -126,4 +126,4 @@ Update Zoho API client for rate limiting
 ## Questions?
 
 - Open a [discussion](https://github.com/talas9/zbooks-for-woocommerce/discussions)
-- Check the [documentation](https://github.com/talas9/zbooks-for-woocommerce/wiki)
+- Check the [documentation](https://talas9.github.io/zbooks-for-woocommerce/)

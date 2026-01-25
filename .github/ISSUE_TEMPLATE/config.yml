@@ -1,7 +1,7 @@
 blank_issues_enabled: false
 contact_links:
   - name: Documentation
-    url: https://github.com/talas9/zbooks-for-woocommerce/wiki
+    url: https://talas9.github.io/zbooks-for-woocommerce/
     about: Check the documentation for setup guides and FAQs
   - name: Discussions
     url: https://github.com/talas9/zbooks-for-woocommerce/discussions

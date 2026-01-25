@@ -232,4 +232,4 @@ Created by [talas9](https://github.com/talas9)
 ## Support
 
 - [GitHub Issues](https://github.com/talas9/zbooks-for-woocommerce/issues)
-- [Documentation](https://github.com/talas9/zbooks-for-woocommerce/wiki)
+- [Documentation](https://talas9.github.io/zbooks-for-woocommerce/)

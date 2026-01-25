@@ -128,7 +128,7 @@ Download the latest release from GitHub and upload via WordPress plugins page, o
 
 ### Where can I get help?
 
-- [Documentation](https://github.com/talas9/zbooks-for-woocommerce/wiki)
+- [Documentation](https://talas9.github.io/zbooks-for-woocommerce/)
 - [GitHub Issues](https://github.com/talas9/zbooks-for-woocommerce/issues)
 - [Discussions](https://github.com/talas9/zbooks-for-woocommerce/discussions)
 
