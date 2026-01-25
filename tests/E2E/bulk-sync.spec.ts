@@ -38,8 +38,8 @@ test.describe('Bulk Sync Page', () => {
         // If there's a table, check its structure
         const table = page.locator('#zbooks-orders-form table');
         if (await table.isVisible()) {
-            // Check table headers
-            await expect(page.locator('th:has-text("Order")')).toBeVisible();
+            // Check table headers (use exact text to avoid matching "Order Status" when checking "Order")
+            await expect(page.locator('th', { hasText: /^Order$/ })).toBeVisible();
             await expect(page.locator('th:has-text("Customer")')).toBeVisible();
             await expect(page.locator('th:has-text("Total")')).toBeVisible();
             await expect(page.locator('th:has-text("Sync Status")')).toBeVisible();

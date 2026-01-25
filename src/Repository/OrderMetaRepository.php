@@ -14,548 +14,550 @@ namespace Zbooks\Repository;
 use WC_Order;
 use Zbooks\Model\SyncStatus;
 
-defined('ABSPATH') || exit;
+defined( 'ABSPATH' ) || exit;
 
 /**
  * Repository for managing WooCommerce order meta related to Zoho sync.
  */
 class OrderMetaRepository {
 
-    /**
-     * Meta key for Zoho invoice ID.
-     */
-    public const META_INVOICE_ID = '_zbooks_zoho_invoice_id';
+	/**
+	 * Meta key for Zoho invoice ID.
+	 */
+	public const META_INVOICE_ID = '_zbooks_zoho_invoice_id';
 
-    /**
-     * Meta key for Zoho contact ID.
-     */
-    public const META_CONTACT_ID = '_zbooks_zoho_contact_id';
+	/**
+	 * Meta key for Zoho contact ID.
+	 */
+	public const META_CONTACT_ID = '_zbooks_zoho_contact_id';
 
-    /**
-     * Meta key for sync status.
-     */
-    public const META_SYNC_STATUS = '_zbooks_sync_status';
+	/**
+	 * Meta key for sync status.
+	 */
+	public const META_SYNC_STATUS = '_zbooks_sync_status';
 
-    /**
-     * Meta key for last sync attempt.
-     */
-    public const META_LAST_SYNC_ATTEMPT = '_zbooks_last_sync_attempt';
+	/**
+	 * Meta key for last sync attempt.
+	 */
+	public const META_LAST_SYNC_ATTEMPT = '_zbooks_last_sync_attempt';
 
-    /**
-     * Meta key for sync error.
-     */
-    public const META_SYNC_ERROR = '_zbooks_sync_error';
+	/**
+	 * Meta key for sync error.
+	 */
+	public const META_SYNC_ERROR = '_zbooks_sync_error';
 
-    /**
-     * Meta key for retry count.
-     */
-    public const META_RETRY_COUNT = '_zbooks_retry_count';
+	/**
+	 * Meta key for retry count.
+	 */
+	public const META_RETRY_COUNT = '_zbooks_retry_count';
 
-    /**
-     * Meta key for Zoho payment ID.
-     */
-    public const META_PAYMENT_ID = '_zbooks_zoho_payment_id';
+	/**
+	 * Meta key for Zoho payment ID.
+	 */
+	public const META_PAYMENT_ID = '_zbooks_zoho_payment_id';
 
-    /**
-     * Meta key for Zoho refund IDs (array).
-     */
-    public const META_REFUND_IDS = '_zbooks_zoho_refund_ids';
+	/**
+	 * Meta key for Zoho refund IDs (array).
+	 */
+	public const META_REFUND_IDS = '_zbooks_zoho_refund_ids';
 
-    /**
-     * Meta key for Zoho credit note IDs (array).
-     */
-    public const META_CREDIT_NOTE_IDS = '_zbooks_zoho_credit_note_ids';
+	/**
+	 * Meta key for Zoho credit note IDs (array).
+	 */
+	public const META_CREDIT_NOTE_IDS = '_zbooks_zoho_credit_note_ids';
 
-    /**
-     * Meta key for Zoho invoice number (human-readable).
-     */
-    public const META_INVOICE_NUMBER = '_zbooks_zoho_invoice_number';
+	/**
+	 * Meta key for Zoho invoice number (human-readable).
+	 */
+	public const META_INVOICE_NUMBER = '_zbooks_zoho_invoice_number';
 
-    /**
-     * Meta key for Zoho payment number (human-readable).
-     */
-    public const META_PAYMENT_NUMBER = '_zbooks_zoho_payment_number';
+	/**
+	 * Meta key for Zoho payment number (human-readable).
+	 */
+	public const META_PAYMENT_NUMBER = '_zbooks_zoho_payment_number';
 
-    /**
-     * Meta key for Zoho contact display name.
-     */
-    public const META_CONTACT_NAME = '_zbooks_zoho_contact_name';
+	/**
+	 * Meta key for Zoho contact display name.
+	 */
+	public const META_CONTACT_NAME = '_zbooks_zoho_contact_name';
 
-    /**
-     * Get Zoho invoice ID for an order.
-     *
-     * @param WC_Order $order WooCommerce order.
-     * @return string|null
-     */
-    public function get_invoice_id(WC_Order $order): ?string {
-        $value = $order->get_meta(self::META_INVOICE_ID);
-        return $value !== '' ? $value : null;
-    }
+	/**
+	 * Get Zoho invoice ID for an order.
+	 *
+	 * @param WC_Order $order WooCommerce order.
+	 * @return string|null
+	 */
+	public function get_invoice_id( WC_Order $order ): ?string {
+		$value = $order->get_meta( self::META_INVOICE_ID );
+		return $value !== '' ? $value : null;
+	}
 
-    /**
-     * Set Zoho invoice ID for an order.
-     *
-     * @param WC_Order $order      WooCommerce order.
-     * @param string   $invoice_id Zoho invoice ID.
-     */
-    public function set_invoice_id(WC_Order $order, string $invoice_id): void {
-        $order->update_meta_data(self::META_INVOICE_ID, $invoice_id);
-        $order->save();
-    }
+	/**
+	 * Set Zoho invoice ID for an order.
+	 *
+	 * @param WC_Order $order      WooCommerce order.
+	 * @param string   $invoice_id Zoho invoice ID.
+	 */
+	public function set_invoice_id( WC_Order $order, string $invoice_id ): void {
+		$order->update_meta_data( self::META_INVOICE_ID, $invoice_id );
+		$order->save();
+	}
 
-    /**
-     * Get Zoho contact ID for an order.
-     *
-     * @param WC_Order $order WooCommerce order.
-     * @return string|null
-     */
-    public function get_contact_id(WC_Order $order): ?string {
-        $value = $order->get_meta(self::META_CONTACT_ID);
-        return $value !== '' ? $value : null;
-    }
+	/**
+	 * Get Zoho contact ID for an order.
+	 *
+	 * @param WC_Order $order WooCommerce order.
+	 * @return string|null
+	 */
+	public function get_contact_id( WC_Order $order ): ?string {
+		$value = $order->get_meta( self::META_CONTACT_ID );
+		return $value !== '' ? $value : null;
+	}
 
-    /**
-     * Set Zoho contact ID for an order.
-     *
-     * @param WC_Order $order      WooCommerce order.
-     * @param string   $contact_id Zoho contact ID.
-     */
-    public function set_contact_id(WC_Order $order, string $contact_id): void {
-        $order->update_meta_data(self::META_CONTACT_ID, $contact_id);
-        $order->save();
-    }
+	/**
+	 * Set Zoho contact ID for an order.
+	 *
+	 * @param WC_Order $order      WooCommerce order.
+	 * @param string   $contact_id Zoho contact ID.
+	 */
+	public function set_contact_id( WC_Order $order, string $contact_id ): void {
+		$order->update_meta_data( self::META_CONTACT_ID, $contact_id );
+		$order->save();
+	}
 
-    /**
-     * Get sync status for an order.
-     *
-     * @param WC_Order $order WooCommerce order.
-     * @return SyncStatus|null
-     */
-    public function get_sync_status(WC_Order $order): ?SyncStatus {
-        $value = $order->get_meta(self::META_SYNC_STATUS);
+	/**
+	 * Get sync status for an order.
+	 *
+	 * @param WC_Order $order WooCommerce order.
+	 * @return SyncStatus|null
+	 */
+	public function get_sync_status( WC_Order $order ): ?SyncStatus {
+		$value = $order->get_meta( self::META_SYNC_STATUS );
 
-        if ($value === '') {
-            return null;
-        }
+		if ( $value === '' ) {
+			return null;
+		}
 
-        return SyncStatus::tryFrom($value);
-    }
+		return SyncStatus::tryFrom( $value );
+	}
 
-    /**
-     * Set sync status for an order.
-     *
-     * @param WC_Order   $order  WooCommerce order.
-     * @param SyncStatus $status Sync status.
-     */
-    public function set_sync_status(WC_Order $order, SyncStatus $status): void {
-        $order->update_meta_data(self::META_SYNC_STATUS, $status->value);
-        $order->save();
-    }
+	/**
+	 * Set sync status for an order.
+	 *
+	 * @param WC_Order   $order  WooCommerce order.
+	 * @param SyncStatus $status Sync status.
+	 */
+	public function set_sync_status( WC_Order $order, SyncStatus $status ): void {
+		$order->update_meta_data( self::META_SYNC_STATUS, $status->value );
+		$order->save();
+	}
 
-    /**
-     * Get last sync attempt time.
-     *
-     * @param WC_Order $order WooCommerce order.
-     * @return \DateTimeImmutable|null
-     */
-    public function get_last_sync_attempt(WC_Order $order): ?\DateTimeImmutable {
-        $value = $order->get_meta(self::META_LAST_SYNC_ATTEMPT);
+	/**
+	 * Get last sync attempt time.
+	 *
+	 * @param WC_Order $order WooCommerce order.
+	 * @return \DateTimeImmutable|null
+	 */
+	public function get_last_sync_attempt( WC_Order $order ): ?\DateTimeImmutable {
+		$value = $order->get_meta( self::META_LAST_SYNC_ATTEMPT );
 
-        if ($value === '') {
-            return null;
-        }
+		if ( $value === '' ) {
+			return null;
+		}
 
-        return new \DateTimeImmutable($value);
-    }
+		return new \DateTimeImmutable( $value );
+	}
 
-    /**
-     * Set last sync attempt time.
-     *
-     * @param WC_Order $order WooCommerce order.
-     */
-    public function set_last_sync_attempt(WC_Order $order): void {
-        $order->update_meta_data(
-            self::META_LAST_SYNC_ATTEMPT,
-            gmdate('Y-m-d H:i:s')
-        );
-        $order->save();
-    }
+	/**
+	 * Set last sync attempt time.
+	 *
+	 * @param WC_Order $order WooCommerce order.
+	 */
+	public function set_last_sync_attempt( WC_Order $order ): void {
+		$order->update_meta_data(
+			self::META_LAST_SYNC_ATTEMPT,
+			gmdate( 'Y-m-d H:i:s' )
+		);
+		$order->save();
+	}
 
-    /**
-     * Get sync error message.
-     *
-     * @param WC_Order $order WooCommerce order.
-     * @return string|null
-     */
-    public function get_sync_error(WC_Order $order): ?string {
-        $value = $order->get_meta(self::META_SYNC_ERROR);
-        return $value !== '' ? $value : null;
-    }
+	/**
+	 * Get sync error message.
+	 *
+	 * @param WC_Order $order WooCommerce order.
+	 * @return string|null
+	 */
+	public function get_sync_error( WC_Order $order ): ?string {
+		$value = $order->get_meta( self::META_SYNC_ERROR );
+		return $value !== '' ? $value : null;
+	}
 
-    /**
-     * Set sync error message.
-     *
-     * @param WC_Order $order WooCommerce order.
-     * @param string   $error Error message.
-     */
-    public function set_sync_error(WC_Order $order, string $error): void {
-        $order->update_meta_data(self::META_SYNC_ERROR, $error);
-        $order->save();
-    }
+	/**
+	 * Set sync error message.
+	 *
+	 * @param WC_Order $order WooCommerce order.
+	 * @param string   $error Error message.
+	 */
+	public function set_sync_error( WC_Order $order, string $error ): void {
+		$order->update_meta_data( self::META_SYNC_ERROR, $error );
+		$order->save();
+	}
 
-    /**
-     * Clear sync error.
-     *
-     * @param WC_Order $order WooCommerce order.
-     */
-    public function clear_sync_error(WC_Order $order): void {
-        $order->delete_meta_data(self::META_SYNC_ERROR);
-        $order->save();
-    }
+	/**
+	 * Clear sync error.
+	 *
+	 * @param WC_Order $order WooCommerce order.
+	 */
+	public function clear_sync_error( WC_Order $order ): void {
+		$order->delete_meta_data( self::META_SYNC_ERROR );
+		$order->save();
+	}
 
-    /**
-     * Get retry count.
-     *
-     * @param WC_Order $order WooCommerce order.
-     * @return int
-     */
-    public function get_retry_count(WC_Order $order): int {
-        $value = $order->get_meta(self::META_RETRY_COUNT);
-        return $value !== '' ? (int) $value : 0;
-    }
+	/**
+	 * Get retry count.
+	 *
+	 * @param WC_Order $order WooCommerce order.
+	 * @return int
+	 */
+	public function get_retry_count( WC_Order $order ): int {
+		$value = $order->get_meta( self::META_RETRY_COUNT );
+		return $value !== '' ? (int) $value : 0;
+	}
 
-    /**
-     * Increment retry count.
-     *
-     * @param WC_Order $order WooCommerce order.
-     * @return int New retry count.
-     */
-    public function increment_retry_count(WC_Order $order): int {
-        $count = $this->get_retry_count($order) + 1;
-        $order->update_meta_data(self::META_RETRY_COUNT, $count);
-        $order->save();
-        return $count;
-    }
+	/**
+	 * Increment retry count.
+	 *
+	 * @param WC_Order $order WooCommerce order.
+	 * @return int New retry count.
+	 */
+	public function increment_retry_count( WC_Order $order ): int {
+		$count = $this->get_retry_count( $order ) + 1;
+		$order->update_meta_data( self::META_RETRY_COUNT, $count );
+		$order->save();
+		return $count;
+	}
 
-    /**
-     * Reset retry count.
-     *
-     * @param WC_Order $order WooCommerce order.
-     */
-    public function reset_retry_count(WC_Order $order): void {
-        $order->delete_meta_data(self::META_RETRY_COUNT);
-        $order->save();
-    }
+	/**
+	 * Reset retry count.
+	 *
+	 * @param WC_Order $order WooCommerce order.
+	 */
+	public function reset_retry_count( WC_Order $order ): void {
+		$order->delete_meta_data( self::META_RETRY_COUNT );
+		$order->save();
+	}
 
-    /**
-     * Check if order has been synced.
-     *
-     * @param WC_Order $order WooCommerce order.
-     * @return bool
-     */
-    public function is_synced(WC_Order $order): bool {
-        $status = $this->get_sync_status($order);
-        return $status === SyncStatus::SYNCED || $status === SyncStatus::DRAFT;
-    }
+	/**
+	 * Check if order has been synced.
+	 *
+	 * @param WC_Order $order WooCommerce order.
+	 * @return bool
+	 */
+	public function is_synced( WC_Order $order ): bool {
+		$status = $this->get_sync_status( $order );
+		return $status === SyncStatus::SYNCED || $status === SyncStatus::DRAFT;
+	}
 
-    /**
-     * Get orders with failed sync status.
-     *
-     * @param int $limit Maximum number of orders to return.
-     * @return WC_Order[]
-     */
-    public function get_failed_orders(int $limit = 10): array {
-        $query = new \WC_Order_Query([
-            'limit' => $limit,
-            'orderby' => 'date',
-            'order' => 'ASC',
-            'meta_query' => [
-                [
-                    'key' => self::META_SYNC_STATUS,
-                    'value' => SyncStatus::FAILED->value,
-                    'compare' => '=',
-                ],
-            ],
-        ]);
+	/**
+	 * Get orders with failed sync status.
+	 *
+	 * @param int $limit Maximum number of orders to return.
+	 * @return WC_Order[]
+	 */
+	public function get_failed_orders( int $limit = 10 ): array {
+		$query = new \WC_Order_Query(
+			[
+				'limit'      => $limit,
+				'orderby'    => 'date',
+				'order'      => 'ASC',
+				'meta_query' => [
+					[
+						'key'     => self::META_SYNC_STATUS,
+						'value'   => SyncStatus::FAILED->value,
+						'compare' => '=',
+					],
+				],
+			]
+		);
 
-        return $query->get_orders();
-    }
+		return $query->get_orders();
+	}
 
-    /**
-     * Get orders pending sync in date range.
-     *
-     * @param string|null $date_from Start date (Y-m-d).
-     * @param string|null $date_to   End date (Y-m-d).
-     * @param int         $limit     Maximum number of orders.
-     * @return WC_Order[]
-     */
-    public function get_unsynced_orders(
-        ?string $date_from = null,
-        ?string $date_to = null,
-        int $limit = 100
-    ): array {
-        $args = [
-            'limit' => $limit,
-            'type' => 'shop_order', // Only regular orders, not refunds.
-            'orderby' => 'date',
-            'order' => 'ASC',
-            'meta_query' => [
-                'relation' => 'OR',
-                [
-                    'key' => self::META_SYNC_STATUS,
-                    'compare' => 'NOT EXISTS',
-                ],
-                [
-                    'key' => self::META_SYNC_STATUS,
-                    'value' => SyncStatus::PENDING->value,
-                    'compare' => '=',
-                ],
-            ],
-        ];
+	/**
+	 * Get orders pending sync in date range.
+	 *
+	 * @param string|null $date_from Start date (Y-m-d).
+	 * @param string|null $date_to   End date (Y-m-d).
+	 * @param int         $limit     Maximum number of orders.
+	 * @return WC_Order[]
+	 */
+	public function get_unsynced_orders(
+		?string $date_from = null,
+		?string $date_to = null,
+		int $limit = 100
+	): array {
+		$args = [
+			'limit'      => $limit,
+			'type'       => 'shop_order', // Only regular orders, not refunds.
+			'orderby'    => 'date',
+			'order'      => 'ASC',
+			'meta_query' => [
+				'relation' => 'OR',
+				[
+					'key'     => self::META_SYNC_STATUS,
+					'compare' => 'NOT EXISTS',
+				],
+				[
+					'key'     => self::META_SYNC_STATUS,
+					'value'   => SyncStatus::PENDING->value,
+					'compare' => '=',
+				],
+			],
+		];
 
-        if ($date_from) {
-            $args['date_created'] = '>=' . $date_from;
-        }
+		if ( $date_from ) {
+			$args['date_created'] = '>=' . $date_from;
+		}
 
-        if ($date_to) {
-            if (isset($args['date_created'])) {
-                $args['date_created'] .= '...' . $date_to;
-            } else {
-                $args['date_created'] = '<=' . $date_to;
-            }
-        }
+		if ( $date_to ) {
+			if ( isset( $args['date_created'] ) ) {
+				$args['date_created'] .= '...' . $date_to;
+			} else {
+				$args['date_created'] = '<=' . $date_to;
+			}
+		}
 
-        $query = new \WC_Order_Query($args);
-        return $query->get_orders();
-    }
+		$query = new \WC_Order_Query( $args );
+		return $query->get_orders();
+	}
 
-    /**
-     * Update all sync meta at once.
-     *
-     * @param WC_Order    $order          WooCommerce order.
-     * @param SyncStatus  $status         Sync status.
-     * @param string|null $invoice_id     Zoho invoice ID.
-     * @param string|null $contact_id     Zoho contact ID.
-     * @param string|null $error          Error message.
-     * @param string|null $invoice_number Zoho invoice number (human-readable).
-     * @param string|null $contact_name   Zoho contact display name.
-     */
-    public function update_sync_meta(
-        WC_Order $order,
-        SyncStatus $status,
-        ?string $invoice_id = null,
-        ?string $contact_id = null,
-        ?string $error = null,
-        ?string $invoice_number = null,
-        ?string $contact_name = null
-    ): void {
-        $order->update_meta_data(self::META_SYNC_STATUS, $status->value);
-        $order->update_meta_data(self::META_LAST_SYNC_ATTEMPT, gmdate('Y-m-d H:i:s'));
+	/**
+	 * Update all sync meta at once.
+	 *
+	 * @param WC_Order    $order          WooCommerce order.
+	 * @param SyncStatus  $status         Sync status.
+	 * @param string|null $invoice_id     Zoho invoice ID.
+	 * @param string|null $contact_id     Zoho contact ID.
+	 * @param string|null $error          Error message.
+	 * @param string|null $invoice_number Zoho invoice number (human-readable).
+	 * @param string|null $contact_name   Zoho contact display name.
+	 */
+	public function update_sync_meta(
+		WC_Order $order,
+		SyncStatus $status,
+		?string $invoice_id = null,
+		?string $contact_id = null,
+		?string $error = null,
+		?string $invoice_number = null,
+		?string $contact_name = null
+	): void {
+		$order->update_meta_data( self::META_SYNC_STATUS, $status->value );
+		$order->update_meta_data( self::META_LAST_SYNC_ATTEMPT, gmdate( 'Y-m-d H:i:s' ) );
 
-        if ($invoice_id !== null) {
-            $order->update_meta_data(self::META_INVOICE_ID, $invoice_id);
-        }
+		if ( $invoice_id !== null ) {
+			$order->update_meta_data( self::META_INVOICE_ID, $invoice_id );
+		}
 
-        if ($contact_id !== null) {
-            $order->update_meta_data(self::META_CONTACT_ID, $contact_id);
-        }
+		if ( $contact_id !== null ) {
+			$order->update_meta_data( self::META_CONTACT_ID, $contact_id );
+		}
 
-        if ($invoice_number !== null) {
-            $order->update_meta_data(self::META_INVOICE_NUMBER, $invoice_number);
-        }
+		if ( $invoice_number !== null ) {
+			$order->update_meta_data( self::META_INVOICE_NUMBER, $invoice_number );
+		}
 
-        if ($contact_name !== null) {
-            $order->update_meta_data(self::META_CONTACT_NAME, $contact_name);
-        }
+		if ( $contact_name !== null ) {
+			$order->update_meta_data( self::META_CONTACT_NAME, $contact_name );
+		}
 
-        if ($error !== null) {
-            $order->update_meta_data(self::META_SYNC_ERROR, $error);
-        } else {
-            $order->delete_meta_data(self::META_SYNC_ERROR);
-        }
+		if ( $error !== null ) {
+			$order->update_meta_data( self::META_SYNC_ERROR, $error );
+		} else {
+			$order->delete_meta_data( self::META_SYNC_ERROR );
+		}
 
-        if ($status !== SyncStatus::FAILED) {
-            $order->delete_meta_data(self::META_RETRY_COUNT);
-        }
+		if ( $status !== SyncStatus::FAILED ) {
+			$order->delete_meta_data( self::META_RETRY_COUNT );
+		}
 
-        $order->save();
-    }
+		$order->save();
+	}
 
-    /**
-     * Get Zoho payment ID for an order.
-     *
-     * @param WC_Order $order WooCommerce order.
-     * @return string|null
-     */
-    public function get_payment_id(WC_Order $order): ?string {
-        $value = $order->get_meta(self::META_PAYMENT_ID);
-        return $value !== '' ? $value : null;
-    }
+	/**
+	 * Get Zoho payment ID for an order.
+	 *
+	 * @param WC_Order $order WooCommerce order.
+	 * @return string|null
+	 */
+	public function get_payment_id( WC_Order $order ): ?string {
+		$value = $order->get_meta( self::META_PAYMENT_ID );
+		return $value !== '' ? $value : null;
+	}
 
-    /**
-     * Set Zoho payment ID for an order.
-     *
-     * @param WC_Order $order      WooCommerce order.
-     * @param string   $payment_id Zoho payment ID.
-     */
-    public function set_payment_id(WC_Order $order, string $payment_id): void {
-        $order->update_meta_data(self::META_PAYMENT_ID, $payment_id);
-        $order->save();
-    }
+	/**
+	 * Set Zoho payment ID for an order.
+	 *
+	 * @param WC_Order $order      WooCommerce order.
+	 * @param string   $payment_id Zoho payment ID.
+	 */
+	public function set_payment_id( WC_Order $order, string $payment_id ): void {
+		$order->update_meta_data( self::META_PAYMENT_ID, $payment_id );
+		$order->save();
+	}
 
-    /**
-     * Get Zoho invoice number for an order.
-     *
-     * @param WC_Order $order WooCommerce order.
-     * @return string|null
-     */
-    public function get_invoice_number(WC_Order $order): ?string {
-        $value = $order->get_meta(self::META_INVOICE_NUMBER);
-        return $value !== '' ? $value : null;
-    }
+	/**
+	 * Get Zoho invoice number for an order.
+	 *
+	 * @param WC_Order $order WooCommerce order.
+	 * @return string|null
+	 */
+	public function get_invoice_number( WC_Order $order ): ?string {
+		$value = $order->get_meta( self::META_INVOICE_NUMBER );
+		return $value !== '' ? $value : null;
+	}
 
-    /**
-     * Set Zoho invoice number for an order.
-     *
-     * @param WC_Order $order          WooCommerce order.
-     * @param string   $invoice_number Zoho invoice number.
-     */
-    public function set_invoice_number(WC_Order $order, string $invoice_number): void {
-        $order->update_meta_data(self::META_INVOICE_NUMBER, $invoice_number);
-        $order->save();
-    }
+	/**
+	 * Set Zoho invoice number for an order.
+	 *
+	 * @param WC_Order $order          WooCommerce order.
+	 * @param string   $invoice_number Zoho invoice number.
+	 */
+	public function set_invoice_number( WC_Order $order, string $invoice_number ): void {
+		$order->update_meta_data( self::META_INVOICE_NUMBER, $invoice_number );
+		$order->save();
+	}
 
-    /**
-     * Get Zoho payment number for an order.
-     *
-     * @param WC_Order $order WooCommerce order.
-     * @return string|null
-     */
-    public function get_payment_number(WC_Order $order): ?string {
-        $value = $order->get_meta(self::META_PAYMENT_NUMBER);
-        return $value !== '' ? $value : null;
-    }
+	/**
+	 * Get Zoho payment number for an order.
+	 *
+	 * @param WC_Order $order WooCommerce order.
+	 * @return string|null
+	 */
+	public function get_payment_number( WC_Order $order ): ?string {
+		$value = $order->get_meta( self::META_PAYMENT_NUMBER );
+		return $value !== '' ? $value : null;
+	}
 
-    /**
-     * Set Zoho payment number for an order.
-     *
-     * @param WC_Order $order          WooCommerce order.
-     * @param string   $payment_number Zoho payment number.
-     */
-    public function set_payment_number(WC_Order $order, string $payment_number): void {
-        $order->update_meta_data(self::META_PAYMENT_NUMBER, $payment_number);
-        $order->save();
-    }
+	/**
+	 * Set Zoho payment number for an order.
+	 *
+	 * @param WC_Order $order          WooCommerce order.
+	 * @param string   $payment_number Zoho payment number.
+	 */
+	public function set_payment_number( WC_Order $order, string $payment_number ): void {
+		$order->update_meta_data( self::META_PAYMENT_NUMBER, $payment_number );
+		$order->save();
+	}
 
-    /**
-     * Get Zoho contact display name for an order.
-     *
-     * @param WC_Order $order WooCommerce order.
-     * @return string|null
-     */
-    public function get_contact_name(WC_Order $order): ?string {
-        $value = $order->get_meta(self::META_CONTACT_NAME);
-        return $value !== '' ? $value : null;
-    }
+	/**
+	 * Get Zoho contact display name for an order.
+	 *
+	 * @param WC_Order $order WooCommerce order.
+	 * @return string|null
+	 */
+	public function get_contact_name( WC_Order $order ): ?string {
+		$value = $order->get_meta( self::META_CONTACT_NAME );
+		return $value !== '' ? $value : null;
+	}
 
-    /**
-     * Set Zoho contact display name for an order.
-     *
-     * @param WC_Order $order        WooCommerce order.
-     * @param string   $contact_name Zoho contact display name.
-     */
-    public function set_contact_name(WC_Order $order, string $contact_name): void {
-        $order->update_meta_data(self::META_CONTACT_NAME, $contact_name);
-        $order->save();
-    }
+	/**
+	 * Set Zoho contact display name for an order.
+	 *
+	 * @param WC_Order $order        WooCommerce order.
+	 * @param string   $contact_name Zoho contact display name.
+	 */
+	public function set_contact_name( WC_Order $order, string $contact_name ): void {
+		$order->update_meta_data( self::META_CONTACT_NAME, $contact_name );
+		$order->save();
+	}
 
-    /**
-     * Get Zoho refund IDs for an order.
-     *
-     * @param WC_Order $order WooCommerce order.
-     * @return array<int, array{refund_id: int, zoho_refund_id: string, zoho_credit_note_id: string}>
-     */
-    public function get_refund_ids(WC_Order $order): array {
-        $value = $order->get_meta(self::META_REFUND_IDS);
-        return is_array($value) ? $value : [];
-    }
+	/**
+	 * Get Zoho refund IDs for an order.
+	 *
+	 * @param WC_Order $order WooCommerce order.
+	 * @return array<int, array{refund_id: int, zoho_refund_id: string, zoho_credit_note_id: string}>
+	 */
+	public function get_refund_ids( WC_Order $order ): array {
+		$value = $order->get_meta( self::META_REFUND_IDS );
+		return is_array( $value ) ? $value : [];
+	}
 
-    /**
-     * Add a refund ID mapping.
-     *
-     * @param WC_Order $order                  WooCommerce order.
-     * @param int      $wc_refund_id           WooCommerce refund ID.
-     * @param string   $zoho_refund_id         Zoho refund ID.
-     * @param string   $zoho_credit_note_id    Zoho credit note ID.
-     * @param string   $zoho_credit_note_number Zoho credit note number (human-readable).
-     */
-    public function add_refund_id(
-        WC_Order $order,
-        int $wc_refund_id,
-        string $zoho_refund_id,
-        string $zoho_credit_note_id = '',
-        string $zoho_credit_note_number = ''
-    ): void {
-        $refunds = $this->get_refund_ids($order);
-        $refunds[] = [
-            'refund_id' => $wc_refund_id,
-            'zoho_refund_id' => $zoho_refund_id,
-            'zoho_credit_note_id' => $zoho_credit_note_id,
-            'zoho_credit_note_number' => $zoho_credit_note_number,
-            'created_at' => gmdate('Y-m-d H:i:s'),
-        ];
-        $order->update_meta_data(self::META_REFUND_IDS, $refunds);
-        $order->save();
-    }
+	/**
+	 * Add a refund ID mapping.
+	 *
+	 * @param WC_Order $order                  WooCommerce order.
+	 * @param int      $wc_refund_id           WooCommerce refund ID.
+	 * @param string   $zoho_refund_id         Zoho refund ID.
+	 * @param string   $zoho_credit_note_id    Zoho credit note ID.
+	 * @param string   $zoho_credit_note_number Zoho credit note number (human-readable).
+	 */
+	public function add_refund_id(
+		WC_Order $order,
+		int $wc_refund_id,
+		string $zoho_refund_id,
+		string $zoho_credit_note_id = '',
+		string $zoho_credit_note_number = ''
+	): void {
+		$refunds   = $this->get_refund_ids( $order );
+		$refunds[] = [
+			'refund_id'               => $wc_refund_id,
+			'zoho_refund_id'          => $zoho_refund_id,
+			'zoho_credit_note_id'     => $zoho_credit_note_id,
+			'zoho_credit_note_number' => $zoho_credit_note_number,
+			'created_at'              => gmdate( 'Y-m-d H:i:s' ),
+		];
+		$order->update_meta_data( self::META_REFUND_IDS, $refunds );
+		$order->save();
+	}
 
-    /**
-     * Get Zoho IDs for a specific WooCommerce refund.
-     *
-     * @param WC_Order $order        WooCommerce order.
-     * @param int      $wc_refund_id WooCommerce refund ID.
-     * @return array|null Refund data or null.
-     */
-    public function get_zoho_refund_for_wc_refund(WC_Order $order, int $wc_refund_id): ?array {
-        $refunds = $this->get_refund_ids($order);
+	/**
+	 * Get Zoho IDs for a specific WooCommerce refund.
+	 *
+	 * @param WC_Order $order        WooCommerce order.
+	 * @param int      $wc_refund_id WooCommerce refund ID.
+	 * @return array|null Refund data or null.
+	 */
+	public function get_zoho_refund_for_wc_refund( WC_Order $order, int $wc_refund_id ): ?array {
+		$refunds = $this->get_refund_ids( $order );
 
-        foreach ($refunds as $refund) {
-            if ((int) $refund['refund_id'] === $wc_refund_id) {
-                return $refund;
-            }
-        }
+		foreach ( $refunds as $refund ) {
+			if ( (int) $refund['refund_id'] === $wc_refund_id ) {
+				return $refund;
+			}
+		}
 
-        return null;
-    }
+		return null;
+	}
 
-    /**
-     * Check if order has payment recorded.
-     *
-     * @param WC_Order $order WooCommerce order.
-     * @return bool
-     */
-    public function has_payment(WC_Order $order): bool {
-        return $this->get_payment_id($order) !== null;
-    }
+	/**
+	 * Check if order has payment recorded.
+	 *
+	 * @param WC_Order $order WooCommerce order.
+	 * @return bool
+	 */
+	public function has_payment( WC_Order $order ): bool {
+		return $this->get_payment_id( $order ) !== null;
+	}
 
-    /**
-     * Get complete Zoho sync data for an order.
-     *
-     * @param WC_Order $order WooCommerce order.
-     * @return array
-     */
-    public function get_all_zoho_data(WC_Order $order): array {
-        return [
-            'invoice_id' => $this->get_invoice_id($order),
-            'invoice_number' => $this->get_invoice_number($order),
-            'contact_id' => $this->get_contact_id($order),
-            'contact_name' => $this->get_contact_name($order),
-            'payment_id' => $this->get_payment_id($order),
-            'payment_number' => $this->get_payment_number($order),
-            'refunds' => $this->get_refund_ids($order),
-            'sync_status' => $this->get_sync_status($order)?->value,
-            'last_sync_attempt' => $this->get_last_sync_attempt($order)?->format('Y-m-d H:i:s'),
-            'sync_error' => $this->get_sync_error($order),
-            'retry_count' => $this->get_retry_count($order),
-        ];
-    }
+	/**
+	 * Get complete Zoho sync data for an order.
+	 *
+	 * @param WC_Order $order WooCommerce order.
+	 * @return array
+	 */
+	public function get_all_zoho_data( WC_Order $order ): array {
+		return [
+			'invoice_id'        => $this->get_invoice_id( $order ),
+			'invoice_number'    => $this->get_invoice_number( $order ),
+			'contact_id'        => $this->get_contact_id( $order ),
+			'contact_name'      => $this->get_contact_name( $order ),
+			'payment_id'        => $this->get_payment_id( $order ),
+			'payment_number'    => $this->get_payment_number( $order ),
+			'refunds'           => $this->get_refund_ids( $order ),
+			'sync_status'       => $this->get_sync_status( $order )?->value,
+			'last_sync_attempt' => $this->get_last_sync_attempt( $order )?->format( 'Y-m-d H:i:s' ),
+			'sync_error'        => $this->get_sync_error( $order ),
+			'retry_count'       => $this->get_retry_count( $order ),
+		];
+	}
 }
