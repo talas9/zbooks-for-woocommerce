@@ -696,3 +696,502 @@
         padding-left: 0;
     }
 }
+
+/* ==========================================================================
+   Product Meta Box (ProductMetaBox.php)
+   ========================================================================== */
+
+.zbooks-product-meta-box .zbooks-status {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+}
+
+.zbooks-product-meta-box .zbooks-status-synced {
+    background: #d4edda;
+    color: #155724;
+}
+
+.zbooks-product-meta-box .zbooks-status-none {
+    background: #f0f0f1;
+    color: #50575e;
+}
+
+.zbooks-product-meta-box hr {
+    margin: 12px 0;
+}
+
+.zbooks-product-meta-box .button {
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+
+/* ==========================================================================
+   Log Viewer (LogViewer.php)
+   ========================================================================== */
+
+.zbooks-log-level {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.zbooks-level-error {
+    background: #d63638;
+    color: #fff;
+}
+
+.zbooks-level-warning {
+    background: #dba617;
+    color: #fff;
+}
+
+.zbooks-level-info {
+    background: #00a32a;
+    color: #fff;
+}
+
+.zbooks-level-debug {
+    background: #72aee6;
+    color: #fff;
+}
+
+.zbooks-log-error td {
+    background: #fcf0f1 !important;
+}
+
+.zbooks-log-warning td {
+    background: #fcf9e8 !important;
+}
+
+.zbooks-log-row {
+    cursor: pointer;
+}
+
+.zbooks-log-row:hover td {
+    background: #f0f6fc !important;
+}
+
+.zbooks-log-message {
+    max-width: 400px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Log Viewer Modal */
+.zbooks-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 100000;
+}
+
+.zbooks-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+}
+
+.zbooks-modal-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
+    width: 90%;
+    max-width: 700px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.zbooks-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #dcdcde;
+}
+
+.zbooks-modal-header h2 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.zbooks-modal-close {
+    background: none;
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+    color: #666;
+    line-height: 1;
+    padding: 0 5px;
+}
+
+.zbooks-modal-close:hover {
+    color: #d63638;
+}
+
+.zbooks-modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.zbooks-detail-row {
+    margin-bottom: 15px;
+}
+
+.zbooks-detail-row label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: #1d2327;
+}
+
+.zbooks-detail-row span,
+.zbooks-detail-row div {
+    color: #50575e;
+}
+
+#zbooks-modal-message {
+    background: #f6f7f7;
+    padding: 10px 15px;
+    border-radius: 4px;
+    word-break: break-word;
+}
+
+#zbooks-modal-context {
+    background: #1d2327;
+    color: #50fa7b;
+    padding: 15px;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-size: 12px;
+    line-height: 1.5;
+    margin: 0;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.zbooks-modal-footer {
+    padding: 15px 20px;
+    border-top: 1px solid #dcdcde;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* ==========================================================================
+   Field Mapping Page (FieldMappingPage.php)
+   ========================================================================== */
+
+.zbooks-mapping-section {
+    margin: 20px 0;
+}
+
+.zbooks-mapping-row select {
+    width: 100%;
+}
+
+#zbooks-mapping-spinner {
+    float: none;
+    margin-left: 10px;
+}
+
+#zbooks-mapping-spinner.is-active {
+    visibility: visible;
+}
+
+.zbooks-no-mappings td {
+    font-style: italic;
+    color: #666;
+}
+
+/* ==========================================================================
+   Reconciliation Page (ReconciliationPage.php)
+   ========================================================================== */
+
+.zbooks-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.zbooks-badge-missing_in_zoho {
+    background: #ffeaea;
+    color: #dc3545;
+}
+
+.zbooks-badge-missing_in_wc {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.zbooks-badge-amount_mismatch {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.zbooks-badge-payment_mismatch {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.zbooks-badge-refund_mismatch {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.zbooks-badge-status_mismatch {
+    background: #e7f3ff;
+    color: #0056b3;
+}
+
+/* Reconciliation status colors (extend existing .zbooks-status) */
+.zbooks-status-completed {
+    color: #28a745;
+}
+
+.zbooks-status-running {
+    color: #ffc107;
+}
+
+/* Summary Cards */
+.zbooks-summary-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.zbooks-card {
+    background: #fff;
+    padding: 20px 16px;
+    border-radius: 12px;
+    text-align: center;
+    border: 1px solid #e0e0e0;
+    transition: all 0.3s ease;
+    cursor: default;
+}
+
+.zbooks-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.zbooks-card-value {
+    display: block;
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 8px;
+}
+
+.zbooks-card-label {
+    display: block;
+    font-size: 12px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+}
+
+.zbooks-card-desc {
+    display: block;
+    font-size: 11px;
+    color: #999;
+    margin-top: 6px;
+    font-style: italic;
+}
+
+.zbooks-card-neutral {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-color: #dee2e6;
+}
+
+.zbooks-card-neutral .zbooks-card-value {
+    color: #495057;
+}
+
+.zbooks-card-success {
+    background: linear-gradient(135deg, #d4edda 0%, #b8e0c4 100%);
+    border-color: #a3d9b1;
+}
+
+.zbooks-card-success .zbooks-card-value {
+    color: #155724;
+}
+
+.zbooks-card-success:hover {
+    border-color: #28a745;
+}
+
+.zbooks-card-danger {
+    background: linear-gradient(135deg, #f8d7da 0%, #f1aeb5 100%);
+    border-color: #f1aeb5;
+}
+
+.zbooks-card-danger .zbooks-card-value {
+    color: #721c24;
+}
+
+.zbooks-card-danger:hover {
+    border-color: #dc3545;
+}
+
+.zbooks-card-warning {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%);
+    border-color: #ffc107;
+}
+
+.zbooks-card-warning .zbooks-card-value {
+    color: #856404;
+}
+
+.zbooks-card-warning:hover {
+    border-color: #e0a800;
+}
+
+.zbooks-card-info {
+    background: linear-gradient(135deg, #cfe2ff 0%, #9ec5fe 100%);
+    border-color: #9ec5fe;
+}
+
+.zbooks-card-info .zbooks-card-value {
+    color: #084298;
+}
+
+.zbooks-card-info:hover {
+    border-color: #0d6efd;
+}
+
+/* Reconciliation Modal Styles */
+.zbooks-modal h2 {
+    margin-top: 0;
+}
+
+.zbooks-modal h3 {
+    margin-top: 20px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 8px;
+}
+
+.zbooks-modal-summary .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-top: 15px;
+}
+
+.zbooks-modal-summary .summary-item {
+    background: #fff;
+    padding: 16px 12px;
+    border-radius: 8px;
+    text-align: center;
+    border: 1px solid #e0e0e0;
+    transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.zbooks-modal-summary .summary-item:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
+}
+
+.zbooks-modal-summary .summary-item .value {
+    display: block;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 8px;
+}
+
+.zbooks-modal-summary .summary-item .label {
+    display: block;
+    font-size: 11px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.zbooks-modal-summary .summary-item .desc {
+    display: block;
+    font-size: 10px;
+    color: #888;
+    margin-top: 6px;
+    font-style: italic;
+}
+
+.zbooks-modal-summary .summary-item.neutral {
+    background: #f8f9fa;
+    border-color: #dee2e6;
+}
+
+.zbooks-modal-summary .summary-item.neutral .value {
+    color: #495057;
+}
+
+.zbooks-modal-summary .summary-item.success {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    border-color: #b1dfbb;
+}
+
+.zbooks-modal-summary .summary-item.success .value {
+    color: #155724;
+}
+
+.zbooks-modal-summary .summary-item.danger {
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    border-color: #f1b0b7;
+}
+
+.zbooks-modal-summary .summary-item.danger .value {
+    color: #721c24;
+}
+
+.zbooks-modal-summary .summary-item.warning {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%);
+    border-color: #ffc107;
+}
+
+.zbooks-modal-summary .summary-item.warning .value {
+    color: #856404;
+}
+
+.zbooks-modal-summary .summary-item.info {
+    background: linear-gradient(135deg, #e7f3ff 0%, #cce5ff 100%);
+    border-color: #b8daff;
+}
+
+.zbooks-modal-summary .summary-item.info .value {
+    color: #004085;
+}
+
+@media (max-width: 768px) {
+    .zbooks-modal-summary .summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.zbooks-modal-discrepancies {
+    margin-top: 20px;
+}
+
+.zbooks-modal-discrepancies table {
+    margin-top: 10px;
+}

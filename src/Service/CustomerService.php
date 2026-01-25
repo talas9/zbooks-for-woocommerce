@@ -279,6 +279,17 @@ class CustomerService {
 	}
 
 	/**
+	 * Verify that a contact exists in Zoho Books.
+	 *
+	 * @param string $contact_id Zoho contact ID.
+	 * @return bool True if contact exists, false otherwise.
+	 */
+	public function verify_contact_exists( string $contact_id ): bool {
+		$contact = $this->get_contact( $contact_id );
+		return $contact !== null;
+	}
+
+	/**
 	 * Create a new Zoho contact from WooCommerce order.
 	 *
 	 * @param WC_Order $order WooCommerce order.

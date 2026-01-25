@@ -105,6 +105,54 @@ class SyncOrchestrator {
 	}
 
 	/**
+	 * Acquire a sync lock for an order.
+	 *
+	 * @param int $order_id Order ID.
+	 * @return bool True if lock acquired, false if already locked.
+	 */
+	private function acquire_sync_lock( int $order_id ): bool {
+		$lock_key = 'zbooks_sync_lock_' . $order_id;
+		if ( get_transient( $lock_key ) ) {
+			return false;
+		}
+		set_transient( $lock_key, time(), 60 );
+		return true;
+	}
+
+	/**
+	 * Release a sync lock for an order.
+	 *
+	 * @param int $order_id Order ID.
+	 */
+	private function release_sync_lock( int $order_id ): void {
+		delete_transient( 'zbooks_sync_lock_' . $order_id );
+	}
+
+	/**
+	 * Acquire a payment lock for an order.
+	 *
+	 * @param int $order_id Order ID.
+	 * @return bool True if lock acquired, false if already locked.
+	 */
+	private function acquire_payment_lock( int $order_id ): bool {
+		$lock_key = 'zbooks_payment_lock_' . $order_id;
+		if ( get_transient( $lock_key ) ) {
+			return false;
+		}
+		set_transient( $lock_key, time(), 30 );
+		return true;
+	}
+
+	/**
+	 * Release a payment lock for an order.
+	 *
+	 * @param int $order_id Order ID.
+	 */
+	private function release_payment_lock( int $order_id ): void {
+		delete_transient( 'zbooks_payment_lock_' . $order_id );
+	}
+
+	/**
 	 * Sync an order to Zoho Books.
 	 *
 	 * @param WC_Order $order    WooCommerce order.
@@ -125,30 +173,42 @@ class SyncOrchestrator {
 			]
 		);
 
-		// Check if already synced.
-		$existing_invoice_id = $this->repository->get_invoice_id( $order );
-		if ( $existing_invoice_id !== null ) {
-			$this->logger->debug(
-				'Order already synced',
+		// Acquire sync lock to prevent duplicate invoices.
+		if ( ! $this->acquire_sync_lock( $order_id ) ) {
+			$this->logger->info(
+				'Sync already in progress for order',
 				[
 					'order_id'     => $order_id,
 					'order_number' => $order_number,
-					'invoice_id'   => $existing_invoice_id,
 				]
 			);
-
-			return SyncResult::success(
-				invoice_id: $existing_invoice_id,
-				contact_id: $this->repository->get_contact_id( $order ),
-				status: $this->repository->get_sync_status( $order ) ?? SyncStatus::SYNCED
-			);
+			return SyncResult::pending( __( 'Sync already in progress', 'zbooks-for-woocommerce' ) );
 		}
 
-		// Update status to pending.
-		$this->repository->set_sync_status( $order, SyncStatus::PENDING );
-		$this->repository->set_last_sync_attempt( $order );
-
 		try {
+			// Check if already synced.
+			$existing_invoice_id = $this->repository->get_invoice_id( $order );
+			if ( $existing_invoice_id !== null ) {
+				$this->logger->debug(
+					'Order already synced',
+					[
+						'order_id'     => $order_id,
+						'order_number' => $order_number,
+						'invoice_id'   => $existing_invoice_id,
+					]
+				);
+
+				return SyncResult::success(
+					invoice_id: $existing_invoice_id,
+					contact_id: $this->repository->get_contact_id( $order ),
+					status: $this->repository->get_sync_status( $order ) ?? SyncStatus::SYNCED
+				);
+			}
+
+			// Update status to pending.
+			$this->repository->set_sync_status( $order, SyncStatus::PENDING );
+			$this->repository->set_last_sync_attempt( $order );
+
 			// Step 1: Find or create contact.
 			$contact_id = $this->get_or_create_contact( $order );
 
@@ -254,6 +314,73 @@ class SyncOrchestrator {
 			do_action( 'zbooks_order_sync_failed', $order, $result );
 
 			return $result;
+		} finally {
+			$this->release_sync_lock( $order_id );
+		}
+	}
+
+	/**
+	 * Re-sync an order to update the existing Zoho invoice.
+	 *
+	 * If the order has already been synced, updates the existing invoice.
+	 * If not synced, creates a new invoice.
+	 *
+	 * @param WC_Order $order    WooCommerce order.
+	 * @param bool     $as_draft Create invoice as draft (only for new invoices).
+	 * @return SyncResult
+	 */
+	public function resync_order( WC_Order $order, bool $as_draft = false ): SyncResult {
+		$order_id = $order->get_id();
+		$invoice_id = $this->repository->get_invoice_id( $order );
+
+		if ( ! $invoice_id ) {
+			// Not synced yet, create new invoice.
+			return $this->sync_order( $order, $as_draft );
+		}
+
+		// Acquire sync lock.
+		if ( ! $this->acquire_sync_lock( $order_id ) ) {
+			return SyncResult::pending( __( 'Sync already in progress', 'zbooks-for-woocommerce' ) );
+		}
+
+		try {
+			$this->logger->info(
+				'Re-syncing order (updating existing invoice)',
+				[
+					'order_id'   => $order_id,
+					'invoice_id' => $invoice_id,
+				]
+			);
+
+			// Get or verify contact.
+			$contact_id = $this->get_or_create_contact( $order );
+
+			// Update the existing invoice.
+			$result = $this->invoice_service->update_invoice( $order, $invoice_id, $contact_id );
+
+			if ( $result['success'] ) {
+				$this->repository->set_last_sync_attempt( $order );
+
+				$this->note_service->add_order_note(
+					$order,
+					sprintf(
+						/* translators: %s: Invoice ID */
+						__( 'Zoho invoice %s has been updated.', 'zbooks-for-woocommerce' ),
+						$invoice_id
+					)
+				);
+
+				return SyncResult::success(
+					invoice_id: $invoice_id,
+					contact_id: $contact_id,
+					status: $this->repository->get_sync_status( $order ) ?? \Zbooks\Model\SyncStatus::SYNCED,
+					data: [ 'updated' => true ]
+				);
+			}
+
+			return SyncResult::failure( $result['error'] ?? __( 'Failed to update invoice', 'zbooks-for-woocommerce' ) );
+		} finally {
+			$this->release_sync_lock( $order_id );
 		}
 	}
 
@@ -268,7 +395,20 @@ class SyncOrchestrator {
 		// Check if we already have a contact ID.
 		$existing_contact_id = $this->repository->get_contact_id( $order );
 		if ( $existing_contact_id !== null ) {
-			return $existing_contact_id;
+			// Verify the contact still exists in Zoho.
+			if ( $this->customer_service->verify_contact_exists( $existing_contact_id ) ) {
+				return $existing_contact_id;
+			}
+
+			// Contact was deleted in Zoho - clear stale reference.
+			$this->logger->warning(
+				'Cached contact no longer exists in Zoho, recreating',
+				[
+					'order_id'   => $order->get_id(),
+					'contact_id' => $existing_contact_id,
+				]
+			);
+			$this->repository->clear_contact_id( $order );
 		}
 
 		return $this->customer_service->find_or_create_contact( $order );
@@ -419,8 +559,10 @@ class SyncOrchestrator {
 		$retry_count = $this->repository->get_retry_count( $order );
 		$base_delay  = (int) $settings['backoff_minutes'] * 60;
 
-		// Exponential backoff: 15min, 30min, 1hr, 2hr, 4hr, ...
-		return $base_delay * pow( 2, $retry_count );
+		// Exponential backoff: 15min, 30min, 1hr, 2hr, 4hr, ... capped at 24 hours.
+		$max_delay = 24 * 60 * 60; // 24 hours in seconds.
+		$delay = $base_delay * pow( 2, min( $retry_count, 7 ) ); // Cap exponent at 2^7 = 128x.
+		return min( $delay, $max_delay );
 	}
 
 	/**
@@ -591,6 +733,21 @@ class SyncOrchestrator {
 			];
 		}
 
+		// Acquire payment lock to prevent duplicate payments.
+		if ( ! $this->acquire_payment_lock( $order_id ) ) {
+			$this->logger->info(
+				'Payment already being processed for order',
+				[
+					'order_id' => $order_id,
+				]
+			);
+			return [
+				'success'    => false,
+				'payment_id' => null,
+				'error'      => __( 'Payment already being processed', 'zbooks-for-woocommerce' ),
+			];
+		}
+
 		// Check if order has been synced.
 		$invoice_id = $this->repository->get_invoice_id( $order );
 		if ( ! $invoice_id ) {
@@ -600,6 +757,7 @@ class SyncOrchestrator {
 					'order_id' => $order_id,
 				]
 			);
+			$this->release_payment_lock( $order_id );
 			return [
 				'success'    => false,
 				'payment_id' => null,
@@ -617,6 +775,7 @@ class SyncOrchestrator {
 					'payment_id' => $existing_payment_id,
 				]
 			);
+			$this->release_payment_lock( $order_id );
 			return [
 				'success'    => true,
 				'payment_id' => $existing_payment_id,
@@ -631,6 +790,9 @@ class SyncOrchestrator {
 
 		if ( $result['success'] && $result['payment_id'] ) {
 			$this->repository->set_payment_id( $order, $result['payment_id'] );
+
+			// Refresh invoice status after payment.
+			$this->refresh_invoice_status( $order );
 
 			// Save payment number if available.
 			$payment_number = $result['payment_number'] ?? null;
@@ -659,7 +821,39 @@ class SyncOrchestrator {
 			do_action( 'zbooks_payment_applied', $order, $result['payment_id'] );
 		}
 
+		$this->release_payment_lock( $order_id );
+
 		return $result;
+	}
+
+	/**
+	 * Refresh invoice status from Zoho Books.
+	 *
+	 * Fetches the current invoice status from Zoho and updates the order meta.
+	 *
+	 * @param WC_Order $order WooCommerce order.
+	 * @return string|null Updated invoice status or null if not synced.
+	 */
+	public function refresh_invoice_status( WC_Order $order ): ?string {
+		$invoice_id = $this->repository->get_invoice_id( $order );
+		if ( ! $invoice_id ) {
+			return null;
+		}
+
+		$status = $this->invoice_service->get_invoice_status( $invoice_id );
+		if ( $status !== null ) {
+			$this->repository->set_invoice_status( $order, $status );
+			$this->logger->debug(
+				'Invoice status refreshed',
+				[
+					'order_id'   => $order->get_id(),
+					'invoice_id' => $invoice_id,
+					'status'     => $status,
+				]
+			);
+		}
+
+		return $status;
 	}
 
 	/**
@@ -773,39 +967,60 @@ class SyncOrchestrator {
 	 * Sync order and apply payment if order is paid.
 	 *
 	 * Convenience method that syncs the order and applies payment in one call.
+	 * Returns a detailed result array showing both sync and payment status.
 	 *
 	 * @param WC_Order $order       WooCommerce order.
 	 * @param bool     $as_draft    Create invoice as draft.
 	 * @param bool     $with_payment Apply payment if order is paid.
-	 * @return SyncResult
+	 * @return array{sync: SyncResult, payment: ?array, overall_success: bool, error: ?string}
 	 */
 	public function sync_order_with_payment(
 		WC_Order $order,
 		bool $as_draft = false,
 		bool $with_payment = true
-	): SyncResult {
+	): array {
 		// First sync the order.
-		$result = $this->sync_order( $order, $as_draft );
+		$sync_result = $this->sync_order( $order, $as_draft );
 
-		if ( ! $result->success ) {
+		$result = [
+			'sync'            => $sync_result,
+			'payment'         => null,
+			'overall_success' => $sync_result->success,
+			'error'           => $sync_result->error,
+		];
+
+		if ( ! $sync_result->success ) {
 			return $result;
 		}
 
 		// Apply payment if order is paid and not a draft.
 		if ( $with_payment && ! $as_draft && $order->is_paid() ) {
-			$payment_result = $this->apply_payment( $order );
+			$payment_result      = $this->apply_payment( $order );
+			$result['payment'] = $payment_result;
 
-			if ( $payment_result['success'] && $payment_result['payment_id'] ) {
-				// Include payment ID in result data.
-				$data               = $result->data ?? [];
-				$data['payment_id'] = $payment_result['payment_id'];
-
-				return SyncResult::success(
-					invoice_id: $result->invoice_id,
-					contact_id: $result->contact_id,
-					status: $result->status,
-					data: $data
+			// Mark overall as failed if payment failed (but not if already paid).
+			if ( ! $payment_result['success'] && $payment_result['payment_id'] === null ) {
+				$result['overall_success'] = false;
+				$result['error']           = sprintf(
+					/* translators: %s: Payment error message */
+					__( 'Invoice synced but payment failed: %s', 'zbooks-for-woocommerce' ),
+					$payment_result['error'] ?? __( 'Unknown error', 'zbooks-for-woocommerce' )
 				);
+
+				// Store payment failure in order meta for visibility.
+				$this->repository->set_payment_error( $order, $payment_result['error'] ?? '' );
+
+				$this->logger->warning(
+					'Sync completed but payment failed',
+					[
+						'order_id'   => $order->get_id(),
+						'invoice_id' => $sync_result->invoice_id,
+						'error'      => $payment_result['error'],
+					]
+				);
+			} elseif ( $payment_result['success'] ) {
+				// Clear any previous payment error on success.
+				$this->repository->clear_payment_error( $order );
 			}
 		}
 

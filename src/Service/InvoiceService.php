@@ -92,19 +92,38 @@ class InvoiceService {
 
 		// Check for existing invoice by order number (checks both reference_number and invoice_number).
 		$existing_id = $this->find_invoice_by_order_number( $order_number );
-		if ( $existing_id !== null ) {
-			$this->logger->info(
-				'Invoice already exists',
-				[
-					'order_id'   => $order->get_id(),
-					'invoice_id' => $existing_id,
-				]
-			);
-			return SyncResult::success(
-				invoice_id: $existing_id,
-				contact_id: $contact_id,
-				status: SyncStatus::SYNCED
-			);
+		if ( ! empty( $existing_id ) ) {
+			// Verify the existing invoice belongs to the same customer to avoid collision.
+			$existing_invoice = $this->get_invoice( $existing_id );
+			$existing_customer_id = $existing_invoice['customer_id'] ?? null;
+
+			if ( $existing_customer_id === $contact_id ) {
+				$this->logger->info(
+					'Invoice already exists',
+					[
+						'order_id'   => $order->get_id(),
+						'invoice_id' => $existing_id,
+					]
+				);
+				return SyncResult::success(
+					invoice_id: $existing_id,
+					contact_id: $contact_id,
+					status: SyncStatus::SYNCED
+				);
+			} else {
+				// Different customer - this is a collision with an old invoice.
+				$this->logger->warning(
+					'Invoice with same order number exists but for different customer - creating new invoice',
+					[
+						'order_id'            => $order->get_id(),
+						'order_number'        => $order_number,
+						'existing_invoice_id' => $existing_id,
+						'existing_customer'   => $existing_customer_id,
+						'new_customer'        => $contact_id,
+					]
+				);
+				// Continue to create a new invoice below.
+			}
 		}
 
 		$invoice_data = $this->map_order_to_invoice( $order, $contact_id );
@@ -142,9 +161,22 @@ class InvoiceService {
 			$invoice_id       = (string) ( $invoice_response['invoice_id'] ?? '' );
 
 			// Mark as sent if not draft and setting is enabled.
+			$marked_as_sent = false;
+			$mark_as_sent_error = null;
 			$should_mark_sent = ! $as_draft && $this->should_mark_as_sent();
 			if ( $should_mark_sent ) {
-				$this->mark_as_sent( $invoice_id );
+				$marked_as_sent = $this->mark_as_sent( $invoice_id );
+				if ( ! $marked_as_sent ) {
+					$mark_as_sent_error = __( 'Failed to mark invoice as sent', 'zbooks-for-woocommerce' );
+					$this->logger->warning(
+						'Invoice created but mark_as_sent failed',
+						[
+							'order_id'     => $order->get_id(),
+							'order_number' => $order_number,
+							'invoice_id'   => $invoice_id,
+						]
+					);
+				}
 			}
 
 			$status = $as_draft ? SyncStatus::DRAFT : SyncStatus::SYNCED;
@@ -159,11 +191,18 @@ class InvoiceService {
 				]
 			);
 
+			// Merge response data with mark_as_sent status.
+			$result_data = is_array( $response ) ? $response : [];
+			$result_data['marked_as_sent'] = $marked_as_sent;
+			if ( $mark_as_sent_error ) {
+				$result_data['mark_as_sent_error'] = $mark_as_sent_error;
+			}
+
 			return SyncResult::success(
 				invoice_id: $invoice_id,
 				contact_id: $contact_id,
 				status: $status,
-				data: $response
+				data: $result_data
 			);
 		} catch ( \Exception $e ) {
 			$this->logger->error(
@@ -178,6 +217,70 @@ class InvoiceService {
 			);
 
 			return SyncResult::failure( $e->getMessage() );
+		}
+	}
+
+	/**
+	 * Update an existing invoice in Zoho Books.
+	 *
+	 * @param WC_Order $order      WooCommerce order.
+	 * @param string   $invoice_id Zoho invoice ID.
+	 * @param string   $contact_id Zoho contact ID.
+	 * @return array{success: bool, error: ?string}
+	 */
+	public function update_invoice( WC_Order $order, string $invoice_id, string $contact_id ): array {
+		$order_number = $order->get_order_number();
+
+		$this->logger->info(
+			'Updating invoice',
+			[
+				'order_id'     => $order->get_id(),
+				'order_number' => $order_number,
+				'invoice_id'   => $invoice_id,
+			]
+		);
+
+		try {
+			$invoice_data = $this->map_order_to_invoice( $order, $contact_id );
+
+			$response = $this->client->request(
+				function ( $client ) use ( $invoice_id, $invoice_data ) {
+					return $client->invoices->update( $invoice_id, $invoice_data );
+				},
+				[
+					'endpoint'     => 'invoices.update',
+					'invoice_id'   => $invoice_id,
+					'order_id'     => $order->get_id(),
+					'order_number' => $order_number,
+				]
+			);
+
+			$this->logger->info(
+				'Invoice updated successfully',
+				[
+					'order_id'     => $order->get_id(),
+					'invoice_id'   => $invoice_id,
+				]
+			);
+
+			return [
+				'success' => true,
+				'error'   => null,
+			];
+		} catch ( \Exception $e ) {
+			$this->logger->error(
+				'Failed to update invoice',
+				[
+					'order_id'   => $order->get_id(),
+					'invoice_id' => $invoice_id,
+					'error'      => $e->getMessage(),
+				]
+			);
+
+			return [
+				'success' => false,
+				'error'   => $e->getMessage(),
+			];
 		}
 	}
 
@@ -225,7 +328,9 @@ class InvoiceService {
 			);
 
 			if ( ! empty( $invoices ) ) {
-				return (string) $invoices[0]['invoice_id'];
+				// API returns associative array keyed by invoice_id, use reset() to get first element.
+				$first_invoice = reset( $invoices );
+				return (string) ( $first_invoice['invoice_id'] ?? '' );
 			}
 		} catch ( \Exception $e ) {
 			$this->logger->warning(
@@ -264,7 +369,9 @@ class InvoiceService {
 			);
 
 			if ( ! empty( $invoices ) ) {
-				return (string) $invoices[0]['invoice_id'];
+				// API returns associative array keyed by invoice_id, use reset() to get first element.
+				$first_invoice = reset( $invoices );
+				return (string) ( $first_invoice['invoice_id'] ?? '' );
 			}
 		} catch ( \Exception $e ) {
 			$this->logger->warning(
@@ -522,6 +629,55 @@ class InvoiceService {
 				]
 			);
 			return null;
+		}
+	}
+
+	/**
+	 * Get invoice status from Zoho.
+	 *
+	 * @param string $invoice_id Zoho invoice ID.
+	 * @return string|null Invoice status (draft/sent/paid/partially_paid/overdue/void) or null.
+	 */
+	public function get_invoice_status( string $invoice_id ): ?string {
+		$invoice = $this->get_invoice( $invoice_id );
+		return $invoice['status'] ?? null;
+	}
+
+	/**
+	 * Void an invoice in Zoho Books.
+	 *
+	 * @param string $invoice_id Zoho invoice ID.
+	 * @return bool True on success.
+	 */
+	public function void_invoice( string $invoice_id ): bool {
+		try {
+			$this->client->request(
+				function ( $client ) use ( $invoice_id ) {
+					return $client->invoices->markAsVoid( $invoice_id );
+				},
+				[
+					'endpoint'   => 'invoices.markAsVoid',
+					'invoice_id' => $invoice_id,
+				]
+			);
+
+			$this->logger->info(
+				'Invoice voided',
+				[
+					'invoice_id' => $invoice_id,
+				]
+			);
+
+			return true;
+		} catch ( \Exception $e ) {
+			$this->logger->error(
+				'Failed to void invoice',
+				[
+					'invoice_id' => $invoice_id,
+					'error'      => $e->getMessage(),
+				]
+			);
+			return false;
 		}
 	}
 }

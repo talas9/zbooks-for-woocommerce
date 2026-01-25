@@ -88,24 +88,58 @@ class PaymentService {
 			];
 		}
 
-		// Check if invoice is already paid.
-		$invoice = $this->get_invoice_status( $invoice_id );
-		if ( $invoice && $invoice['status'] === 'paid' ) {
-			$this->logger->debug(
-				'Invoice already paid',
+		// Validate invoice can accept payments.
+		$validation = $this->validate_invoice_for_payment( $invoice_id );
+		if ( ! $validation['valid'] ) {
+			$log_level = $validation['already_paid'] ? 'debug' : 'warning';
+			$this->logger->$log_level(
+				'Invoice validation failed for payment',
 				[
-					'order_id'   => $order_id,
-					'invoice_id' => $invoice_id,
+					'order_id'     => $order_id,
+					'invoice_id'   => $invoice_id,
+					'error'        => $validation['error'],
+					'already_paid' => $validation['already_paid'],
 				]
 			);
+
+			// Return success if already paid (idempotent behavior).
+			if ( $validation['already_paid'] ) {
+				return [
+					'success'    => true,
+					'payment_id' => null,
+					'error'      => null,
+				];
+			}
+
 			return [
-				'success'    => true,
+				'success'    => false,
 				'payment_id' => null,
-				'error'      => null,
+				'error'      => $validation['error'],
 			];
 		}
 
-		$payment_data = $this->map_order_to_payment( $order, $invoice_id, $contact_id );
+		// Use the lesser of order total and invoice balance.
+		$invoice = $validation['invoice'];
+		$invoice_balance = (float) ( $invoice['balance'] ?? $amount );
+		$payment_amount = min( $amount, $invoice_balance );
+
+		// Warn if amounts don't match.
+		if ( abs( $amount - $invoice_balance ) > 0.01 ) {
+			$this->logger->warning(
+				'Payment amount mismatch - using invoice balance',
+				[
+					'order_id'       => $order_id,
+					'order_total'    => $amount,
+					'invoice_balance' => $invoice_balance,
+					'applying'       => $payment_amount,
+				]
+			);
+		}
+
+		// Use the calculated payment amount for the rest of the method.
+		$amount = $payment_amount;
+
+		$payment_data = $this->map_order_to_payment( $order, $invoice_id, $contact_id, $amount );
 
 		// Get actual bank charges from order meta (set by payment gateways).
 		$bank_charges = $this->get_order_bank_charges( $order );
@@ -222,20 +256,85 @@ class PaymentService {
 	}
 
 	/**
+	 * Validate that an invoice can accept payments.
+	 *
+	 * Checks if the invoice exists, is not void/draft/deleted, and has outstanding balance.
+	 *
+	 * @param string $invoice_id Zoho invoice ID.
+	 * @return array{valid: bool, invoice: ?array, error: ?string, already_paid: bool}
+	 */
+	private function validate_invoice_for_payment( string $invoice_id ): array {
+		$invoice = $this->get_invoice_status( $invoice_id );
+
+		if ( $invoice === null ) {
+			return [
+				'valid'        => false,
+				'invoice'      => null,
+				'error'        => __( 'Invoice not found in Zoho Books (may have been deleted)', 'zbooks-for-woocommerce' ),
+				'already_paid' => false,
+			];
+		}
+
+		$status = strtolower( $invoice['status'] ?? '' );
+		$invalid_statuses = [ 'void', 'draft' ];
+
+		if ( in_array( $status, $invalid_statuses, true ) ) {
+			return [
+				'valid'        => false,
+				'invoice'      => $invoice,
+				'error'        => sprintf(
+					/* translators: %s: Invoice status */
+					__( 'Invoice is %s and cannot accept payments', 'zbooks-for-woocommerce' ),
+					$status
+				),
+				'already_paid' => false,
+			];
+		}
+
+		if ( $status === 'paid' ) {
+			return [
+				'valid'        => false,
+				'invoice'      => $invoice,
+				'error'        => __( 'Invoice is already fully paid', 'zbooks-for-woocommerce' ),
+				'already_paid' => true,
+			];
+		}
+
+		// Check if there's any balance remaining.
+		$balance = (float) ( $invoice['balance'] ?? 0 );
+		if ( $balance <= 0 ) {
+			return [
+				'valid'        => false,
+				'invoice'      => $invoice,
+				'error'        => __( 'Invoice has no outstanding balance', 'zbooks-for-woocommerce' ),
+				'already_paid' => true,
+			];
+		}
+
+		return [
+			'valid'        => true,
+			'invoice'      => $invoice,
+			'error'        => null,
+			'already_paid' => false,
+		];
+	}
+
+	/**
 	 * Map WooCommerce order to Zoho payment format.
 	 *
-	 * @param WC_Order $order      WooCommerce order.
-	 * @param string   $invoice_id Zoho invoice ID.
-	 * @param string   $contact_id Zoho contact ID.
+	 * @param WC_Order   $order           WooCommerce order.
+	 * @param string     $invoice_id      Zoho invoice ID.
+	 * @param string     $contact_id      Zoho contact ID.
+	 * @param float|null $override_amount Optional amount to use instead of order total.
 	 * @return array Payment data.
 	 */
-	private function map_order_to_payment( WC_Order $order, string $invoice_id, string $contact_id ): array {
+	private function map_order_to_payment( WC_Order $order, string $invoice_id, string $contact_id, ?float $override_amount = null ): array {
 		$payment_date = $order->get_date_paid();
 		if ( ! $payment_date ) {
 			$payment_date = $order->get_date_completed() ?? $order->get_date_created();
 		}
 
-		$amount    = (float) $order->get_total();
+		$amount = $override_amount ?? (float) $order->get_total();
 		$wc_method = $order->get_payment_method();
 
 		$payment = [

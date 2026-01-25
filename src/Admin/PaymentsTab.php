@@ -1,6 +1,6 @@
 <?php
 /**
- * Payment method mapping admin page.
+ * Payments tab for settings page.
  *
  * @package Zbooks
  * @author talas9
@@ -18,9 +18,9 @@ use Zbooks\Logger\SyncLogger;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Admin page for mapping WooCommerce payment methods to Zoho.
+ * Payments tab for mapping WooCommerce payment methods to Zoho.
  */
-class PaymentMappingPage {
+class PaymentsTab {
 
 	/**
 	 * Zoho client.
@@ -114,7 +114,7 @@ class PaymentMappingPage {
 	}
 
 	/**
-	 * Render the payment settings content.
+	 * Render the tab content.
 	 * Called by SettingsPage for the Payments tab.
 	 */
 	public function render_content(): void {
@@ -334,61 +334,6 @@ class PaymentMappingPage {
 				<?php esc_html_e( 'If no "Deposit To" account is selected, Zoho Books will use your default bank account.', 'zbooks-for-woocommerce' ); ?>
 			</p>
 		</div><!-- .zbooks-payments-tab -->
-
-		<script>
-		jQuery(document).ready(function($) {
-			// Sync account name hidden field when account select changes.
-			$('.zbooks-account-select').on('change', function() {
-				var $select = $(this);
-				var gateway = $select.data('gateway');
-				var selectedOption = $select.find('option:selected');
-				var accountName = selectedOption.data('name') || '';
-
-				// Update the corresponding hidden field.
-				$('.zbooks-account-name[data-gateway="' + gateway + '"]').val(accountName);
-			});
-
-			// Initialize account names on page load (for existing selections).
-			$('.zbooks-account-select').each(function() {
-				var $select = $(this);
-				var gateway = $select.data('gateway');
-				var selectedOption = $select.find('option:selected');
-				var accountName = selectedOption.data('name') || '';
-				var $hidden = $('.zbooks-account-name[data-gateway="' + gateway + '"]');
-
-				// Only update if hidden field is empty but select has a value.
-				if (!$hidden.val() && accountName) {
-					$hidden.val(accountName);
-				}
-			});
-
-			$('.zbooks-refresh-accounts').on('click', function() {
-				var $btn = $(this);
-				$btn.prop('disabled', true).text('<?php echo esc_js( __( 'Refreshing...', 'zbooks-for-woocommerce' ) ); ?>');
-
-				$.ajax({
-					url: ajaxurl,
-					type: 'POST',
-					data: {
-						action: 'zbooks_refresh_bank_accounts',
-						nonce: '<?php echo esc_js( wp_create_nonce( 'zbooks_refresh_accounts' ) ); ?>'
-					},
-					success: function(response) {
-						if (response.success) {
-							location.reload();
-						} else {
-							alert(response.data.message || '<?php echo esc_js( __( 'Failed to refresh accounts.', 'zbooks-for-woocommerce' ) ); ?>');
-							$btn.prop('disabled', false).text('<?php echo esc_js( __( 'Refresh Zoho Accounts', 'zbooks-for-woocommerce' ) ); ?>');
-						}
-					},
-					error: function() {
-						alert('<?php echo esc_js( __( 'Network error. Please try again.', 'zbooks-for-woocommerce' ) ); ?>');
-						$btn.prop('disabled', false).text('<?php echo esc_js( __( 'Refresh Zoho Accounts', 'zbooks-for-woocommerce' ) ); ?>');
-					}
-				});
-			});
-		});
-		</script>
 		<?php
 	}
 

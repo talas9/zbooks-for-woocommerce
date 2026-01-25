@@ -1,6 +1,6 @@
 <?php
 /**
- * Field Mapping admin page.
+ * Custom Fields tab for settings page.
  *
  * @package Zbooks
  * @author talas9
@@ -18,9 +18,9 @@ use Zbooks\Logger\SyncLogger;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Admin page for managing custom field mappings.
+ * Custom Fields tab for managing custom field mappings.
  */
-class FieldMappingPage {
+class CustomFieldsTab {
 
 	/**
 	 * Zoho client.
@@ -71,7 +71,7 @@ class FieldMappingPage {
 	}
 
 	/**
-	 * Render the custom fields content.
+	 * Render the tab content.
 	 * Called by SettingsPage for the Custom Fields tab.
 	 */
 	public function render_content(): void {
@@ -384,201 +384,6 @@ class FieldMappingPage {
 				</tr>
 			</script>
 		</div><!-- .zbooks-custom-fields-tab -->
-
-		<style>
-			.zbooks-mapping-section {
-				margin: 20px 0;
-			}
-			.zbooks-mapping-row select {
-				width: 100%;
-			}
-			#zbooks-mapping-spinner {
-				float: none;
-				margin-left: 10px;
-			}
-			#zbooks-mapping-spinner.is-active {
-				visibility: visible;
-			}
-			.zbooks-no-mappings td {
-				font-style: italic;
-				color: #666;
-			}
-		</style>
-
-		<script>
-		jQuery(document).ready(function($) {
-			var customerIndex = <?php echo count( $customer_mappings ); ?>;
-			var invoiceIndex = <?php echo count( $invoice_mappings ); ?>;
-			var creditnoteIndex = <?php echo count( $creditnote_mappings ); ?>;
-
-			// Add new mapping row.
-			$('.zbooks-add-mapping').on('click', function() {
-				var type = $(this).data('type');
-				var templateId = '#zbooks-' + type + '-mapping-template';
-				var tableId = '#zbooks-' + type + '-mappings tbody';
-				var index;
-				if (type === 'customer') {
-					index = customerIndex++;
-				} else if (type === 'invoice') {
-					index = invoiceIndex++;
-				} else {
-					index = creditnoteIndex++;
-				}
-
-				var template = $(templateId).html().replace(/\{\{index\}\}/g, index);
-				$(tableId).find('.zbooks-no-mappings').remove();
-				$(tableId).append(template);
-			});
-
-			// Remove mapping row.
-			$(document).on('click', '.zbooks-remove-mapping', function() {
-				$(this).closest('tr').remove();
-			});
-
-			// Update hidden label and type fields when Zoho field changes.
-			$(document).on('change', '.zbooks-zoho-field', function() {
-				var $selected = $(this).find('option:selected');
-				var label = $selected.text();
-				var fieldType = $selected.data('type') || 'string';
-				$(this).siblings('input[name$="[zoho_field_label]"]').val(label);
-				$(this).siblings('input[name$="[zoho_field_type]"]').val(fieldType);
-			});
-
-			// Save mappings.
-			$('#zbooks-save-field-mappings').on('click', function() {
-				var $btn = $(this);
-				var $spinner = $('#zbooks-mapping-spinner');
-
-				$btn.prop('disabled', true);
-				$spinner.addClass('is-active');
-
-				var customerMappings = [];
-				var invoiceMappings = [];
-				var creditnoteMappings = [];
-
-				// Collect customer mappings.
-				$('#zbooks-customer-mappings .zbooks-mapping-row').each(function() {
-					var $row = $(this);
-					var wcField = $row.find('.zbooks-wc-field').val();
-					var $zohoSelect = $row.find('.zbooks-zoho-field');
-					var zohoField = $zohoSelect.val();
-					var $selected = $zohoSelect.find('option:selected');
-					var zohoLabel = $selected.text();
-					var zohoType = $selected.data('type') || 'string';
-
-					if (wcField && zohoField) {
-						customerMappings.push({
-							wc_field: wcField,
-							zoho_field: zohoField,
-							zoho_field_label: zohoLabel,
-							zoho_field_type: zohoType
-						});
-					}
-				});
-
-				// Collect invoice mappings.
-				$('#zbooks-invoice-mappings .zbooks-mapping-row').each(function() {
-					var $row = $(this);
-					var wcField = $row.find('.zbooks-wc-field').val();
-					var $zohoSelect = $row.find('.zbooks-zoho-field');
-					var zohoField = $zohoSelect.val();
-					var $selected = $zohoSelect.find('option:selected');
-					var zohoLabel = $selected.text();
-					var zohoType = $selected.data('type') || 'string';
-
-					if (wcField && zohoField) {
-						invoiceMappings.push({
-							wc_field: wcField,
-							zoho_field: zohoField,
-							zoho_field_label: zohoLabel,
-							zoho_field_type: zohoType
-						});
-					}
-				});
-
-				// Collect credit note mappings.
-				$('#zbooks-creditnote-mappings .zbooks-mapping-row').each(function() {
-					var $row = $(this);
-					var wcField = $row.find('.zbooks-wc-field').val();
-					var $zohoSelect = $row.find('.zbooks-zoho-field');
-					var zohoField = $zohoSelect.val();
-					var $selected = $zohoSelect.find('option:selected');
-					var zohoLabel = $selected.text();
-					var zohoType = $selected.data('type') || 'string';
-
-					if (wcField && zohoField) {
-						creditnoteMappings.push({
-							wc_field: wcField,
-							zoho_field: zohoField,
-							zoho_field_label: zohoLabel,
-							zoho_field_type: zohoType
-						});
-					}
-				});
-
-				$.ajax({
-					url: zbooks.ajax_url,
-					type: 'POST',
-					data: {
-						action: 'zbooks_save_field_mappings',
-						nonce: zbooks.nonce,
-						customer_mappings: customerMappings,
-						invoice_mappings: invoiceMappings,
-						creditnote_mappings: creditnoteMappings
-					},
-					success: function(response) {
-						$btn.prop('disabled', false);
-						$spinner.removeClass('is-active');
-
-						var $notices = $('#zbooks-field-mapping-notices');
-						if (response.success) {
-							$notices.html('<div class="notice notice-success is-dismissible"><p>' + response.data.message + '</p></div>');
-						} else {
-							$notices.html('<div class="notice notice-error is-dismissible"><p>' + response.data.message + '</p></div>');
-						}
-					},
-					error: function() {
-						$btn.prop('disabled', false);
-						$spinner.removeClass('is-active');
-						$('#zbooks-field-mapping-notices').html('<div class="notice notice-error is-dismissible"><p><?php esc_html_e( 'Failed to save mappings.', 'zbooks-for-woocommerce' ); ?></p></div>');
-					}
-				});
-			});
-
-			// Refresh Zoho fields.
-			$('#zbooks-refresh-zoho-fields').on('click', function() {
-				var $btn = $(this);
-				var $spinner = $('#zbooks-mapping-spinner');
-
-				$btn.prop('disabled', true);
-				$spinner.addClass('is-active');
-
-				$.ajax({
-					url: zbooks.ajax_url,
-					type: 'POST',
-					data: {
-						action: 'zbooks_fetch_zoho_custom_fields',
-						nonce: zbooks.nonce
-					},
-					success: function(response) {
-						$btn.prop('disabled', false);
-						$spinner.removeClass('is-active');
-
-						if (response.success) {
-							location.reload();
-						} else {
-							$('#zbooks-field-mapping-notices').html('<div class="notice notice-error is-dismissible"><p>' + response.data.message + '</p></div>');
-						}
-					},
-					error: function() {
-						$btn.prop('disabled', false);
-						$spinner.removeClass('is-active');
-						$('#zbooks-field-mapping-notices').html('<div class="notice notice-error is-dismissible"><p><?php esc_html_e( 'Failed to fetch Zoho fields.', 'zbooks-for-woocommerce' ); ?></p></div>');
-					}
-				});
-			});
-		});
-		</script>
 		<?php
 	}
 

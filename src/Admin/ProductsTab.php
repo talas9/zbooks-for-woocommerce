@@ -1,6 +1,6 @@
 <?php
 /**
- * Product mapping admin page.
+ * Products tab for settings page.
  *
  * @package Zbooks
  * @author talas9
@@ -18,9 +18,9 @@ use Zbooks\Logger\SyncLogger;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Admin page for mapping WooCommerce products to Zoho items.
+ * Products tab for mapping WooCommerce products to Zoho items.
  */
-class ProductMappingPage {
+class ProductsTab {
 
 	/**
 	 * Zoho client.
@@ -81,14 +81,14 @@ class ProductMappingPage {
 	}
 
 	/**
-	 * Render the mapping page content.
+	 * Render the tab content.
 	 * Called by SettingsPage for the Products tab.
 	 */
 	public function render_content(): void {
-        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only pagination parameters for display only.
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only pagination parameters for display only.
 		$paged    = isset( $_GET['paged'] ) ? max( 1, absint( wp_unslash( $_GET['paged'] ) ) ) : 1;
 		$per_page = 20;
-        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only filter parameter for display only.
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only filter parameter for display only.
 		$filter = isset( $_GET['filter'] ) ? sanitize_key( wp_unslash( $_GET['filter'] ) ) : 'all';
 
 		$products       = $this->get_products( $filter, $paged, $per_page );
@@ -264,205 +264,6 @@ class ProductMappingPage {
 				</div>
 			<?php endif; ?>
 		</div><!-- .zbooks-products-tab -->
-
-		<script>
-		jQuery(document).ready(function($) {
-			var nonce = '<?php echo esc_js( wp_create_nonce( 'zbooks_mapping' ) ); ?>';
-
-			// Update selected count.
-			function updateSelectedCount() {
-				var count = $('.zbooks-product-checkbox:checked').length;
-				var $countSpan = $('#zbooks-selected-count');
-				var $bulkBtn = $('#zbooks-bulk-create');
-
-				if (count > 0) {
-					$countSpan.text(count + ' <?php echo esc_js( __( 'selected', 'zbooks-for-woocommerce' ) ); ?>');
-					$bulkBtn.prop('disabled', false);
-				} else {
-					$countSpan.text('');
-					$bulkBtn.prop('disabled', true);
-				}
-			}
-
-			// Select all checkbox.
-			$('#zbooks-select-all-products').on('change', function() {
-				$('.zbooks-product-checkbox').prop('checked', $(this).is(':checked'));
-				updateSelectedCount();
-			});
-
-			// Individual checkbox.
-			$('.zbooks-product-checkbox').on('change', updateSelectedCount);
-
-			// Single create button.
-			$('.zbooks-create-single').on('click', function() {
-				var $btn = $(this);
-				var productId = $btn.data('product-id');
-				var $status = $('#zbooks-action-status');
-
-				$btn.prop('disabled', true).text('<?php echo esc_js( __( 'Creating...', 'zbooks-for-woocommerce' ) ); ?>');
-
-				$.post(ajaxurl, {
-					action: 'zbooks_bulk_create_items',
-					nonce: nonce,
-					product_ids: [productId]
-				}, function(response) {
-					if (response.success) {
-						$status.text('<?php echo esc_js( __( 'Created!', 'zbooks-for-woocommerce' ) ); ?>');
-						setTimeout(function() {
-							location.reload();
-						}, 1000);
-					} else {
-						$btn.prop('disabled', false).text('<?php echo esc_js( __( 'Create', 'zbooks-for-woocommerce' ) ); ?>');
-						$status.text(response.data.message || 'Error creating item');
-					}
-				});
-			});
-
-			// Bulk create button.
-			$('#zbooks-bulk-create').on('click', function() {
-				var $btn = $(this);
-				var $status = $('#zbooks-action-status');
-				var productIds = [];
-
-				$('.zbooks-product-checkbox:checked').each(function() {
-					productIds.push($(this).val());
-				});
-
-				if (productIds.length === 0) {
-					return;
-				}
-
-				if (!confirm('<?php echo esc_js( __( 'Create', 'zbooks-for-woocommerce' ) ); ?> ' + productIds.length + ' <?php echo esc_js( __( 'items in Zoho Books?', 'zbooks-for-woocommerce' ) ); ?>')) {
-					return;
-				}
-
-				$btn.prop('disabled', true).text('<?php echo esc_js( __( 'Creating...', 'zbooks-for-woocommerce' ) ); ?>');
-				$status.text('<?php echo esc_js( __( 'Creating items in Zoho...', 'zbooks-for-woocommerce' ) ); ?>');
-
-				$.post(ajaxurl, {
-					action: 'zbooks_bulk_create_items',
-					nonce: nonce,
-					product_ids: productIds
-				}, function(response) {
-					$btn.prop('disabled', false).text('<?php echo esc_js( __( 'Create Selected in Zoho', 'zbooks-for-woocommerce' ) ); ?>');
-					if (response.success) {
-						$status.text(response.data.message);
-						setTimeout(function() {
-							location.reload();
-						}, 1500);
-					} else {
-						$status.text(response.data.message || 'Error creating items');
-					}
-				});
-			});
-
-			// Save mapping (link to existing).
-			$('.zbooks-save-mapping').on('click', function() {
-				var $btn = $(this);
-				var productId = $btn.data('product-id');
-				var zohoItemId = $('select[data-product-id="' + productId + '"]').val();
-
-				if (!zohoItemId) {
-					alert('<?php echo esc_js( __( 'Please select a Zoho item to link.', 'zbooks-for-woocommerce' ) ); ?>');
-					return;
-				}
-
-				$btn.prop('disabled', true).text('<?php echo esc_js( __( 'Linking...', 'zbooks-for-woocommerce' ) ); ?>');
-
-				$.post(ajaxurl, {
-					action: 'zbooks_save_mapping',
-					nonce: nonce,
-					product_id: productId,
-					zoho_item_id: zohoItemId
-				}, function(response) {
-					$btn.prop('disabled', false).text('<?php echo esc_js( __( 'Link', 'zbooks-for-woocommerce' ) ); ?>');
-					if (response.success) {
-						$btn.text('<?php echo esc_js( __( 'Linked!', 'zbooks-for-woocommerce' ) ); ?>');
-						setTimeout(function() {
-							location.reload();
-						}, 1000);
-					} else {
-						alert(response.data.message || 'Error saving mapping');
-					}
-				});
-			});
-
-			// Remove mapping (unlink).
-			$('.zbooks-remove-mapping').on('click', function() {
-				var $btn = $(this);
-				var productId = $btn.data('product-id');
-
-				if (!confirm('<?php echo esc_js( __( 'Unlink this product from Zoho?', 'zbooks-for-woocommerce' ) ); ?>')) {
-					return;
-				}
-
-				$btn.prop('disabled', true);
-
-				$.post(ajaxurl, {
-					action: 'zbooks_remove_mapping',
-					nonce: nonce,
-					product_id: productId
-				}, function(response) {
-					if (response.success) {
-						location.reload();
-					} else {
-						$btn.prop('disabled', false);
-						alert(response.data.message || 'Error removing mapping');
-					}
-				});
-			});
-
-			// Auto-map by SKU.
-			$('#zbooks-auto-map').on('click', function() {
-				var $btn = $(this);
-				var $status = $('#zbooks-action-status');
-
-				$btn.prop('disabled', true);
-				$status.text('<?php echo esc_js( __( 'Auto-mapping products by SKU...', 'zbooks-for-woocommerce' ) ); ?>');
-
-				$.post(ajaxurl, {
-					action: 'zbooks_auto_map_products',
-					nonce: nonce
-				}, function(response) {
-					$btn.prop('disabled', false);
-					if (response.success) {
-						$status.text(response.data.message);
-						if (response.data.mapped > 0) {
-							setTimeout(function() {
-								location.reload();
-							}, 1500);
-						}
-					} else {
-						$status.text(response.data.message || 'Error during auto-mapping');
-					}
-				});
-			});
-
-			// Refresh Zoho items.
-			$('#zbooks-refresh-items').on('click', function() {
-				var $btn = $(this);
-				var $status = $('#zbooks-action-status');
-
-				$btn.prop('disabled', true);
-				$status.text('<?php echo esc_js( __( 'Fetching Zoho items...', 'zbooks-for-woocommerce' ) ); ?>');
-
-				$.post(ajaxurl, {
-					action: 'zbooks_fetch_zoho_items',
-					nonce: nonce
-				}, function(response) {
-					$btn.prop('disabled', false);
-					if (response.success) {
-						$status.text(response.data.message);
-						setTimeout(function() {
-							location.reload();
-						}, 1000);
-					} else {
-						$status.text(response.data.message || 'Error fetching items');
-					}
-				});
-			});
-		});
-		</script>
 		<?php
 	}
 

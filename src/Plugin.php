@@ -17,11 +17,15 @@ use Zbooks\Admin\AdminNotices;
 use Zbooks\Admin\BulkSyncPage;
 use Zbooks\Admin\SetupWizard;
 use Zbooks\Admin\LogViewer;
-use Zbooks\Admin\ProductMappingPage;
+use Zbooks\Admin\ProductsTab;
 use Zbooks\Admin\ProductMetaBox;
-use Zbooks\Admin\FieldMappingPage;
-use Zbooks\Admin\PaymentMappingPage;
+use Zbooks\Admin\CustomFieldsTab;
+use Zbooks\Admin\PaymentsTab;
 use Zbooks\Admin\ReconciliationPage;
+use Zbooks\Admin\ReconciliationTab;
+use Zbooks\Admin\ConnectionTab;
+use Zbooks\Admin\OrdersTab;
+use Zbooks\Admin\AdvancedTab;
 use Zbooks\Repository\ItemMappingRepository;
 use Zbooks\Repository\FieldMappingRepository;
 use Zbooks\Repository\PaymentMethodMappingRepository;
@@ -71,7 +75,7 @@ final class Plugin {
 	 * @return self
 	 */
 	public static function get_instance(): self {
-		if ( self::$instance === null ) {
+		if ( null === self::$instance ) {
 			self::$instance = new self();
 		}
 		return self::$instance;
@@ -145,7 +149,8 @@ final class Plugin {
 		$this->services['refund_service'] = new RefundService(
 			$this->get_service( 'zoho_client' ),
 			$this->get_service( 'logger' ),
-			$this->get_service( 'field_mapping_repository' )
+			$this->get_service( 'field_mapping_repository' ),
+			$this->get_service( 'order_meta_repository' )
 		);
 
 		$this->services['sync_orchestrator'] = new SyncOrchestrator(
@@ -169,20 +174,20 @@ final class Plugin {
 			$this->get_service( 'reconciliation_repository' )
 		);
 
-		// Admin - create tab pages first (they register AJAX handlers).
-		$this->services['product_mapping_page'] = new ProductMappingPage(
+		// Admin - create tab classes first (they register AJAX handlers).
+		$this->services['products_tab'] = new ProductsTab(
 			$this->get_service( 'zoho_client' ),
 			$this->get_service( 'item_mapping_repository' ),
 			$this->get_service( 'logger' )
 		);
 
-		$this->services['payment_mapping_page'] = new PaymentMappingPage(
+		$this->services['payments_tab'] = new PaymentsTab(
 			$this->get_service( 'zoho_client' ),
 			$this->get_service( 'payment_method_mapping_repository' ),
 			$this->get_service( 'logger' )
 		);
 
-		$this->services['field_mapping_page'] = new FieldMappingPage(
+		$this->services['custom_fields_tab'] = new CustomFieldsTab(
 			$this->get_service( 'zoho_client' ),
 			$this->get_service( 'field_mapping_repository' ),
 			$this->get_service( 'logger' )
@@ -193,14 +198,30 @@ final class Plugin {
 			$this->get_service( 'reconciliation_repository' )
 		);
 
-		// Settings page includes Products, Payments, Custom Fields, and Reconciliation tabs.
-		$this->services['settings_page'] = new SettingsPage(
+		$this->services['reconciliation_tab'] = new ReconciliationTab(
+			$this->get_service( 'reconciliation_service' )
+		);
+
+		$this->services['connection_tab'] = new ConnectionTab(
 			$this->get_service( 'zoho_client' ),
-			$this->get_service( 'token_manager' ),
-			$this->get_service( 'product_mapping_page' ),
-			$this->get_service( 'payment_mapping_page' ),
-			$this->get_service( 'field_mapping_page' ),
-			$this->get_service( 'reconciliation_page' )
+			$this->get_service( 'token_manager' )
+		);
+
+		$this->services['orders_tab'] = new OrdersTab(
+			$this->get_service( 'zoho_client' )
+		);
+
+		$this->services['advanced_tab'] = new AdvancedTab();
+
+		// Settings page includes all tabs.
+		$this->services['settings_page'] = new SettingsPage(
+			$this->get_service( 'connection_tab' ),
+			$this->get_service( 'orders_tab' ),
+			$this->get_service( 'products_tab' ),
+			$this->get_service( 'payments_tab' ),
+			$this->get_service( 'custom_fields_tab' ),
+			$this->get_service( 'reconciliation_tab' ),
+			$this->get_service( 'advanced_tab' )
 		);
 
 		$this->services['order_meta_box'] = new OrderMetaBox(

@@ -82,6 +82,21 @@ class OrderMetaRepository {
 	public const META_CONTACT_NAME = '_zbooks_zoho_contact_name';
 
 	/**
+	 * Meta key for Zoho invoice status (actual Zoho status like draft/sent/paid).
+	 */
+	public const META_INVOICE_STATUS = '_zbooks_zoho_invoice_status';
+
+	/**
+	 * Meta key for payment error.
+	 */
+	public const META_PAYMENT_ERROR = '_zbooks_payment_error';
+
+	/**
+	 * Meta key for unapplied credit note.
+	 */
+	public const META_UNAPPLIED_CREDIT = '_zbooks_unapplied_credit_note';
+
+	/**
 	 * Get Zoho invoice ID for an order.
 	 *
 	 * @param WC_Order $order WooCommerce order.
@@ -122,6 +137,19 @@ class OrderMetaRepository {
 	 */
 	public function set_contact_id( WC_Order $order, string $contact_id ): void {
 		$order->update_meta_data( self::META_CONTACT_ID, $contact_id );
+		$order->save();
+	}
+
+	/**
+	 * Clear Zoho contact ID for an order.
+	 *
+	 * Used when a contact is found to be deleted in Zoho and needs to be recreated.
+	 *
+	 * @param WC_Order $order WooCommerce order.
+	 */
+	public function clear_contact_id( WC_Order $order ): void {
+		$order->delete_meta_data( self::META_CONTACT_ID );
+		$order->delete_meta_data( self::META_CONTACT_NAME );
 		$order->save();
 	}
 
@@ -472,6 +500,97 @@ class OrderMetaRepository {
 	}
 
 	/**
+	 * Get Zoho invoice status for an order.
+	 *
+	 * @param WC_Order $order WooCommerce order.
+	 * @return string|null Invoice status (draft/sent/paid/partially_paid/overdue/void).
+	 */
+	public function get_invoice_status( WC_Order $order ): ?string {
+		$value = $order->get_meta( self::META_INVOICE_STATUS );
+		return $value !== '' ? $value : null;
+	}
+
+	/**
+	 * Set Zoho invoice status for an order.
+	 *
+	 * @param WC_Order $order  WooCommerce order.
+	 * @param string   $status Zoho invoice status.
+	 */
+	public function set_invoice_status( WC_Order $order, string $status ): void {
+		$order->update_meta_data( self::META_INVOICE_STATUS, $status );
+		$order->save();
+	}
+
+	/**
+	 * Get payment error for an order.
+	 *
+	 * @param WC_Order $order WooCommerce order.
+	 * @return string|null Payment error message.
+	 */
+	public function get_payment_error( WC_Order $order ): ?string {
+		$value = $order->get_meta( self::META_PAYMENT_ERROR );
+		return $value !== '' ? $value : null;
+	}
+
+	/**
+	 * Set payment error for an order.
+	 *
+	 * @param WC_Order $order WooCommerce order.
+	 * @param string   $error Payment error message.
+	 */
+	public function set_payment_error( WC_Order $order, string $error ): void {
+		$order->update_meta_data( self::META_PAYMENT_ERROR, $error );
+		$order->save();
+	}
+
+	/**
+	 * Clear payment error for an order.
+	 *
+	 * @param WC_Order $order WooCommerce order.
+	 */
+	public function clear_payment_error( WC_Order $order ): void {
+		$order->delete_meta_data( self::META_PAYMENT_ERROR );
+		$order->save();
+	}
+
+	/**
+	 * Get unapplied credit note data for an order.
+	 *
+	 * @param WC_Order $order WooCommerce order.
+	 * @return array|null Unapplied credit data or null.
+	 */
+	public function get_unapplied_credit( WC_Order $order ): ?array {
+		$value = $order->get_meta( self::META_UNAPPLIED_CREDIT );
+		return is_array( $value ) ? $value : null;
+	}
+
+	/**
+	 * Set unapplied credit note for an order.
+	 *
+	 * @param WC_Order $order          WooCommerce order.
+	 * @param string   $credit_note_id Zoho credit note ID.
+	 * @param string   $reason         Reason for failure.
+	 */
+	public function set_unapplied_credit( WC_Order $order, string $credit_note_id, string $reason ): void {
+		$order->update_meta_data( self::META_UNAPPLIED_CREDIT, [
+			'credit_note_id' => $credit_note_id,
+			'reason'         => $reason,
+			'timestamp'      => current_time( 'mysql' ),
+		]);
+		$order->save();
+	}
+
+	/**
+	 * Clear unapplied credit note for an order.
+	 *
+	 * @param WC_Order $order WooCommerce order.
+	 */
+	public function clear_unapplied_credit( WC_Order $order ): void {
+		$order->delete_meta_data( self::META_UNAPPLIED_CREDIT );
+		$order->save();
+	}
+
+	/**
 	 * Get Zoho refund IDs for an order.
 	 *
 	 * @param WC_Order $order WooCommerce order.
@@ -553,6 +672,9 @@ class OrderMetaRepository {
 			'contact_name'      => $this->get_contact_name( $order ),
 			'payment_id'        => $this->get_payment_id( $order ),
 			'payment_number'    => $this->get_payment_number( $order ),
+			'invoice_status'    => $this->get_invoice_status( $order ),
+			'payment_error'     => $this->get_payment_error( $order ),
+			'unapplied_credit'  => $this->get_unapplied_credit( $order ),
 			'refunds'           => $this->get_refund_ids( $order ),
 			'sync_status'       => $this->get_sync_status( $order )?->value,
 			'last_sync_attempt' => $this->get_last_sync_attempt( $order )?->format( 'Y-m-d H:i:s' ),

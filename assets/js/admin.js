@@ -49,6 +49,15 @@
         init: function() {
             this.bindEvents();
             this.initSelectAll();
+
+            // Initialize feature-specific modules
+            this.ProductMetaBox.init();
+            this.LogViewer.init();
+            this.ProductMapping.init();
+            this.PaymentMapping.init();
+            this.FieldMapping.init();
+            this.SettingsPage.init();
+            this.Reconciliation.init();
         },
 
         /**
@@ -856,7 +865,1143 @@
             var div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        },
+
+        /**
+         * Product Meta Box Module
+         * Handles product-level Zoho item creation, linking, syncing, and unlinking
+         */
+        ProductMetaBox: {
+            nonce: '',
+
+            init: function() {
+                // Check if we're on a product edit page with the meta box
+                if (!$('.zbooks-product-meta-box').length) {
+                    return;
+                }
+
+                // Get nonce from localized data
+                this.nonce = typeof zbooks_product !== 'undefined' ? zbooks_product.nonce : '';
+
+                this.bindEvents();
+            },
+
+            bindEvents: function() {
+                var self = this;
+
+                // Create item button
+                $(document).on('click', '.zbooks-create-item-btn', function() {
+                    var $btn = $(this);
+                    var productId = $btn.data('product-id');
+                    var $result = $('.zbooks-product-result');
+                    var trackInventory = $('.zbooks-track-inventory').is(':checked');
+
+                    self.createZohoItem(productId, trackInventory, $btn, $result);
+                });
+
+                // Link existing button
+                $(document).on('click', '.zbooks-link-existing-btn', function() {
+                    var $btn = $(this);
+                    var productId = $btn.data('product-id');
+                    var $result = $('.zbooks-product-result');
+                    var $createBtn = $('.zbooks-create-item-btn');
+
+                    self.searchAndShowItems(productId, '', $createBtn, $result);
+                });
+
+                // Sync product button
+                $(document).on('click', '.zbooks-sync-product-btn', function() {
+                    var $btn = $(this);
+                    var productId = $btn.data('product-id');
+                    var $result = $('.zbooks-product-result');
+
+                    self.syncProduct(productId, $btn, $result);
+                });
+
+                // Unlink button
+                $(document).on('click', '.zbooks-unlink-btn', function() {
+                    var $btn = $(this);
+                    var productId = $btn.data('product-id');
+                    var $result = $('.zbooks-product-result');
+
+                    self.unlinkProduct(productId, $btn, $result);
+                });
+            },
+
+            createZohoItem: function(productId, trackInventory, $btn, $result) {
+                var self = this;
+                var i18n = ZbooksAdmin.config.i18n;
+
+                $btn.prop('disabled', true).text(i18n.creating || 'Creating...');
+                $result.html('');
+
+                $.post(ajaxurl, {
+                    action: 'zbooks_create_zoho_item',
+                    nonce: self.nonce,
+                    product_id: productId,
+                    track_inventory: trackInventory ? '1' : '0'
+                }, function(response) {
+                    if (response.success) {
+                        $result.html('<span style="color:green;">' + response.data.message + '</span>');
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        $btn.prop('disabled', false).text(i18n.create_in_zoho || 'Create in Zoho');
+
+                        // Check if this is a duplicate/already exists error
+                        if (response.data && response.data.can_link_existing) {
+                            self.showDuplicateErrorDialog(response.data.message, productId, response.data.search_term || '', $btn, $result);
+                        }
+                        // Check if this is an inventory-related error with retry option
+                        else if (response.data && response.data.can_retry_without_tracking) {
+                            self.showInventoryErrorDialog(response.data.message, productId, $btn, $result);
+                        } else {
+                            $result.html('<span style="color:red;">' + (response.data.message || 'Error creating item') + '</span>');
+                        }
+                    }
+                }).fail(function() {
+                    $btn.prop('disabled', false).text(i18n.create_in_zoho || 'Create in Zoho');
+                    $result.html('<span style="color:red;">Network error</span>');
+                });
+            },
+
+            showInventoryErrorDialog: function(errorMessage, productId, $btn, $result) {
+                var self = this;
+                var i18n = ZbooksAdmin.config.i18n;
+
+                var dialogHtml = '<div class="zbooks-inventory-error-dialog" style="background:#fff3cd;border:1px solid #ffc107;padding:12px;border-radius:4px;margin-top:10px;">' +
+                    '<p style="margin:0 0 10px;color:#856404;"><strong>' + (i18n.inventory_tracking_error || 'Inventory Tracking Error') + '</strong></p>' +
+                    '<p style="margin:0 0 10px;color:#856404;font-size:12px;">' + errorMessage + '</p>' +
+                    '<p style="margin:0 0 10px;color:#856404;font-size:12px;">' + (i18n.inventory_feature_note || 'This feature requires Zoho Inventory integration with your Zoho Books subscription.') + '</p>' +
+                    '<p style="margin:0;">' +
+                    '<button type="button" class="button zbooks-retry-without-tracking" style="margin-right:5px;">' + (i18n.create_without_inventory || 'Create without inventory tracking') + '</button>' +
+                    '<button type="button" class="button zbooks-cancel-create">' + (i18n.cancel || 'Cancel') + '</button>' +
+                    '</p></div>';
+
+                $result.html(dialogHtml);
+
+                // Handle retry without tracking
+                $result.find('.zbooks-retry-without-tracking').on('click', function() {
+                    // Uncheck the inventory tracking checkbox
+                    $('.zbooks-track-inventory').prop('checked', false);
+                    self.createZohoItem(productId, false, $btn, $result);
+                });
+
+                // Handle cancel
+                $result.find('.zbooks-cancel-create').on('click', function() {
+                    $result.html('');
+                });
+            },
+
+            showDuplicateErrorDialog: function(errorMessage, productId, searchTerm, $btn, $result) {
+                var self = this;
+                var i18n = ZbooksAdmin.config.i18n;
+
+                var dialogHtml = '<div class="zbooks-duplicate-error-dialog" style="background:#f8d7da;border:1px solid #f5c6cb;padding:12px;border-radius:4px;margin-top:10px;">' +
+                    '<p style="margin:0 0 10px;color:#721c24;"><strong>' + (i18n.item_already_exists || 'Item Already Exists') + '</strong></p>' +
+                    '<p style="margin:0 0 10px;color:#721c24;font-size:12px;">' + errorMessage + '</p>' +
+                    '<p style="margin:0 0 10px;color:#721c24;font-size:12px;">' + (i18n.search_and_link_prompt || 'Would you like to search for the existing item and link it to this product?') + '</p>' +
+                    '<p style="margin:0;">' +
+                    '<button type="button" class="button button-primary zbooks-search-existing" style="margin-right:5px;">' + (i18n.search_link_existing || 'Search & Link Existing') + '</button>' +
+                    '<button type="button" class="button zbooks-cancel-create">' + (i18n.cancel || 'Cancel') + '</button>' +
+                    '</p></div>';
+
+                $result.html(dialogHtml);
+
+                // Handle search existing
+                $result.find('.zbooks-search-existing').on('click', function() {
+                    self.searchAndShowItems(productId, searchTerm, $btn, $result);
+                });
+
+                // Handle cancel
+                $result.find('.zbooks-cancel-create').on('click', function() {
+                    $result.html('');
+                });
+            },
+
+            searchAndShowItems: function(productId, searchTerm, $btn, $result) {
+                var self = this;
+                var i18n = ZbooksAdmin.config.i18n;
+
+                $result.html('<p style="color:#666;"><span class="spinner is-active" style="float:none;margin:0 5px 0 0;"></span>' + (i18n.searching || 'Searching...') + '</p>');
+
+                $.post(ajaxurl, {
+                    action: 'zbooks_search_and_link_item',
+                    nonce: self.nonce,
+                    product_id: productId,
+                    search_term: searchTerm
+                }, function(response) {
+                    if (response.success && response.data.items && response.data.items.length > 0) {
+                        self.showItemSelectionDialog(response.data.items, productId, $btn, $result);
+                    } else {
+                        $result.html('<span style="color:red;">' + (response.data.message || (i18n.no_items_found || 'No items found.')) + '</span>');
+                    }
+                }).fail(function() {
+                    $result.html('<span style="color:red;">' + (i18n.search_failed || 'Search failed. Please try again.') + '</span>');
+                });
+            },
+
+            showItemSelectionDialog: function(items, productId, $btn, $result) {
+                var self = this;
+                var i18n = ZbooksAdmin.config.i18n;
+
+                var dialogHtml = '<div class="zbooks-item-selection" style="background:#e7f3ff;border:1px solid #b3d7ff;padding:12px;border-radius:4px;margin-top:10px;">' +
+                    '<p style="margin:0 0 10px;color:#004085;"><strong>' + (i18n.select_item_to_link || 'Select Item to Link') + '</strong></p>' +
+                    '<div style="max-height:200px;overflow-y:auto;margin-bottom:10px;">';
+
+                items.forEach(function(item, index) {
+                    var itemInfo = item.name;
+                    if (item.sku) {
+                        itemInfo += ' (SKU: ' + item.sku + ')';
+                    }
+                    if (item.rate) {
+                        itemInfo += ' - ' + item.rate;
+                    }
+
+                    dialogHtml += '<label style="display:block;padding:8px;margin:4px 0;background:#fff;border:1px solid #ddd;border-radius:3px;cursor:pointer;">' +
+                        '<input type="radio" name="zbooks_select_item" value="' + item.item_id + '" ' + (index === 0 ? 'checked' : '') + ' style="margin-right:8px;">' +
+                        '<span>' + itemInfo + '</span>' +
+                        '</label>';
+                });
+
+                dialogHtml += '</div>' +
+                    '<p style="margin:0;">' +
+                    '<button type="button" class="button button-primary zbooks-link-selected" style="margin-right:5px;">' + (i18n.link_selected || 'Link Selected') + '</button>' +
+                    '<button type="button" class="button zbooks-cancel-create">' + (i18n.cancel || 'Cancel') + '</button>' +
+                    '</p></div>';
+
+                $result.html(dialogHtml);
+
+                // Handle link selected
+                $result.find('.zbooks-link-selected').on('click', function() {
+                    var selectedItemId = $result.find('input[name="zbooks_select_item"]:checked').val();
+                    if (selectedItemId) {
+                        self.linkItemToProduct(productId, selectedItemId, $result);
+                    }
+                });
+
+                // Handle cancel
+                $result.find('.zbooks-cancel-create').on('click', function() {
+                    $result.html('');
+                });
+            },
+
+            linkItemToProduct: function(productId, itemId, $result) {
+                var i18n = ZbooksAdmin.config.i18n;
+                var mappingNonce = typeof zbooks_mapping !== 'undefined' ? zbooks_mapping.nonce : this.nonce;
+
+                $result.html('<p style="color:#666;"><span class="spinner is-active" style="float:none;margin:0 5px 0 0;"></span>' + (i18n.linking || 'Linking...') + '</p>');
+
+                $.post(ajaxurl, {
+                    action: 'zbooks_save_mapping',
+                    nonce: mappingNonce,
+                    product_id: productId,
+                    zoho_item_id: itemId
+                }, function(response) {
+                    if (response.success) {
+                        $result.html('<span style="color:green;">' + (i18n.item_linked_success || 'Item linked successfully!') + '</span>');
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        $result.html('<span style="color:red;">' + (response.data.message || (i18n.failed_to_link || 'Failed to link item.')) + '</span>');
+                    }
+                }).fail(function() {
+                    $result.html('<span style="color:red;">' + (i18n.network_error_linking || 'Network error while linking.') + '</span>');
+                });
+            },
+
+            syncProduct: function(productId, $btn, $result) {
+                var self = this;
+                var i18n = ZbooksAdmin.config.i18n;
+
+                $btn.prop('disabled', true).text(i18n.updating || 'Updating...');
+                $result.html('');
+
+                $.post(ajaxurl, {
+                    action: 'zbooks_sync_product_to_zoho',
+                    nonce: self.nonce,
+                    product_id: productId
+                }, function(response) {
+                    $btn.prop('disabled', false).text(i18n.update_in_zoho || 'Update in Zoho');
+                    if (response.success) {
+                        $result.html('<span style="color:green;">' + response.data.message + '</span>');
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        $result.html('<span style="color:red;">' + (response.data.message || 'Error updating item') + '</span>');
+                    }
+                }).fail(function() {
+                    $btn.prop('disabled', false).text(i18n.update_in_zoho || 'Update in Zoho');
+                    $result.html('<span style="color:red;">Network error</span>');
+                });
+            },
+
+            unlinkProduct: function(productId, $btn, $result) {
+                var i18n = ZbooksAdmin.config.i18n;
+
+                if (!confirm(i18n.confirm_unlink || 'Remove the link to this Zoho item? This will not delete the item in Zoho.')) {
+                    return;
+                }
+
+                var mappingNonce = typeof zbooks_mapping !== 'undefined' ? zbooks_mapping.nonce : this.nonce;
+
+                $btn.prop('disabled', true);
+
+                $.post(ajaxurl, {
+                    action: 'zbooks_remove_mapping',
+                    nonce: mappingNonce,
+                    product_id: productId
+                }, function(response) {
+                    if (response.success) {
+                        location.reload();
+                    } else {
+                        $btn.prop('disabled', false);
+                        $result.html('<span style="color:red;">' + (response.data.message || 'Error unlinking') + '</span>');
+                    }
+                });
+            }
+        },
+
+        /**
+         * Log Viewer Module
+         * Handles log viewing modal, JSON copy, refresh, and clear operations
+         */
+        LogViewer: {
+            $modal: null,
+            currentEntry: null,
+
+            init: function() {
+                // Check if we're on the log viewer page
+                this.$modal = $('#zbooks-log-modal');
+                if (!this.$modal.length) {
+                    return;
+                }
+
+                this.bindEvents();
+            },
+
+            bindEvents: function() {
+                var self = this;
+
+                // Open modal on button click
+                $(document).on('click', '.zbooks-view-details', function(e) {
+                    e.stopPropagation();
+                    var $row = $(this).closest('tr');
+                    self.showLogDetails($row.data('entry'));
+                });
+
+                // Open modal on row double-click
+                $(document).on('dblclick', '.zbooks-log-row', function() {
+                    self.showLogDetails($(this).data('entry'));
+                });
+
+                // Close modal
+                $(document).on('click', '.zbooks-modal-close, .zbooks-modal-overlay', function() {
+                    self.$modal.fadeOut(200);
+                });
+
+                // Close on escape key
+                $(document).on('keydown', function(e) {
+                    if (e.key === 'Escape' && self.$modal.is(':visible')) {
+                        self.$modal.fadeOut(200);
+                    }
+                });
+
+                // Copy JSON to clipboard
+                $(document).on('click', '.zbooks-copy-json', function() {
+                    self.copyJsonToClipboard();
+                });
+            },
+
+            showLogDetails: function(entry) {
+                if (!entry) return;
+                this.currentEntry = entry;
+
+                $('#zbooks-modal-timestamp').text(entry.timestamp);
+                $('#zbooks-modal-level').html(
+                    '<span class="zbooks-log-level zbooks-level-' + entry.level.toLowerCase() + '">' +
+                    entry.level + '</span>'
+                );
+                $('#zbooks-modal-message').text(entry.message);
+
+                if (entry.context && Object.keys(entry.context).length > 0) {
+                    $('#zbooks-modal-context').text(JSON.stringify(entry.context, null, 2));
+                    $('#zbooks-modal-context-row').show();
+                } else {
+                    $('#zbooks-modal-context-row').hide();
+                }
+
+                this.$modal.fadeIn(200);
+            },
+
+            copyJsonToClipboard: function() {
+                if (!this.currentEntry) return;
+                var i18n = ZbooksAdmin.config.i18n;
+
+                var jsonText = JSON.stringify(this.currentEntry, null, 2);
+                navigator.clipboard.writeText(jsonText).then(function() {
+                    var $btn = $('.zbooks-copy-json');
+                    var originalText = $btn.text();
+                    $btn.text(i18n.copied || 'Copied!');
+                    setTimeout(function() {
+                        $btn.text(originalText);
+                    }, 1500);
+                });
+            }
+        },
+
+        /**
+         * Product Mapping Module
+         * Handles bulk product creation and linking on the Products tab
+         */
+        ProductMapping: {
+            nonce: '',
+
+            init: function() {
+                // Check if we're on the product mapping page
+                if (!$('#zbooks-select-all-products').length && !$('.zbooks-product-checkbox').length) {
+                    return;
+                }
+
+                this.nonce = typeof zbooks_mapping !== 'undefined' ? zbooks_mapping.nonce : '';
+                this.bindEvents();
+            },
+
+            bindEvents: function() {
+                var self = this;
+
+                // Update selected count
+                function updateSelectedCount() {
+                    var count = $('.zbooks-product-checkbox:checked').length;
+                    var $countSpan = $('#zbooks-selected-count');
+                    var $bulkBtn = $('#zbooks-bulk-create');
+                    var i18n = ZbooksAdmin.config.i18n;
+
+                    if (count > 0) {
+                        $countSpan.text(count + ' ' + (i18n.selected || 'selected'));
+                        $bulkBtn.prop('disabled', false);
+                    } else {
+                        $countSpan.text('');
+                        $bulkBtn.prop('disabled', true);
+                    }
+                }
+
+                // Select all checkbox
+                $('#zbooks-select-all-products').on('change', function() {
+                    $('.zbooks-product-checkbox').prop('checked', $(this).is(':checked'));
+                    updateSelectedCount();
+                });
+
+                // Individual checkbox
+                $('.zbooks-product-checkbox').on('change', updateSelectedCount);
+
+                // Single create button
+                $(document).on('click', '.zbooks-create-single', function() {
+                    var $btn = $(this);
+                    var productId = $btn.data('product-id');
+                    var $status = $('#zbooks-action-status');
+                    var i18n = ZbooksAdmin.config.i18n;
+
+                    $btn.prop('disabled', true).text(i18n.creating || 'Creating...');
+
+                    $.post(ajaxurl, {
+                        action: 'zbooks_bulk_create_items',
+                        nonce: self.nonce,
+                        product_ids: [productId]
+                    }, function(response) {
+                        if (response.success) {
+                            $status.text(i18n.created || 'Created!');
+                            setTimeout(function() {
+                                location.reload();
+                            }, 1000);
+                        } else {
+                            $btn.prop('disabled', false).text(i18n.create || 'Create');
+                            $status.text(response.data.message || 'Error creating item');
+                        }
+                    });
+                });
+
+                // Bulk create button
+                $('#zbooks-bulk-create').on('click', function() {
+                    var $btn = $(this);
+                    var $status = $('#zbooks-action-status');
+                    var productIds = [];
+                    var i18n = ZbooksAdmin.config.i18n;
+
+                    $('.zbooks-product-checkbox:checked').each(function() {
+                        productIds.push($(this).val());
+                    });
+
+                    if (productIds.length === 0) {
+                        return;
+                    }
+
+                    if (!confirm((i18n.create || 'Create') + ' ' + productIds.length + ' ' + (i18n.items_in_zoho_books || 'items in Zoho Books?'))) {
+                        return;
+                    }
+
+                    $btn.prop('disabled', true).text(i18n.creating || 'Creating...');
+                    $status.text(i18n.creating_items_in_zoho || 'Creating items in Zoho...');
+
+                    $.post(ajaxurl, {
+                        action: 'zbooks_bulk_create_items',
+                        nonce: self.nonce,
+                        product_ids: productIds
+                    }, function(response) {
+                        $btn.prop('disabled', false).text(i18n.create_selected_in_zoho || 'Create Selected in Zoho');
+                        if (response.success) {
+                            $status.text(response.data.message);
+                            setTimeout(function() {
+                                location.reload();
+                            }, 1500);
+                        } else {
+                            $status.text(response.data.message || 'Error creating items');
+                        }
+                    });
+                });
+
+                // Save mapping (link to existing)
+                $(document).on('click', '.zbooks-save-mapping', function() {
+                    var $btn = $(this);
+                    var productId = $btn.data('product-id');
+                    var zohoItemId = $('select[data-product-id="' + productId + '"]').val();
+                    var i18n = ZbooksAdmin.config.i18n;
+
+                    if (!zohoItemId) {
+                        alert(i18n.select_zoho_item || 'Please select a Zoho item to link.');
+                        return;
+                    }
+
+                    $btn.prop('disabled', true).text(i18n.linking || 'Linking...');
+
+                    $.post(ajaxurl, {
+                        action: 'zbooks_save_mapping',
+                        nonce: self.nonce,
+                        product_id: productId,
+                        zoho_item_id: zohoItemId
+                    }, function(response) {
+                        $btn.prop('disabled', false).text(i18n.link || 'Link');
+                        if (response.success) {
+                            $btn.text(i18n.linked || 'Linked!');
+                            setTimeout(function() {
+                                location.reload();
+                            }, 1000);
+                        } else {
+                            alert(response.data.message || 'Error saving mapping');
+                        }
+                    });
+                });
+
+                // Remove mapping (unlink)
+                $(document).on('click', '.zbooks-remove-mapping', function() {
+                    var $btn = $(this);
+                    var productId = $btn.data('product-id');
+                    var i18n = ZbooksAdmin.config.i18n;
+
+                    if (!confirm(i18n.confirm_unlink_product || 'Unlink this product from Zoho?')) {
+                        return;
+                    }
+
+                    $btn.prop('disabled', true);
+
+                    $.post(ajaxurl, {
+                        action: 'zbooks_remove_mapping',
+                        nonce: self.nonce,
+                        product_id: productId
+                    }, function(response) {
+                        if (response.success) {
+                            location.reload();
+                        } else {
+                            $btn.prop('disabled', false);
+                            alert(response.data.message || 'Error removing mapping');
+                        }
+                    });
+                });
+            }
+        },
+
+        /**
+         * Payment Mapping Module
+         * Handles payment gateway to Zoho account mapping
+         */
+        PaymentMapping: {
+            nonce: '',
+
+            init: function() {
+                // Check if we're on the payment mapping page
+                if (!$('.zbooks-account-select').length) {
+                    return;
+                }
+
+                this.nonce = typeof zbooks_refresh_accounts !== 'undefined' ? zbooks_refresh_accounts.nonce : '';
+                this.bindEvents();
+                this.initAccountNames();
+            },
+
+            bindEvents: function() {
+                var self = this;
+                var i18n = ZbooksAdmin.config.i18n;
+
+                // Sync account name hidden field when account select changes
+                $('.zbooks-account-select').on('change', function() {
+                    var $select = $(this);
+                    var gateway = $select.data('gateway');
+                    var selectedOption = $select.find('option:selected');
+                    var accountName = selectedOption.data('name') || '';
+
+                    // Update the corresponding hidden field
+                    $('.zbooks-account-name[data-gateway="' + gateway + '"]').val(accountName);
+                });
+
+                // Refresh accounts button
+                $('.zbooks-refresh-accounts').on('click', function() {
+                    var $btn = $(this);
+                    $btn.prop('disabled', true).text(i18n.refreshing || 'Refreshing...');
+
+                    $.ajax({
+                        url: ajaxurl,
+                        type: 'POST',
+                        data: {
+                            action: 'zbooks_refresh_bank_accounts',
+                            nonce: self.nonce
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                location.reload();
+                            } else {
+                                alert(response.data.message || (i18n.failed_to_refresh || 'Failed to refresh accounts.'));
+                                $btn.prop('disabled', false).text(i18n.refresh_zoho_accounts || 'Refresh Zoho Accounts');
+                            }
+                        },
+                        error: function() {
+                            alert(i18n.network_error_try_again || 'Network error. Please try again.');
+                            $btn.prop('disabled', false).text(i18n.refresh_zoho_accounts || 'Refresh Zoho Accounts');
+                        }
+                    });
+                });
+            },
+
+            initAccountNames: function() {
+                // Initialize account names on page load (for existing selections)
+                $('.zbooks-account-select').each(function() {
+                    var $select = $(this);
+                    var gateway = $select.data('gateway');
+                    var selectedOption = $select.find('option:selected');
+                    var accountName = selectedOption.data('name') || '';
+                    var $hidden = $('.zbooks-account-name[data-gateway="' + gateway + '"]');
+
+                    // Only update if hidden field is empty but select has a value
+                    if (!$hidden.val() && accountName) {
+                        $hidden.val(accountName);
+                    }
+                });
+            }
+        },
+
+        /**
+         * Field Mapping Module
+         * Handles custom field mapping for customers, invoices, and credit notes
+         */
+        FieldMapping: {
+            customerIndex: 0,
+            invoiceIndex: 0,
+            creditnoteIndex: 0,
+
+            init: function() {
+                // Check if we're on the field mapping page
+                if (!$('#zbooks-customer-mappings').length) {
+                    return;
+                }
+
+                // Initialize indices from existing mapping counts
+                this.customerIndex = $('#zbooks-customer-mappings .zbooks-mapping-row').length;
+                this.invoiceIndex = $('#zbooks-invoice-mappings .zbooks-mapping-row').length;
+                this.creditnoteIndex = $('#zbooks-creditnote-mappings .zbooks-mapping-row').length;
+
+                this.bindEvents();
+            },
+
+            bindEvents: function() {
+                var self = this;
+
+                // Add new mapping row
+                $(document).on('click', '.zbooks-add-mapping', function() {
+                    var type = $(this).data('type');
+                    var templateId = '#zbooks-' + type + '-mapping-template';
+                    var tableId = '#zbooks-' + type + '-mappings tbody';
+                    var index;
+
+                    if (type === 'customer') {
+                        index = self.customerIndex++;
+                    } else if (type === 'invoice') {
+                        index = self.invoiceIndex++;
+                    } else {
+                        index = self.creditnoteIndex++;
+                    }
+
+                    var template = $(templateId).html().replace(/\{\{index\}\}/g, index);
+                    $(tableId).find('.zbooks-no-mappings').remove();
+                    $(tableId).append(template);
+                });
+
+                // Remove mapping row
+                $(document).on('click', '.zbooks-remove-mapping', function() {
+                    $(this).closest('tr').remove();
+                });
+
+                // Update hidden label and type fields when Zoho field changes
+                $(document).on('change', '.zbooks-zoho-field', function() {
+                    var $selected = $(this).find('option:selected');
+                    var label = $selected.text();
+                    var fieldType = $selected.data('type') || 'string';
+                    $(this).siblings('input[name$="[zoho_field_label]"]').val(label);
+                    $(this).siblings('input[name$="[zoho_field_type]"]').val(fieldType);
+                });
+
+                // Save mappings
+                $('#zbooks-save-field-mappings').on('click', function() {
+                    self.saveMappings();
+                });
+
+                // Refresh Zoho fields
+                $('#zbooks-refresh-zoho-fields').on('click', function() {
+                    self.refreshZohoFields();
+                });
+            },
+
+            saveMappings: function() {
+                var $btn = $('#zbooks-save-field-mappings');
+                var $spinner = $('#zbooks-mapping-spinner');
+                var i18n = ZbooksAdmin.config.i18n;
+
+                $btn.prop('disabled', true);
+                $spinner.addClass('is-active');
+
+                var customerMappings = [];
+                var invoiceMappings = [];
+                var creditnoteMappings = [];
+
+                // Collect customer mappings
+                $('#zbooks-customer-mappings .zbooks-mapping-row').each(function() {
+                    var $row = $(this);
+                    var wcField = $row.find('.zbooks-wc-field').val();
+                    var $zohoSelect = $row.find('.zbooks-zoho-field');
+                    var zohoField = $zohoSelect.val();
+                    var $selected = $zohoSelect.find('option:selected');
+                    var zohoLabel = $selected.text();
+                    var zohoType = $selected.data('type') || 'string';
+
+                    if (wcField && zohoField) {
+                        customerMappings.push({
+                            wc_field: wcField,
+                            zoho_field: zohoField,
+                            zoho_field_label: zohoLabel,
+                            zoho_field_type: zohoType
+                        });
+                    }
+                });
+
+                // Collect invoice mappings
+                $('#zbooks-invoice-mappings .zbooks-mapping-row').each(function() {
+                    var $row = $(this);
+                    var wcField = $row.find('.zbooks-wc-field').val();
+                    var $zohoSelect = $row.find('.zbooks-zoho-field');
+                    var zohoField = $zohoSelect.val();
+                    var $selected = $zohoSelect.find('option:selected');
+                    var zohoLabel = $selected.text();
+                    var zohoType = $selected.data('type') || 'string';
+
+                    if (wcField && zohoField) {
+                        invoiceMappings.push({
+                            wc_field: wcField,
+                            zoho_field: zohoField,
+                            zoho_field_label: zohoLabel,
+                            zoho_field_type: zohoType
+                        });
+                    }
+                });
+
+                // Collect credit note mappings
+                $('#zbooks-creditnote-mappings .zbooks-mapping-row').each(function() {
+                    var $row = $(this);
+                    var wcField = $row.find('.zbooks-wc-field').val();
+                    var $zohoSelect = $row.find('.zbooks-zoho-field');
+                    var zohoField = $zohoSelect.val();
+                    var $selected = $zohoSelect.find('option:selected');
+                    var zohoLabel = $selected.text();
+                    var zohoType = $selected.data('type') || 'string';
+
+                    if (wcField && zohoField) {
+                        creditnoteMappings.push({
+                            wc_field: wcField,
+                            zoho_field: zohoField,
+                            zoho_field_label: zohoLabel,
+                            zoho_field_type: zohoType
+                        });
+                    }
+                });
+
+                $.ajax({
+                    url: ZbooksAdmin.config.ajaxUrl,
+                    type: 'POST',
+                    data: {
+                        action: 'zbooks_save_field_mappings',
+                        nonce: ZbooksAdmin.config.nonce,
+                        customer_mappings: customerMappings,
+                        invoice_mappings: invoiceMappings,
+                        creditnote_mappings: creditnoteMappings
+                    },
+                    success: function(response) {
+                        $btn.prop('disabled', false);
+                        $spinner.removeClass('is-active');
+
+                        var $notices = $('#zbooks-field-mapping-notices');
+                        if (response.success) {
+                            $notices.html('<div class="notice notice-success is-dismissible"><p>' + response.data.message + '</p></div>');
+                        } else {
+                            $notices.html('<div class="notice notice-error is-dismissible"><p>' + response.data.message + '</p></div>');
+                        }
+                    },
+                    error: function() {
+                        $btn.prop('disabled', false);
+                        $spinner.removeClass('is-active');
+                        $('#zbooks-field-mapping-notices').html('<div class="notice notice-error is-dismissible"><p>' + (i18n.failed_to_save_mappings || 'Failed to save mappings.') + '</p></div>');
+                    }
+                });
+            },
+
+            refreshZohoFields: function() {
+                var $btn = $('#zbooks-refresh-zoho-fields');
+                var $spinner = $('#zbooks-mapping-spinner');
+                var i18n = ZbooksAdmin.config.i18n;
+
+                $btn.prop('disabled', true);
+                $spinner.addClass('is-active');
+
+                $.ajax({
+                    url: ZbooksAdmin.config.ajaxUrl,
+                    type: 'POST',
+                    data: {
+                        action: 'zbooks_fetch_zoho_custom_fields',
+                        nonce: ZbooksAdmin.config.nonce
+                    },
+                    success: function(response) {
+                        $btn.prop('disabled', false);
+                        $spinner.removeClass('is-active');
+
+                        if (response.success) {
+                            location.reload();
+                        } else {
+                            $('#zbooks-field-mapping-notices').html('<div class="notice notice-error is-dismissible"><p>' + response.data.message + '</p></div>');
+                        }
+                    },
+                    error: function() {
+                        $btn.prop('disabled', false);
+                        $spinner.removeClass('is-active');
+                        $('#zbooks-field-mapping-notices').html('<div class="notice notice-error is-dismissible"><p>' + (i18n.failed_to_fetch_fields || 'Failed to fetch Zoho fields.') + '</p></div>');
+                    }
+                });
+            }
+        },
+
+        /**
+         * Settings Page Module
+         * Handles invoice numbering warning toggle
+         */
+        SettingsPage: {
+            init: function() {
+                // Check if we're on the settings page with the reference number checkbox
+                if (!$('#zbooks_use_reference_number').length) {
+                    return;
+                }
+
+                this.bindEvents();
+            },
+
+            bindEvents: function() {
+                var i18n = ZbooksAdmin.config.i18n;
+
+                $('#zbooks_use_reference_number').on('change', function() {
+                    var $warning = $('#zbooks_invoice_number_warning');
+                    if ($(this).is(':checked')) {
+                        $warning.slideUp(200);
+                    } else {
+                        $warning.slideDown(200);
+                        if (!confirm(i18n.invoice_number_warning || 'Warning: Using order numbers as invoice numbers may create gaps in your invoice sequence, which can cause issues during tax audits. Are you sure you want to disable this option?')) {
+                            $(this).prop('checked', true);
+                            $warning.hide();
+                        }
+                    }
+                });
+            }
+        },
+
+        /**
+         * Reconciliation Module
+         * Handles reconciliation report running, viewing, and management
+         */
+        Reconciliation: {
+            nonce: '',
+
+            init: function() {
+                // Check if we're on the reconciliation page
+                if (!$('#zbooks-run-reconciliation').length && !$('#zbooks-recon-frequency').length) {
+                    return;
+                }
+
+                this.nonce = typeof zbooks_reconciliation !== 'undefined' ? zbooks_reconciliation.nonce : '';
+                this.bindEvents();
+            },
+
+            bindEvents: function() {
+                var self = this;
+                var i18n = ZbooksAdmin.config.i18n;
+
+                // Toggle frequency options
+                $('#zbooks-recon-frequency').on('change', function() {
+                    var frequency = $(this).val();
+                    $('.zbooks-weekly-option, .zbooks-monthly-option').hide();
+                    if (frequency === 'weekly') {
+                        $('.zbooks-weekly-option').show();
+                    } else if (frequency === 'monthly') {
+                        $('.zbooks-monthly-option').show();
+                    }
+                });
+
+                // Run reconciliation
+                $('#zbooks-run-reconciliation').on('click', function() {
+                    var $btn = $(this);
+                    var $progress = $('#zbooks-reconciliation-progress');
+                    var startDate = $('#zbooks-recon-start').val();
+                    var endDate = $('#zbooks-recon-end').val();
+
+                    if (!startDate || !endDate) {
+                        alert(i18n.select_both_dates || 'Please select both start and end dates.');
+                        return;
+                    }
+
+                    if (startDate > endDate) {
+                        alert(i18n.start_before_end || 'Start date must be before end date.');
+                        return;
+                    }
+
+                    $btn.prop('disabled', true);
+                    $progress.show();
+
+                    $.ajax({
+                        url: ajaxurl,
+                        type: 'POST',
+                        data: {
+                            action: 'zbooks_run_reconciliation',
+                            nonce: self.nonce,
+                            start_date: startDate,
+                            end_date: endDate
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                location.reload();
+                            } else {
+                                alert(response.data.message || (i18n.reconciliation_failed || 'Reconciliation failed.'));
+                                $btn.prop('disabled', false);
+                                $progress.hide();
+                            }
+                        },
+                        error: function() {
+                            alert(i18n.network_error_try_again || 'Network error. Please try again.');
+                            $btn.prop('disabled', false);
+                            $progress.hide();
+                        }
+                    });
+                });
+
+                // Delete report
+                $(document).on('click', '.zbooks-delete-report', function() {
+                    if (!confirm(i18n.confirm_delete_report || 'Are you sure you want to delete this report?')) {
+                        return;
+                    }
+
+                    var $btn = $(this);
+                    var reportId = $btn.data('report-id');
+
+                    $btn.prop('disabled', true);
+
+                    $.ajax({
+                        url: ajaxurl,
+                        type: 'POST',
+                        data: {
+                            action: 'zbooks_delete_report',
+                            nonce: self.nonce,
+                            report_id: reportId
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                $btn.closest('tr').fadeOut(function() {
+                                    $(this).remove();
+                                });
+                            } else {
+                                alert(response.data.message || (i18n.failed_to_delete_report || 'Failed to delete report.'));
+                                $btn.prop('disabled', false);
+                            }
+                        },
+                        error: function() {
+                            alert(i18n.network_error_try_again || 'Network error. Please try again.');
+                            $btn.prop('disabled', false);
+                        }
+                    });
+                });
+
+                // Export CSV
+                $(document).on('click', '.zbooks-export-csv', function() {
+                    var reportId = $(this).data('report-id');
+                    var url = ajaxurl + '?action=zbooks_export_report_csv&nonce=' + self.nonce + '&report_id=' + reportId;
+                    window.location.href = url;
+                });
+
+                // View report
+                $(document).on('click', '.zbooks-view-report', function(e) {
+                    e.preventDefault();
+                    var $btn = $(this);
+                    var reportId = $btn.data('report-id');
+
+                    $btn.prop('disabled', true);
+
+                    $.ajax({
+                        url: ajaxurl,
+                        type: 'POST',
+                        data: {
+                            action: 'zbooks_view_report',
+                            nonce: self.nonce,
+                            report_id: reportId
+                        },
+                        success: function(response) {
+                            $btn.prop('disabled', false);
+                            if (response.success) {
+                                self.showReportModal(response.data);
+                            } else {
+                                alert(response.data.message || (i18n.failed_to_load_report || 'Failed to load report.'));
+                            }
+                        },
+                        error: function() {
+                            alert(i18n.network_error_try_again || 'Network error. Please try again.');
+                            $btn.prop('disabled', false);
+                        }
+                    });
+                });
+            },
+
+            showReportModal: function(data) {
+                var i18n = ZbooksAdmin.config.i18n;
+                var summary = data.summary || {};
+                var paymentIssues = (summary.payment_mismatches || 0) + (summary.refund_mismatches || 0);
+                var statusIssues = summary.status_mismatches || 0;
+
+                var modalHtml = '<div id="zbooks-report-modal" class="zbooks-modal">' +
+                    '<div class="zbooks-modal-content">' +
+                    '<span class="zbooks-modal-close">&times;</span>' +
+                    '<h2>' + (i18n.reconciliation_report || 'Reconciliation Report') + '</h2>' +
+                    '<p><strong>' + (i18n.period || 'Period:') + '</strong> ' + data.period_start + ' - ' + data.period_end + '</p>' +
+                    '<p><strong>' + (i18n.generated || 'Generated:') + '</strong> ' + data.generated_at + '</p>' +
+                    '<p><strong>' + (i18n.status || 'Status:') + '</strong> <span class="zbooks-status zbooks-status-' + data.status + '">' + data.status.charAt(0).toUpperCase() + data.status.slice(1) + '</span></p>' +
+                    (data.error ? '<p class="error"><strong>' + (i18n.error || 'Error:') + '</strong> ' + data.error + '</p>' : '') +
+                    '<div class="zbooks-modal-summary">' +
+                    '<h3>' + (i18n.summary || 'Summary') + '</h3>' +
+                    '<div class="summary-grid">' +
+                    '<div class="summary-item neutral"><span class="value">' + (summary.total_wc_orders || 0) + '</span><span class="label">' + (i18n.wc_orders || 'WC Orders') + '</span><span class="desc">' + (i18n.orders_in_period || 'Orders in period') + '</span></div>' +
+                    '<div class="summary-item neutral"><span class="value">' + (summary.total_zoho_invoices || 0) + '</span><span class="label">' + (i18n.zoho_invoices || 'Zoho Invoices') + '</span><span class="desc">' + (i18n.invoices_in_period || 'Invoices in period') + '</span></div>' +
+                    '<div class="summary-item success"><span class="value">' + (summary.matched_count || 0) + '</span><span class="label">' + (i18n.matched || 'Matched') + '</span><span class="desc">' + (i18n.orders_synced_correctly || 'Orders synced correctly') + '</span></div>' +
+                    '<div class="summary-item ' + ((summary.missing_in_zoho || 0) > 0 ? 'danger' : 'neutral') + '"><span class="value">' + (summary.missing_in_zoho || 0) + '</span><span class="label">' + (i18n.missing_in_zoho || 'Missing in Zoho') + '</span><span class="desc">' + (i18n.orders_without_invoices || 'Orders without invoices') + '</span></div>' +
+                    '<div class="summary-item ' + ((summary.amount_mismatches || 0) > 0 ? 'warning' : 'neutral') + '"><span class="value">' + (summary.amount_mismatches || 0) + '</span><span class="label">' + (i18n.amount_mismatches || 'Amount Mismatches') + '</span><span class="desc">' + (i18n.totals_dont_match || "Totals don't match") + '</span></div>' +
+                    '<div class="summary-item ' + (paymentIssues > 0 ? 'warning' : 'neutral') + '"><span class="value">' + paymentIssues + '</span><span class="label">' + (i18n.payment_issues || 'Payment Issues') + '</span><span class="desc">' + (i18n.payment_or_refund_mismatch || 'Payment or refund mismatch') + '</span></div>' +
+                    '<div class="summary-item ' + (statusIssues > 0 ? 'info' : 'neutral') + '"><span class="value">' + statusIssues + '</span><span class="label">' + (i18n.status_mismatches || 'Status Mismatches') + '</span><span class="desc">' + (i18n.invoice_status_differs || 'Invoice status differs') + '</span></div>' +
+                    '<div class="summary-item neutral"><span class="value">' + (summary.missing_in_wc || 0) + '</span><span class="label">' + (i18n.missing_in_wc || 'Missing in WC') + '</span><span class="desc">' + (i18n.invoices_without_orders || 'Invoices without orders') + '</span></div>' +
+                    '</div></div>' +
+                    '<div class="zbooks-modal-discrepancies">' +
+                    '<h3>' + (i18n.discrepancies || 'Discrepancies') + ' (' + data.discrepancy_count + ')</h3>' +
+                    data.discrepancies_html +
+                    '</div>' +
+                    '</div></div>';
+
+                // Remove existing modal
+                $('#zbooks-report-modal').remove();
+
+                // Add modal to body
+                $('body').append(modalHtml);
+
+                // Show modal
+                $('#zbooks-report-modal').fadeIn();
+
+                // Close on X click
+                $('.zbooks-modal-close').on('click', function() {
+                    $('#zbooks-report-modal').fadeOut(function() {
+                        $(this).remove();
+                    });
+                });
+
+                // Close on outside click
+                $('#zbooks-report-modal').on('click', function(e) {
+                    if ($(e.target).is('.zbooks-modal')) {
+                        $(this).fadeOut(function() {
+                            $(this).remove();
+                        });
+                    }
+                });
+            }
         }
+    };
+
+    /**
+     * Global functions for log viewer buttons (called from HTML onclick)
+     */
+    window.zbooksRefreshLogs = function() {
+        location.reload();
+    };
+
+    window.zbooksClearOldLogs = function() {
+        var i18n = ZbooksAdmin.config.i18n;
+        var confirmMsg = i18n.confirm_clear_old_logs || 'Delete old log files?';
+
+        if (!confirm(confirmMsg)) {
+            return;
+        }
+
+        var nonce = typeof zbooks_logs !== 'undefined' ? zbooks_logs.clear_logs_nonce : '';
+
+        jQuery.post(ajaxurl, {
+            action: 'zbooks_clear_logs',
+            nonce: nonce
+        }, function(response) {
+            if (response.success) {
+                alert(response.data.message);
+                location.reload();
+            } else {
+                alert(response.data.message || 'Error clearing logs');
+            }
+        });
+    };
+
+    window.zbooksClearAllLogs = function() {
+        var i18n = ZbooksAdmin.config.i18n;
+
+        if (!confirm(i18n.confirm_clear_all_logs || 'Delete ALL log files? This cannot be undone.')) {
+            return;
+        }
+
+        var nonce = typeof zbooks_logs !== 'undefined' ? zbooks_logs.clear_all_logs_nonce : '';
+
+        jQuery.post(ajaxurl, {
+            action: 'zbooks_clear_all_logs',
+            nonce: nonce
+        }, function(response) {
+            if (response.success) {
+                alert(response.data.message);
+                location.reload();
+            } else {
+                alert(response.data.message || 'Error clearing logs');
+            }
+        });
     };
 
     /**

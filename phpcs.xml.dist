@@ -55,6 +55,17 @@
         <exclude name="WordPress.Files.FileName.NotHyphenatedLowercase"/>
     </rule>
 
+    <!-- WooCommerce capabilities are valid when WooCommerce is active -->
+    <rule ref="WordPress.WP.Capabilities">
+        <properties>
+            <property name="custom_capabilities" type="array">
+                <element value="manage_woocommerce"/>
+                <element value="edit_shop_orders"/>
+                <element value="view_woocommerce_reports"/>
+            </property>
+        </properties>
+    </rule>
+
     <!-- Verify that everything in the global namespace is prefixed -->
     <rule ref="WordPress.WP.I18n">
         <properties>

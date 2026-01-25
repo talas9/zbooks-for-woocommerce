@@ -107,6 +107,8 @@ class OrderMetaBox {
 		$payment_id     = $this->repository->get_payment_id( $order );
 		$payment_number = $this->repository->get_payment_number( $order );
 		$refunds        = $this->repository->get_refund_ids( $order );
+		$invoice_status = $this->repository->get_invoice_status( $order );
+		$payment_error  = $this->repository->get_payment_error( $order );
 		$error          = $this->repository->get_sync_error( $order );
 		$last_attempt   = $this->repository->get_last_sync_attempt( $order );
 
@@ -143,6 +145,35 @@ class OrderMetaBox {
 					<a href="<?php echo esc_url( ZohoUrlHelper::invoice( $invoice_id ) ); ?>" target="_blank">
 						<?php echo esc_html( $invoice_number ?? $invoice_id ); ?>
 					</a>
+				</p>
+			<?php endif; ?>
+
+			<?php if ( $invoice_id && $invoice_status ) : ?>
+				<p>
+					<strong><?php esc_html_e( 'Invoice Status:', 'zbooks-for-woocommerce' ); ?></strong>
+					<?php
+					$status_class = 'zbooks-invoice-status-' . sanitize_html_class( strtolower( $invoice_status ) );
+					$status_colors = [
+						'draft'          => '#dba617',
+						'sent'           => '#2271b1',
+						'viewed'         => '#2271b1',
+						'paid'           => '#00a32a',
+						'partially_paid' => '#dba617',
+						'overdue'        => '#d63638',
+						'void'           => '#787c82',
+					];
+					$status_color = $status_colors[ strtolower( $invoice_status ) ] ?? '#787c82';
+					?>
+					<span class="<?php echo esc_attr( $status_class ); ?>" style="color: <?php echo esc_attr( $status_color ); ?>; font-weight: 600;">
+						<?php echo esc_html( ucwords( str_replace( '_', ' ', $invoice_status ) ) ); ?>
+					</span>
+					<button type="button"
+						class="button-link zbooks-refresh-status-btn"
+						data-order-id="<?php echo esc_attr( $order->get_id() ); ?>"
+						style="margin-left: 5px; font-size: 11px; text-decoration: underline;"
+						title="<?php esc_attr_e( 'Refresh status from Zoho', 'zbooks-for-woocommerce' ); ?>">
+						<?php esc_html_e( 'Refresh', 'zbooks-for-woocommerce' ); ?>
+					</button>
 				</p>
 			<?php endif; ?>
 
@@ -225,6 +256,13 @@ class OrderMetaBox {
 				<p class="zbooks-error">
 					<strong><?php esc_html_e( 'Error:', 'zbooks-for-woocommerce' ); ?></strong>
 					<?php echo esc_html( $error ); ?>
+				</p>
+			<?php endif; ?>
+
+			<?php if ( $payment_error ) : ?>
+				<p class="zbooks-error" style="background: #fcf0f1; padding: 8px; border-left: 4px solid #d63638;">
+					<strong><?php esc_html_e( 'Payment Error:', 'zbooks-for-woocommerce' ); ?></strong>
+					<?php echo esc_html( $payment_error ); ?>
 				</p>
 			<?php endif; ?>
 

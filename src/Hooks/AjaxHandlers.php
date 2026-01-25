@@ -48,6 +48,7 @@ class AjaxHandlers {
 		add_action( 'wp_ajax_zbooks_test_connection', [ $this, 'handle_test_connection' ] );
 		add_action( 'wp_ajax_zbooks_apply_payment', [ $this, 'handle_apply_payment' ] );
 		add_action( 'wp_ajax_zbooks_refresh_bank_accounts', [ $this, 'handle_refresh_bank_accounts' ] );
+		add_action( 'wp_ajax_zbooks_refresh_invoice_status', [ $this, 'handle_refresh_invoice_status' ] );
 	}
 
 	/**
@@ -268,6 +269,59 @@ class AjaxHandlers {
 				'message' => __( 'Bank accounts refreshed.', 'zbooks-for-woocommerce' ),
 			]
 		);
+	}
+
+	/**
+	 * Handle refresh invoice status AJAX request.
+	 */
+	public function handle_refresh_invoice_status(): void {
+		check_ajax_referer( 'zbooks_ajax_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'edit_shop_orders' ) ) {
+			wp_send_json_error(
+				[
+					'message' => __( 'Permission denied.', 'zbooks-for-woocommerce' ),
+				]
+			);
+		}
+
+		$order_id = isset( $_POST['order_id'] ) ? absint( $_POST['order_id'] ) : 0;
+
+		if ( ! $order_id ) {
+			wp_send_json_error(
+				[
+					'message' => __( 'Invalid order ID.', 'zbooks-for-woocommerce' ),
+				]
+			);
+		}
+
+		$order = wc_get_order( $order_id );
+
+		if ( ! $order ) {
+			wp_send_json_error(
+				[
+					'message' => __( 'Order not found.', 'zbooks-for-woocommerce' ),
+				]
+			);
+		}
+
+		$status = $this->orchestrator->refresh_invoice_status( $order );
+
+		if ( $status !== null ) {
+			wp_send_json_success(
+				[
+					'message' => __( 'Invoice status refreshed.', 'zbooks-for-woocommerce' ),
+					'status'  => $status,
+					'label'   => ucwords( str_replace( '_', ' ', $status ) ),
+				]
+			);
+		} else {
+			wp_send_json_error(
+				[
+					'message' => __( 'Could not refresh status. Order may not be synced.', 'zbooks-for-woocommerce' ),
+				]
+			);
+		}
 	}
 
 	/**

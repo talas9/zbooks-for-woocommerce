@@ -60,21 +60,35 @@ jobs:
         continue-on-error: true
 
       - name: Activate WooCommerce
-        run: npx wp-env run cli wp plugin activate woocommerce
+        run: |
+          npx wp-env run cli wp plugin activate woocommerce
+          npx wp-env run tests-cli wp plugin activate woocommerce
 
       - name: Activate Plugin
-        run: npx wp-env run cli wp plugin activate zbooks-for-woocommerce
+        run: |
+          npx wp-env run cli wp plugin activate zbooks-for-woocommerce
+          npx wp-env run tests-cli wp plugin activate zbooks-for-woocommerce
 
       - name: Wait for WordPress
         run: |
           echo "Waiting for WordPress to be ready..."
-          timeout 60 bash -c 'until curl -s http://localhost:8888 > /dev/null; do sleep 2; done'
+          timeout 60 bash -c 'until curl -s http://localhost:8889 > /dev/null; do sleep 2; done'
           echo "WordPress is ready!"
+
+      - name: Setup Zoho credentials (tests environment)
+        if: ${{ secrets.ZOHO_CLIENT_ID != '' }}
+        run: npm run env:setup:tests
+        env:
+          ZOHO_CLIENT_ID: ${{ secrets.ZOHO_CLIENT_ID }}
+          ZOHO_CLIENT_SECRET: ${{ secrets.ZOHO_CLIENT_SECRET }}
+          ZOHO_REFRESH_TOKEN: ${{ secrets.ZOHO_REFRESH_TOKEN }}
+          ZOHO_ORGANIZATION_ID: ${{ secrets.ZOHO_ORGANIZATION_ID }}
+          ZOHO_DATACENTER: ${{ secrets.ZOHO_DATACENTER || 'us' }}
 
       - name: Run E2E tests
         run: npm run test:e2e -- --project=chromium
         env:
-          WP_BASE_URL: http://localhost:8888
+          WP_BASE_URL: http://localhost:8889
           WP_ADMIN_USER: admin
           WP_ADMIN_PASSWORD: password
 

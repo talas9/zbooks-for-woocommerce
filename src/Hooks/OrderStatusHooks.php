@@ -74,6 +74,8 @@ class OrderStatusHooks {
 			10,
 			2
 		);
+
+		add_action( 'woocommerce_order_status_cancelled', [ $this, 'on_order_cancelled' ], 10, 1 );
 	}
 
 	/**
@@ -286,6 +288,84 @@ class OrderStatusHooks {
 
 		$this->orchestrator->process_refund( $order, $refund );
 	}
+
+	/**
+	 * Handle order cancellation.
+	 *
+	 * Voids the corresponding Zoho invoice if no payment has been applied.
+	 *
+	 * @param int $order_id WooCommerce order ID.
+	 */
+	public function on_order_cancelled( int $order_id ): void {
+		$order = wc_get_order( $order_id );
+		if ( ! $order ) {
+			return;
+		}
+
+		$invoice_id = $order->get_meta( '_zbooks_zoho_invoice_id' );
+		if ( empty( $invoice_id ) ) {
+			return; // Never synced.
+		}
+
+		// Check if invoice can be voided (no payments applied).
+		$payment_id = $order->get_meta( '_zbooks_zoho_payment_id' );
+		if ( ! empty( $payment_id ) ) {
+			$order->add_order_note(
+				__( 'Cannot void Zoho invoice - payment already applied. Manual void required in Zoho Books.', 'zbooks-for-woocommerce' )
+			);
+			return;
+		}
+
+		// Schedule void action via Action Scheduler if available.
+		if ( function_exists( 'as_schedule_single_action' ) ) {
+			as_schedule_single_action(
+				time(),
+				'zbooks_void_invoice',
+				[ 'order_id' => $order_id ],
+				'zbooks'
+			);
+		} else {
+			// Void immediately if Action Scheduler not available.
+			$this->void_invoice_for_order( $order );
+		}
+	}
+
+	/**
+	 * Void invoice for an order.
+	 *
+	 * @param WC_Order $order WooCommerce order.
+	 */
+	private function void_invoice_for_order( WC_Order $order ): void {
+		$plugin = \Zbooks\Plugin::get_instance();
+		$invoice_service = $plugin->get_service( 'invoice_service' );
+
+		if ( ! $invoice_service ) {
+			return;
+		}
+
+		$invoice_id = $order->get_meta( '_zbooks_zoho_invoice_id' );
+		if ( empty( $invoice_id ) ) {
+			return;
+		}
+
+		$result = $invoice_service->void_invoice( $invoice_id );
+
+		if ( $result ) {
+			$order->add_order_note(
+				sprintf(
+					/* translators: %s: Invoice ID */
+					__( 'Zoho invoice %s has been voided due to order cancellation.', 'zbooks-for-woocommerce' ),
+					$invoice_id
+				)
+			);
+			$order->update_meta_data( '_zbooks_zoho_invoice_status', 'void' );
+			$order->save();
+		} else {
+			$order->add_order_note(
+				__( 'Failed to void Zoho invoice. Please void manually in Zoho Books.', 'zbooks-for-woocommerce' )
+			);
+		}
+	}
 }
 
 // Register Action Scheduler callbacks.
@@ -320,4 +400,46 @@ add_action(
 	},
 	10,
 	2
+);
+
+add_action(
+	'zbooks_void_invoice',
+	function ( int $order_id ) {
+		$order = wc_get_order( $order_id );
+		if ( ! $order ) {
+			return;
+		}
+
+		$plugin = \Zbooks\Plugin::get_instance();
+		$invoice_service = $plugin->get_service( 'invoice_service' );
+
+		if ( ! $invoice_service ) {
+			return;
+		}
+
+		$invoice_id = $order->get_meta( '_zbooks_zoho_invoice_id' );
+		if ( empty( $invoice_id ) ) {
+			return;
+		}
+
+		$result = $invoice_service->void_invoice( $invoice_id );
+
+		if ( $result ) {
+			$order->add_order_note(
+				sprintf(
+					/* translators: %s: Invoice ID */
+					__( 'Zoho invoice %s has been voided due to order cancellation.', 'zbooks-for-woocommerce' ),
+					$invoice_id
+				)
+			);
+			$order->update_meta_data( '_zbooks_zoho_invoice_status', 'void' );
+			$order->save();
+		} else {
+			$order->add_order_note(
+				__( 'Failed to void Zoho invoice. Please void manually in Zoho Books.', 'zbooks-for-woocommerce' )
+			);
+		}
+	},
+	10,
+	1
 );

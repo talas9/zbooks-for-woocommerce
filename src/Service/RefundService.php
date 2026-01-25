@@ -16,6 +16,7 @@ use WC_Order_Refund;
 use Zbooks\Api\ZohoClient;
 use Zbooks\Logger\SyncLogger;
 use Zbooks\Repository\FieldMappingRepository;
+use Zbooks\Repository\OrderMetaRepository;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -46,20 +47,30 @@ class RefundService {
 	private FieldMappingRepository $field_mapping;
 
 	/**
+	 * Order meta repository.
+	 *
+	 * @var OrderMetaRepository
+	 */
+	private OrderMetaRepository $order_meta;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param ZohoClient             $client        Zoho client instance.
 	 * @param SyncLogger             $logger        Logger instance.
 	 * @param FieldMappingRepository $field_mapping Field mapping repository.
+	 * @param OrderMetaRepository    $order_meta    Order meta repository.
 	 */
 	public function __construct(
 		ZohoClient $client,
 		SyncLogger $logger,
-		FieldMappingRepository $field_mapping
+		FieldMappingRepository $field_mapping,
+		OrderMetaRepository $order_meta
 	) {
 		$this->client        = $client;
 		$this->logger        = $logger;
 		$this->field_mapping = $field_mapping;
+		$this->order_meta    = $order_meta;
 	}
 
 	/**
@@ -128,7 +139,7 @@ class RefundService {
 			$credit_note_number = $credit_note_result['number'];
 
 			// Step 2: Apply credit note to invoice.
-			$this->apply_credit_to_invoice( $credit_note_id, $invoice_id, $refund_amount );
+			$this->apply_credit_to_invoice( $credit_note_id, $invoice_id, $refund_amount, $order );
 
 			// Step 3: Create refund (actual money back to customer) if enabled.
 			$zoho_refund_id  = null;
@@ -341,14 +352,16 @@ class RefundService {
 	 * 1. POST /invoices/{invoice_id}/credits - requires ZohoBooks.invoices.UPDATE scope
 	 * 2. POST /creditnotes/{credit_note_id}/invoices - alternative endpoint
 	 *
-	 * @param string $credit_note_id Credit note ID.
-	 * @param string $invoice_id     Invoice ID.
-	 * @param float  $amount         Amount to apply.
+	 * @param string   $credit_note_id Credit note ID.
+	 * @param string   $invoice_id     Invoice ID.
+	 * @param float    $amount         Amount to apply.
+	 * @param WC_Order $order          WooCommerce order for tracking.
 	 */
 	private function apply_credit_to_invoice(
 		string $credit_note_id,
 		string $invoice_id,
-		float $amount
+		float $amount,
+		WC_Order $order
 	): void {
 		// Check invoice status first - credits can't be applied to draft/closed/void invoices.
 		$status_check = $this->can_apply_credit_to_invoice( $invoice_id );
@@ -452,7 +465,19 @@ class RefundService {
 					]
 				);
 			}
-			// Don't throw - credit note still exists and can be applied manually.
+
+			// Track unapplied credit in order meta.
+			$this->order_meta->set_unapplied_credit( $order, $credit_note_id, $error_msg );
+
+			// Add order note warning.
+			$order->add_order_note(
+				sprintf(
+					/* translators: 1: Credit note ID, 2: Error message */
+					__( 'Zoho credit note %1$s created but could not be applied to invoice. Reason: %2$s. Please apply manually in Zoho Books.', 'zbooks-for-woocommerce' ),
+					$credit_note_id,
+					$error_msg
+				)
+			);
 		}
 	}
 
