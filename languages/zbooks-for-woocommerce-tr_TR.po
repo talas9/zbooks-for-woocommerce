@@ -1,870 +1,873 @@
+# Turkish translation for ZBooks for WooCommerce.
 # Copyright (C) 2024 talas9
 # This file is distributed under the GPL-2.0+.
 msgid ""
 msgstr ""
-"Project-Id-Version: ZBooks for WooCommerce 1.0.0\n"
+"Project-Id-Version: ZBooks for WooCommerce 1.0.5\n"
 "Report-Msgid-Bugs-To: https://github.com/talas9/zbooks-for-woocommerce/issues\n"
 "POT-Creation-Date: 2024-01-25 00:00:00+00:00\n"
+"PO-Revision-Date: 2025-01-25 00:00:00+00:00\n"
+"Last-Translator: ZBooks Team\n"
+"Language-Team: Turkish\n"
+"Language: tr_TR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: Turkish <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
 msgid "-- Not Mapped --"
-msgstr ""
+msgstr "-- Eşleştirilmedi --"
 
 msgid "-- Select Account --"
-msgstr ""
+msgstr "-- Hesap Seçin --"
 
 msgid "-- Select Mode --"
-msgstr ""
+msgstr "-- Mod Seçin --"
 
 msgid "Action"
-msgstr ""
+msgstr "İşlem"
 
 msgid "Actions"
-msgstr ""
+msgstr "İşlemler"
 
 msgid "Add Customer Mapping"
-msgstr ""
+msgstr "Müşteri Eşleştirmesi Ekle"
 
 msgid "Add Invoice Mapping"
-msgstr ""
+msgstr "Fatura Eşleştirmesi Ekle"
 
 msgid "Advanced"
-msgstr ""
+msgstr "Gelişmiş"
 
 msgid "All"
-msgstr ""
+msgstr "Tümü"
 
 msgid "Already linked."
-msgstr ""
+msgstr "Zaten bağlı."
 
 msgid "An error occurred."
-msgstr ""
+msgstr "Bir hata oluştu."
 
 msgid "API Credentials"
-msgstr ""
+msgstr "API Kimlik Bilgileri"
 
 msgid "Apply Payment"
-msgstr ""
+msgstr "Ödeme Uygula"
 
 msgid "Are you sure you want to sync the selected orders?"
-msgstr ""
+msgstr "Seçili siparişleri senkronize etmek istediğinizden emin misiniz?"
 
 msgid "Australia (.com.au)"
-msgstr ""
+msgstr "Avustralya (.com.au)"
 
 msgid "Auto-Map by SKU"
-msgstr ""
+msgstr "SKU ile Otomatik Eşleştir"
 
 msgid "Back"
-msgstr ""
+msgstr "Geri"
 
 msgid "Bank"
-msgstr ""
+msgstr "Banka"
 
 msgid "Bank accounts refreshed."
-msgstr ""
+msgstr "Banka hesapları yenilendi."
 
 msgid "Billing Address 1"
-msgstr ""
+msgstr "Fatura Adresi 1"
 
 msgid "Billing Address 2"
-msgstr ""
+msgstr "Fatura Adresi 2"
 
 msgid "Billing City"
-msgstr ""
+msgstr "Fatura Şehri"
 
 msgid "Billing Company"
-msgstr ""
+msgstr "Fatura Şirketi"
 
 msgid "Billing Country"
-msgstr ""
+msgstr "Fatura Ülkesi"
 
 msgid "Billing Email"
-msgstr ""
+msgstr "Fatura E-postası"
 
 msgid "Billing First Name"
-msgstr ""
+msgstr "Fatura Adı"
 
 msgid "Billing Full Name"
-msgstr ""
+msgstr "Fatura Tam Adı"
 
 msgid "Billing Last Name"
-msgstr ""
+msgstr "Fatura Soyadı"
 
 msgid "Billing Phone"
-msgstr ""
+msgstr "Fatura Telefonu"
 
 msgid "Billing Postcode"
-msgstr ""
+msgstr "Fatura Posta Kodu"
 
 msgid "Billing State"
-msgstr ""
+msgstr "Fatura İli"
 
 msgid "Bulk Sync"
-msgstr ""
+msgstr "Toplu Senkronizasyon"
 
 msgid "Bulk Sync Orders to Zoho Books"
-msgstr ""
+msgstr "Siparişleri Zoho Books'a Toplu Senkronize Et"
 
 msgid "Cancel"
-msgstr ""
+msgstr "İptal"
 
 msgid "Cash"
-msgstr ""
+msgstr "Nakit"
 
 msgid "China (.com.cn)"
-msgstr ""
+msgstr "Çin (.com.cn)"
 
 msgid "Clear"
-msgstr ""
+msgstr "Temizle"
 
 msgid "Client ID"
-msgstr ""
+msgstr "Client ID"
 
 msgid "Client Secret"
-msgstr ""
+msgstr "Client Secret"
 
 msgid "Close"
-msgstr ""
+msgstr "Kapat"
 
 msgid "Complete"
-msgstr ""
+msgstr "Tamamla"
 
 msgid "Completed"
-msgstr ""
+msgstr "Tamamlandı"
 
 msgid "Configuration incomplete."
-msgstr ""
+msgstr "Yapılandırma tamamlanmadı."
 
 msgid "Configure Sync"
-msgstr ""
+msgstr "Senkronizasyonu Yapılandır"
 
 msgid "Configure sync behavior for different order statuses."
-msgstr ""
+msgstr "Farklı sipariş durumları için senkronizasyon davranışını yapılandırın."
 
 msgid "Connection"
-msgstr ""
+msgstr "Bağlantı"
 
 msgid "Connection failed. Please check your credentials."
-msgstr ""
+msgstr "Bağlantı başarısız. Lütfen kimlik bilgilerinizi kontrol edin."
 
 msgid "Connection successful!"
-msgstr ""
+msgstr "Bağlantı başarılı!"
 
 msgid "Context / Details:"
-msgstr ""
+msgstr "Bağlam / Detaylar:"
 
 msgid "Copied!"
-msgstr ""
+msgstr "Kopyalandı!"
 
 msgid "Copy JSON"
-msgstr ""
+msgstr "JSON Kopyala"
 
 msgid "Coupon Codes"
-msgstr ""
+msgstr "Kupon Kodları"
 
 msgid "Create"
-msgstr ""
+msgstr "Oluştur"
 
 msgid "Create & send invoice"
-msgstr ""
+msgstr "Fatura oluştur ve gönder"
 
 msgid "Create and submit invoice"
-msgstr ""
+msgstr "Fatura oluştur ve gönder"
 
 msgid "Create draft invoice"
-msgstr ""
+msgstr "Taslak fatura oluştur"
 
 msgid "Create in Zoho"
-msgstr ""
+msgstr "Zoho'da Oluştur"
 
 msgid "Create Selected in Zoho"
-msgstr ""
+msgstr "Seçilenleri Zoho'da Oluştur"
 
 msgid "Created!"
-msgstr ""
+msgstr "Oluşturuldu!"
 
 msgid "Creating..."
-msgstr ""
+msgstr "Oluşturuluyor..."
 
 msgid "Credit Note ID:"
-msgstr ""
+msgstr "Alacak Dekontu ID:"
 
 msgid "Currency"
-msgstr ""
+msgstr "Para Birimi"
 
 msgid "Currency Handling"
-msgstr ""
+msgstr "Para Birimi İşleme"
 
 msgid "Customer"
-msgstr ""
+msgstr "Müşteri"
 
 msgid "Customer Note"
-msgstr ""
+msgstr "Müşteri Notu"
 
 msgid "Datacenter"
-msgstr ""
+msgstr "Veri Merkezi"
 
 msgid "Date"
-msgstr ""
+msgstr "Tarih"
 
 msgid "Date:"
-msgstr ""
+msgstr "Tarih:"
 
 msgid "Debug"
-msgstr ""
+msgstr "Hata Ayıklama"
 
 msgid "Deposit To"
-msgstr ""
+msgstr "Yatırılacak Hesap"
 
 msgid "Details"
-msgstr ""
+msgstr "Detaylar"
 
 msgid "Display Name"
-msgstr ""
+msgstr "Görünen Ad"
 
 msgid "Do nothing"
-msgstr ""
+msgstr "Hiçbir şey yapma"
 
 msgid "Draft"
-msgstr ""
+msgstr "Taslak"
 
 msgid "Email Admin on Sync Errors"
-msgstr ""
+msgstr "Senkronizasyon Hatalarında Yöneticiye E-posta Gönder"
 
 msgid "Enable"
-msgstr ""
+msgstr "Etkinleştir"
 
 msgid "Enable automatic sync when orders are placed"
-msgstr ""
+msgstr "Siparişler verildiğinde otomatik senkronizasyonu etkinleştir"
 
 msgid "Error:"
-msgstr ""
+msgstr "Hata:"
 
 msgid "Errors"
-msgstr ""
+msgstr "Hatalar"
 
 msgid "Europe (.eu)"
-msgstr ""
+msgstr "Avrupa (.eu)"
 
 msgid "Every 15 Minutes"
-msgstr ""
+msgstr "Her 15 Dakikada"
 
 msgid "Failed"
-msgstr ""
+msgstr "Başarısız"
 
 msgid "Failed to apply payment."
-msgstr ""
+msgstr "Ödeme uygulanamadı."
 
 msgid "Failed to connect to Zoho Books."
-msgstr ""
+msgstr "Zoho Books'a bağlanılamadı."
 
 msgid "Failed to link item."
-msgstr ""
+msgstr "Öğe bağlanamadı."
 
 msgid "Failed to refresh accounts."
-msgstr ""
+msgstr "Hesaplar yenilenemedi."
 
 msgid "Failed to save mapping."
-msgstr ""
+msgstr "Eşleştirme kaydedilemedi."
 
 msgid "Fetching Zoho items..."
-msgstr ""
+msgstr "Zoho öğeleri alınıyor..."
 
 msgid "Field Mapping"
-msgstr ""
+msgstr "Alan Eşleştirme"
 
 msgid "Field mappings saved successfully."
-msgstr ""
+msgstr "Alan eşleştirmeleri başarıyla kaydedildi."
 
 msgid "Filter"
-msgstr ""
+msgstr "Filtrele"
 
 msgid "Finish"
-msgstr ""
+msgstr "Bitir"
 
 msgid "Go to Settings"
-msgstr ""
+msgstr "Ayarlara Git"
 
 msgid "India (.in)"
-msgstr ""
+msgstr "Hindistan (.in)"
 
 msgid "Info"
-msgstr ""
+msgstr "Bilgi"
 
 msgid "Invalid order ID."
-msgstr ""
+msgstr "Geçersiz sipariş ID."
 
 msgid "Invalid product ID."
-msgstr ""
+msgstr "Geçersiz ürün ID."
 
 msgid "Invoice"
-msgstr ""
+msgstr "Fatura"
 
 msgid "Invoice ID:"
-msgstr ""
+msgstr "Fatura ID:"
 
 msgid "Invoice Number:"
-msgstr ""
+msgstr "Fatura Numarası:"
 
 msgid "Invoice Numbering"
-msgstr ""
+msgstr "Fatura Numaralandırma"
 
 msgid "Invoice Status:"
-msgstr ""
+msgstr "Fatura Durumu:"
 
 msgid "Item created in Zoho Books!"
-msgstr ""
+msgstr "Öğe Zoho Books'ta oluşturuldu!"
 
 msgid "Item linked successfully!"
-msgstr ""
+msgstr "Öğe başarıyla bağlandı!"
 
 msgid "Item Mapping"
-msgstr ""
+msgstr "Öğe Eşleştirme"
 
 msgid "Item updated in Zoho Books!"
-msgstr ""
+msgstr "Öğe Zoho Books'ta güncellendi!"
 
 msgid "Japan (.jp)"
-msgstr ""
+msgstr "Japonya (.jp)"
 
 msgid "Last Synced:"
-msgstr ""
+msgstr "Son Senkronizasyon:"
 
 msgid "Level:"
-msgstr ""
+msgstr "Seviye:"
 
 msgid "Link"
-msgstr ""
+msgstr "Bağla"
 
 msgid "Link Selected"
-msgstr ""
+msgstr "Seçilenleri Bağla"
 
 msgid "Linked!"
-msgstr ""
+msgstr "Bağlandı!"
 
 msgid "Linking..."
-msgstr ""
+msgstr "Bağlanıyor..."
 
 msgid "Loading organizations..."
-msgstr ""
+msgstr "Kuruluşlar yükleniyor..."
 
 msgid "Log Configuration"
-msgstr ""
+msgstr "Günlük Yapılandırması"
 
 msgid "Log Entry Details"
-msgstr ""
+msgstr "Günlük Kaydı Detayları"
 
 msgid "Log Settings"
-msgstr ""
+msgstr "Günlük Ayarları"
 
 msgid "Logs"
-msgstr ""
+msgstr "Günlükler"
 
 msgid "Manage Field Mappings"
-msgstr ""
+msgstr "Alan Eşleştirmelerini Yönet"
 
 msgid "Manage Payment Method Mapping"
-msgstr ""
+msgstr "Ödeme Yöntemi Eşleştirmesini Yönet"
 
 msgid "Manage Product Mapping"
-msgstr ""
+msgstr "Ürün Eşleştirmesini Yönet"
 
 msgid "Map Products to Zoho Items"
-msgstr ""
+msgstr "Ürünleri Zoho Öğeleriyle Eşleştir"
 
 msgid "Map WooCommerce Products to Zoho Items"
-msgstr ""
+msgstr "WooCommerce Ürünlerini Zoho Öğeleriyle Eşleştir"
 
 msgid "Mapping removed."
-msgstr ""
+msgstr "Eşleştirme kaldırıldı."
 
 msgid "Mapping saved."
-msgstr ""
+msgstr "Eşleştirme kaydedildi."
 
 msgid "Message"
-msgstr ""
+msgstr "Mesaj"
 
 msgid "Message:"
-msgstr ""
+msgstr "Mesaj:"
 
 msgid "minutes"
-msgstr ""
+msgstr "dakika"
 
 msgid "Network error while linking."
-msgstr ""
+msgstr "Bağlantı sırasında ağ hatası."
 
 msgid "Never"
-msgstr ""
+msgstr "Asla"
 
 msgid "New orders will be synced automatically based on your trigger settings"
-msgstr ""
+msgstr "Yeni siparişler tetikleme ayarlarınıza göre otomatik olarak senkronize edilecek"
 
 msgid "Next"
-msgstr ""
+msgstr "İleri"
 
 msgid "No"
-msgstr ""
+msgstr "Hayır"
 
 msgid "No log entries found."
-msgstr ""
+msgstr "Günlük kaydı bulunamadı."
 
 msgid "No logs available"
-msgstr ""
+msgstr "Günlük mevcut değil"
 
 msgid "No orders found matching your criteria."
-msgstr ""
+msgstr "Kriterlerinize uyan sipariş bulunamadı."
 
 msgid "No products found."
-msgstr ""
+msgstr "Ürün bulunamadı."
 
 msgid "No published products found in WooCommerce."
-msgstr ""
+msgstr "WooCommerce'de yayınlanmış ürün bulunamadı."
 
 msgid "Not Linked"
-msgstr ""
+msgstr "Bağlı Değil"
 
 msgid "Not linked"
-msgstr ""
+msgstr "Bağlı değil"
 
 msgid "Not synced yet"
-msgstr ""
+msgstr "Henüz senkronize edilmedi"
 
 msgid "On Processing"
-msgstr ""
+msgstr "İşleme Alındığında"
 
 msgid "Order"
-msgstr ""
+msgstr "Sipariş"
 
 msgid "Order #%s"
-msgstr ""
+msgstr "Sipariş #%s"
 
 msgid "Order Date"
-msgstr ""
+msgstr "Sipariş Tarihi"
 
 msgid "Order has no billing email address."
-msgstr ""
+msgstr "Siparişin fatura e-posta adresi yok."
 
 msgid "Order has not been synced to Zoho Books"
-msgstr ""
+msgstr "Sipariş Zoho Books'a senkronize edilmedi"
 
 msgid "Order ID"
-msgstr ""
+msgstr "Sipariş ID"
 
 msgid "Order Notes"
-msgstr ""
+msgstr "Sipariş Notları"
 
 msgid "Order Number"
-msgstr ""
+msgstr "Sipariş Numarası"
 
 msgid "Order Status"
-msgstr ""
+msgstr "Sipariş Durumu"
 
 msgid "Order Total"
-msgstr ""
+msgstr "Sipariş Toplamı"
 
 msgid "Orders"
-msgstr ""
+msgstr "Siparişler"
 
 msgid "Organization"
-msgstr ""
+msgstr "Kuruluş"
 
 msgid "Organization ID"
-msgstr ""
+msgstr "Kuruluş ID"
 
 msgid "Overdue"
-msgstr ""
+msgstr "Vadesi Geçmiş"
 
 msgid "Paid"
-msgstr ""
+msgstr "Ödendi"
 
 msgid "Partially Paid"
-msgstr ""
+msgstr "Kısmen Ödendi"
 
 msgid "Payment"
-msgstr ""
+msgstr "Ödeme"
 
 msgid "Payment ID:"
-msgstr ""
+msgstr "Ödeme ID:"
 
 msgid "Payment Mapping"
-msgstr ""
+msgstr "Ödeme Eşleştirme"
 
 msgid "Payment Method"
-msgstr ""
+msgstr "Ödeme Yöntemi"
 
 msgid "Payment Method Mapping"
-msgstr ""
+msgstr "Ödeme Yöntemi Eşleştirme"
 
 msgid "Payment recorded successfully!"
-msgstr ""
+msgstr "Ödeme başarıyla kaydedildi!"
 
 msgid "Payment service not configured"
-msgstr ""
+msgstr "Ödeme servisi yapılandırılmadı"
 
 msgid "Pending"
-msgstr ""
+msgstr "Beklemede"
 
 msgid "Pending Approval"
-msgstr ""
+msgstr "Onay Bekliyor"
 
 msgid "Permission denied."
-msgstr ""
+msgstr "Erişim reddedildi."
 
 msgid "Processing"
-msgstr ""
+msgstr "İşleniyor"
 
 msgid "Product"
-msgstr ""
+msgstr "Ürün"
 
 msgid "Product already linked to a Zoho item."
-msgstr ""
+msgstr "Ürün zaten bir Zoho öğesine bağlı."
 
 msgid "Product Mapping"
-msgstr ""
+msgstr "Ürün Eşleştirme"
 
 msgid "Product not found."
-msgstr ""
+msgstr "Ürün bulunamadı."
 
 msgid "Product not linked to a Zoho item."
-msgstr ""
+msgstr "Ürün bir Zoho öğesine bağlı değil."
 
 msgid "Re-sync"
-msgstr ""
+msgstr "Yeniden Senkronize Et"
 
 msgid "Refresh"
-msgstr ""
+msgstr "Yenile"
 
 msgid "Refresh Accounts"
-msgstr ""
+msgstr "Hesapları Yenile"
 
 msgid "Refresh Token"
-msgstr ""
+msgstr "Refresh Token"
 
 msgid "Refund"
-msgstr ""
+msgstr "İade"
 
 msgid "Refund ID:"
-msgstr ""
+msgstr "İade ID:"
 
 msgid "Refund service not configured"
-msgstr ""
+msgstr "İade servisi yapılandırılmadı"
 
 msgid "Refund synced successfully!"
-msgstr ""
+msgstr "İade başarıyla senkronize edildi!"
 
 msgid "Remove"
-msgstr ""
+msgstr "Kaldır"
 
 msgid "Retry Failed Syncs"
-msgstr ""
+msgstr "Başarısız Senkronizasyonları Yeniden Dene"
 
 msgid "Retry Settings"
-msgstr ""
+msgstr "Yeniden Deneme Ayarları"
 
 msgid "Returning customer. Using existing Zoho contact."
-msgstr ""
+msgstr "Mevcut müşteri. Var olan Zoho kişisi kullanılıyor."
 
 msgid "Save & Continue"
-msgstr ""
+msgstr "Kaydet ve Devam Et"
 
 msgid "Save Mappings"
-msgstr ""
+msgstr "Eşleştirmeleri Kaydet"
 
 msgid "Save Settings"
-msgstr ""
+msgstr "Ayarları Kaydet"
 
 msgid "Search orders..."
-msgstr ""
+msgstr "Sipariş ara..."
 
 msgid "Search products..."
-msgstr ""
+msgstr "Ürün ara..."
 
 msgid "Search Zoho Items"
-msgstr ""
+msgstr "Zoho Öğelerinde Ara"
 
 msgid "Select All"
-msgstr ""
+msgstr "Tümünü Seç"
 
 msgid "Select orders to sync"
-msgstr ""
+msgstr "Senkronize edilecek siparişleri seçin"
 
 msgid "Select Organization"
-msgstr ""
+msgstr "Kuruluş Seçin"
 
 msgid "Sent"
-msgstr ""
+msgstr "Gönderildi"
 
 msgid "Settings"
-msgstr ""
+msgstr "Ayarlar"
 
 msgid "Settings saved."
-msgstr ""
+msgstr "Ayarlar kaydedildi."
 
 msgid "Shipping Address 1"
-msgstr ""
+msgstr "Teslimat Adresi 1"
 
 msgid "Shipping Address 2"
-msgstr ""
+msgstr "Teslimat Adresi 2"
 
 msgid "Shipping City"
-msgstr ""
+msgstr "Teslimat Şehri"
 
 msgid "Shipping Company"
-msgstr ""
+msgstr "Teslimat Şirketi"
 
 msgid "Shipping Country"
-msgstr ""
+msgstr "Teslimat Ülkesi"
 
 msgid "Shipping First Name"
-msgstr ""
+msgstr "Teslimat Adı"
 
 msgid "Shipping Full Name"
-msgstr ""
+msgstr "Teslimat Tam Adı"
 
 msgid "Shipping Last Name"
-msgstr ""
+msgstr "Teslimat Soyadı"
 
 msgid "Shipping Method"
-msgstr ""
+msgstr "Teslimat Yöntemi"
 
 msgid "Shipping Phone"
-msgstr ""
+msgstr "Teslimat Telefonu"
 
 msgid "Shipping Postcode"
-msgstr ""
+msgstr "Teslimat Posta Kodu"
 
 msgid "Shipping State"
-msgstr ""
+msgstr "Teslimat İli"
 
 msgid "Showing first 50 products. You can map additional products from ZBooks > Product Mapping after setup."
-msgstr ""
+msgstr "İlk 50 ürün gösteriliyor. Kurulumdan sonra ZBooks > Ürün Eşleştirme bölümünden ek ürünleri eşleştirebilirsiniz."
 
 msgid "Skip"
-msgstr ""
+msgstr "Atla"
 
 msgid "Skip for Now"
-msgstr ""
+msgstr "Şimdilik Atla"
 
 msgid "SKU"
-msgstr ""
+msgstr "SKU"
 
 msgid "Status"
-msgstr ""
+msgstr "Durum"
 
 msgid "Status:"
-msgstr ""
+msgstr "Durum:"
 
 msgid "Sync"
-msgstr ""
+msgstr "Senkronize Et"
 
 msgid "Sync error"
-msgstr ""
+msgstr "Senkronizasyon hatası"
 
 msgid "Sync failed. Please try again."
-msgstr ""
+msgstr "Senkronizasyon başarısız. Lütfen tekrar deneyin."
 
 msgid "Sync Now"
-msgstr ""
+msgstr "Şimdi Senkronize Et"
 
 msgid "Sync Orders to Zoho Books"
-msgstr ""
+msgstr "Siparişleri Zoho Books'a Senkronize Et"
 
 msgid "Sync Refund"
-msgstr ""
+msgstr "İadeyi Senkronize Et"
 
 msgid "Sync Selected"
-msgstr ""
+msgstr "Seçilenleri Senkronize Et"
 
 msgid "Sync Settings"
-msgstr ""
+msgstr "Senkronizasyon Ayarları"
 
 msgid "Sync Status"
-msgstr ""
+msgstr "Senkronizasyon Durumu"
 
 msgid "Sync successful!"
-msgstr ""
+msgstr "Senkronizasyon başarılı!"
 
 msgid "Sync Triggers"
-msgstr ""
+msgstr "Senkronizasyon Tetikleyicileri"
 
 msgid "Synced"
-msgstr ""
+msgstr "Senkronize Edildi"
 
 msgid "Syncing..."
-msgstr ""
+msgstr "Senkronize ediliyor..."
 
 msgid "Test Connection"
-msgstr ""
+msgstr "Bağlantıyı Test Et"
 
 msgid "Timestamp"
-msgstr ""
+msgstr "Zaman Damgası"
 
 msgid "Timestamp:"
-msgstr ""
+msgstr "Zaman Damgası:"
 
 msgid "Total"
-msgstr ""
+msgstr "Toplam"
 
 msgid "Total:"
-msgstr ""
+msgstr "Toplam:"
 
 msgid "Unexpected response from Zoho."
-msgstr ""
+msgstr "Zoho'dan beklenmeyen yanıt."
 
 msgid "Unlink"
-msgstr ""
+msgstr "Bağlantıyı Kaldır"
 
 msgid "Unpaid"
-msgstr ""
+msgstr "Ödenmedi"
 
 msgid "United States (.com)"
-msgstr ""
+msgstr "Amerika Birleşik Devletleri (.com)"
 
 msgid "Use the Bulk Sync page to sync existing orders"
-msgstr ""
+msgstr "Mevcut siparişleri senkronize etmek için Toplu Senkronizasyon sayfasını kullanın"
 
 msgid "View"
-msgstr ""
+msgstr "Görüntüle"
 
 msgid "View in Zoho Books"
-msgstr ""
+msgstr "Zoho Books'ta Görüntüle"
 
 msgid "Void"
-msgstr ""
+msgstr "Geçersiz"
 
 msgid "Warnings"
-msgstr ""
+msgstr "Uyarılar"
 
 msgid "Welcome"
-msgstr ""
+msgstr "Hoş Geldiniz"
 
 msgid "Welcome to ZBooks for WooCommerce"
-msgstr ""
+msgstr "ZBooks for WooCommerce'e Hoş Geldiniz"
 
 msgid "WooCommerce Custom Field (meta key)"
-msgstr ""
+msgstr "WooCommerce Özel Alanı (meta anahtarı)"
 
 msgid "WooCommerce Field"
-msgstr ""
+msgstr "WooCommerce Alanı"
 
 msgid "WooCommerce Payment Method"
-msgstr ""
+msgstr "WooCommerce Ödeme Yöntemi"
 
 msgid "WooCommerce Product"
-msgstr ""
+msgstr "WooCommerce Ürünü"
 
 msgid "Yes"
-msgstr ""
+msgstr "Evet"
 
 msgid "You can manually sync orders from the order edit page"
-msgstr ""
+msgstr "Siparişleri sipariş düzenleme sayfasından manuel olarak senkronize edebilirsiniz"
 
 msgid "You're All Set!"
-msgstr ""
+msgstr "Her Şey Hazır!"
 
 msgid "ZBooks"
-msgstr ""
+msgstr "ZBooks"
 
 msgid "ZBooks for WooCommerce"
-msgstr ""
+msgstr "ZBooks for WooCommerce"
 
 msgid "ZBooks for WooCommerce is now configured and ready to sync your WooCommerce orders to Zoho Books."
-msgstr ""
+msgstr "ZBooks for WooCommerce artık yapılandırıldı ve WooCommerce siparişlerinizi Zoho Books'a senkronize etmeye hazır."
 
 msgid "ZBooks for WooCommerce requires WooCommerce to be installed and activated."
-msgstr ""
+msgstr "ZBooks for WooCommerce, WooCommerce'in kurulu ve etkin olmasını gerektirir."
 
 msgid "ZBooks Setup"
-msgstr ""
+msgstr "ZBooks Kurulumu"
 
 msgid "ZBooks Setup Wizard"
-msgstr ""
+msgstr "ZBooks Kurulum Sihirbazı"
 
 msgid "ZBooks Sync Logs"
-msgstr ""
+msgstr "ZBooks Senkronizasyon Günlükleri"
 
 msgid "Zoho API rate limit exceeded. Please try again later."
-msgstr ""
+msgstr "Zoho API hız sınırı aşıldı. Lütfen daha sonra tekrar deneyin."
 
 msgid "Zoho Books API credentials not configured."
-msgstr ""
+msgstr "Zoho Books API kimlik bilgileri yapılandırılmadı."
 
 msgid "Zoho Books Sync"
-msgstr ""
+msgstr "Zoho Books Senkronizasyonu"
 
 msgid "Zoho Custom Field (API name)"
-msgstr ""
+msgstr "Zoho Özel Alanı (API adı)"
 
 msgid "Zoho Field"
-msgstr ""
+msgstr "Zoho Alanı"
 
 msgid "Zoho Item"
-msgstr ""
+msgstr "Zoho Öğesi"
 
 msgid "Zoho Payment Account"
-msgstr ""
+msgstr "Zoho Ödeme Hesabı"
 
 msgid "Zoho Payment Mode"
-msgstr ""
+msgstr "Zoho Ödeme Modu"
 
 #. translators: %d: number of days
 msgid "Clear Old Logs (%d+ days)"
-msgstr ""
+msgstr "Eski Günlükleri Temizle (%d+ gün)"
 
 #. translators: %d: number of days for log retention
 msgid "Delete log files older than %d days?"
-msgstr ""
+msgstr "%d günden eski günlük dosyaları silinsin mi?"
 
 #. translators: %d: number of files deleted
 msgid "Deleted %d old log file(s)."
-msgstr ""
+msgstr "%d eski günlük dosyası silindi."
 
 #. translators: %d: number of products auto-mapped
 msgid "Auto-mapped %d product(s) by SKU!"
-msgstr ""
+msgstr "SKU ile %d ürün otomatik eşleştirildi!"
 
 #. translators: %s: Error message
 msgid "Failed to create Zoho contact: %s"
-msgstr ""
+msgstr "Zoho kişisi oluşturulamadı: %s"
 
 #. translators: %s: Error message
 msgid "Failed to refresh Zoho access token: %s"
-msgstr ""
+msgstr "Zoho erişim belirteci yenilenemedi: %s"
 
 #. translators: %s: Error message
 msgid "Failed to exchange grant code: %s"
-msgstr ""
+msgstr "Yetkilendirme kodu değiştirilemedi: %s"
 
 #. translators: %s: Error message
 msgid "Failed to sync order to Zoho Books: %s"
-msgstr ""
+msgstr "Sipariş Zoho Books'a senkronize edilemedi: %s"
 
 #. translators: 1: Contact currency, 2: Order currency
 msgid "Currency mismatch: Contact is set to %1$s but order uses %2$s. Please update the contact currency in Zoho Books or use a different email."
-msgstr ""
+msgstr "Para birimi uyuşmazlığı: Kişi %1$s olarak ayarlanmış ancak sipariş %2$s kullanıyor. Lütfen Zoho Books'ta kişinin para birimini güncelleyin veya farklı bir e-posta kullanın."
 
 #. translators: %1$s: Order number, %2$s: Payment method
 msgid "Payment for Order #%1$s via %2$s"
-msgstr ""
+msgstr "Sipariş #%1$s için %2$s ile ödeme"
 
 #. translators: %s: Service name
 msgid "Service \"%s\" not found in container."
-msgstr ""
+msgstr "\"%s\" servisi konteyner içinde bulunamadı."
 
 msgid "No refresh token received. Ensure the grant code has offline_access scope."
-msgstr ""
+msgstr "Yenileme belirteci alınamadı. Yetkilendirme kodunun offline_access kapsamına sahip olduğundan emin olun."
 
 msgid "Check the settings page to adjust configuration anytime"
-msgstr ""
+msgstr "Yapılandırmayı istediğiniz zaman ayarlar sayfasından düzenleyebilirsiniz"
 
 msgid "What happens next?"
-msgstr ""
+msgstr "Bundan sonra ne olacak?"
 
 msgid "API Setup"
-msgstr ""
+msgstr "API Kurulumu"

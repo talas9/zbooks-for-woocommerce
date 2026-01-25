@@ -1,870 +1,873 @@
+# Japanese translation for ZBooks for WooCommerce.
 # Copyright (C) 2024 talas9
 # This file is distributed under the GPL-2.0+.
 msgid ""
 msgstr ""
-"Project-Id-Version: ZBooks for WooCommerce 1.0.0\n"
+"Project-Id-Version: ZBooks for WooCommerce 1.0.5\n"
 "Report-Msgid-Bugs-To: https://github.com/talas9/zbooks-for-woocommerce/issues\n"
 "POT-Creation-Date: 2024-01-25 00:00:00+00:00\n"
+"PO-Revision-Date: 2025-01-25 00:00:00+00:00\n"
+"Last-Translator: ZBooks Team\n"
+"Language-Team: Japanese\n"
+"Language: ja\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: Japanese <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
 
 msgid "-- Not Mapped --"
-msgstr ""
+msgstr "-- マッピングなし --"
 
 msgid "-- Select Account --"
-msgstr ""
+msgstr "-- アカウントを選択 --"
 
 msgid "-- Select Mode --"
-msgstr ""
+msgstr "-- モードを選択 --"
 
 msgid "Action"
-msgstr ""
+msgstr "アクション"
 
 msgid "Actions"
-msgstr ""
+msgstr "アクション"
 
 msgid "Add Customer Mapping"
-msgstr ""
+msgstr "顧客マッピングを追加"
 
 msgid "Add Invoice Mapping"
-msgstr ""
+msgstr "請求書マッピングを追加"
 
 msgid "Advanced"
-msgstr ""
+msgstr "詳細設定"
 
 msgid "All"
-msgstr ""
+msgstr "すべて"
 
 msgid "Already linked."
-msgstr ""
+msgstr "既にリンク済みです。"
 
 msgid "An error occurred."
-msgstr ""
+msgstr "エラーが発生しました。"
 
 msgid "API Credentials"
-msgstr ""
+msgstr "API認証情報"
 
 msgid "Apply Payment"
-msgstr ""
+msgstr "支払いを適用"
 
 msgid "Are you sure you want to sync the selected orders?"
-msgstr ""
+msgstr "選択した注文を同期してもよろしいですか？"
 
 msgid "Australia (.com.au)"
-msgstr ""
+msgstr "オーストラリア (.com.au)"
 
 msgid "Auto-Map by SKU"
-msgstr ""
+msgstr "SKUで自動マッピング"
 
 msgid "Back"
-msgstr ""
+msgstr "戻る"
 
 msgid "Bank"
-msgstr ""
+msgstr "銀行"
 
 msgid "Bank accounts refreshed."
-msgstr ""
+msgstr "銀行口座を更新しました。"
 
 msgid "Billing Address 1"
-msgstr ""
+msgstr "請求先住所1"
 
 msgid "Billing Address 2"
-msgstr ""
+msgstr "請求先住所2"
 
 msgid "Billing City"
-msgstr ""
+msgstr "請求先市区町村"
 
 msgid "Billing Company"
-msgstr ""
+msgstr "請求先会社名"
 
 msgid "Billing Country"
-msgstr ""
+msgstr "請求先国"
 
 msgid "Billing Email"
-msgstr ""
+msgstr "請求先メールアドレス"
 
 msgid "Billing First Name"
-msgstr ""
+msgstr "請求先名"
 
 msgid "Billing Full Name"
-msgstr ""
+msgstr "請求先氏名"
 
 msgid "Billing Last Name"
-msgstr ""
+msgstr "請求先姓"
 
 msgid "Billing Phone"
-msgstr ""
+msgstr "請求先電話番号"
 
 msgid "Billing Postcode"
-msgstr ""
+msgstr "請求先郵便番号"
 
 msgid "Billing State"
-msgstr ""
+msgstr "請求先都道府県"
 
 msgid "Bulk Sync"
-msgstr ""
+msgstr "一括同期"
 
 msgid "Bulk Sync Orders to Zoho Books"
-msgstr ""
+msgstr "Zoho Booksへ注文を一括同期"
 
 msgid "Cancel"
-msgstr ""
+msgstr "キャンセル"
 
 msgid "Cash"
-msgstr ""
+msgstr "現金"
 
 msgid "China (.com.cn)"
-msgstr ""
+msgstr "中国 (.com.cn)"
 
 msgid "Clear"
-msgstr ""
+msgstr "クリア"
 
 msgid "Client ID"
-msgstr ""
+msgstr "クライアントID"
 
 msgid "Client Secret"
-msgstr ""
+msgstr "クライアントシークレット"
 
 msgid "Close"
-msgstr ""
+msgstr "閉じる"
 
 msgid "Complete"
-msgstr ""
+msgstr "完了"
 
 msgid "Completed"
-msgstr ""
+msgstr "完了済み"
 
 msgid "Configuration incomplete."
-msgstr ""
+msgstr "設定が完了していません。"
 
 msgid "Configure Sync"
-msgstr ""
+msgstr "同期を設定"
 
 msgid "Configure sync behavior for different order statuses."
-msgstr ""
+msgstr "注文ステータスごとの同期動作を設定します。"
 
 msgid "Connection"
-msgstr ""
+msgstr "接続"
 
 msgid "Connection failed. Please check your credentials."
-msgstr ""
+msgstr "接続に失敗しました。認証情報を確認してください。"
 
 msgid "Connection successful!"
-msgstr ""
+msgstr "接続に成功しました！"
 
 msgid "Context / Details:"
-msgstr ""
+msgstr "コンテキスト / 詳細:"
 
 msgid "Copied!"
-msgstr ""
+msgstr "コピーしました！"
 
 msgid "Copy JSON"
-msgstr ""
+msgstr "JSONをコピー"
 
 msgid "Coupon Codes"
-msgstr ""
+msgstr "クーポンコード"
 
 msgid "Create"
-msgstr ""
+msgstr "作成"
 
 msgid "Create & send invoice"
-msgstr ""
+msgstr "請求書を作成して送信"
 
 msgid "Create and submit invoice"
-msgstr ""
+msgstr "請求書を作成して提出"
 
 msgid "Create draft invoice"
-msgstr ""
+msgstr "請求書の下書きを作成"
 
 msgid "Create in Zoho"
-msgstr ""
+msgstr "Zohoで作成"
 
 msgid "Create Selected in Zoho"
-msgstr ""
+msgstr "選択項目をZohoで作成"
 
 msgid "Created!"
-msgstr ""
+msgstr "作成しました！"
 
 msgid "Creating..."
-msgstr ""
+msgstr "作成中..."
 
 msgid "Credit Note ID:"
-msgstr ""
+msgstr "クレジットノートID:"
 
 msgid "Currency"
-msgstr ""
+msgstr "通貨"
 
 msgid "Currency Handling"
-msgstr ""
+msgstr "通貨の処理"
 
 msgid "Customer"
-msgstr ""
+msgstr "顧客"
 
 msgid "Customer Note"
-msgstr ""
+msgstr "顧客メモ"
 
 msgid "Datacenter"
-msgstr ""
+msgstr "データセンター"
 
 msgid "Date"
-msgstr ""
+msgstr "日付"
 
 msgid "Date:"
-msgstr ""
+msgstr "日付:"
 
 msgid "Debug"
-msgstr ""
+msgstr "デバッグ"
 
 msgid "Deposit To"
-msgstr ""
+msgstr "入金先"
 
 msgid "Details"
-msgstr ""
+msgstr "詳細"
 
 msgid "Display Name"
-msgstr ""
+msgstr "表示名"
 
 msgid "Do nothing"
-msgstr ""
+msgstr "何もしない"
 
 msgid "Draft"
-msgstr ""
+msgstr "下書き"
 
 msgid "Email Admin on Sync Errors"
-msgstr ""
+msgstr "同期エラー時に管理者へメール通知"
 
 msgid "Enable"
-msgstr ""
+msgstr "有効化"
 
 msgid "Enable automatic sync when orders are placed"
-msgstr ""
+msgstr "注文時に自動同期を有効にする"
 
 msgid "Error:"
-msgstr ""
+msgstr "エラー:"
 
 msgid "Errors"
-msgstr ""
+msgstr "エラー"
 
 msgid "Europe (.eu)"
-msgstr ""
+msgstr "ヨーロッパ (.eu)"
 
 msgid "Every 15 Minutes"
-msgstr ""
+msgstr "15分ごと"
 
 msgid "Failed"
-msgstr ""
+msgstr "失敗"
 
 msgid "Failed to apply payment."
-msgstr ""
+msgstr "支払いの適用に失敗しました。"
 
 msgid "Failed to connect to Zoho Books."
-msgstr ""
+msgstr "Zoho Booksへの接続に失敗しました。"
 
 msgid "Failed to link item."
-msgstr ""
+msgstr "アイテムのリンクに失敗しました。"
 
 msgid "Failed to refresh accounts."
-msgstr ""
+msgstr "アカウントの更新に失敗しました。"
 
 msgid "Failed to save mapping."
-msgstr ""
+msgstr "マッピングの保存に失敗しました。"
 
 msgid "Fetching Zoho items..."
-msgstr ""
+msgstr "Zohoアイテムを取得中..."
 
 msgid "Field Mapping"
-msgstr ""
+msgstr "フィールドマッピング"
 
 msgid "Field mappings saved successfully."
-msgstr ""
+msgstr "フィールドマッピングを保存しました。"
 
 msgid "Filter"
-msgstr ""
+msgstr "フィルター"
 
 msgid "Finish"
-msgstr ""
+msgstr "完了"
 
 msgid "Go to Settings"
-msgstr ""
+msgstr "設定へ移動"
 
 msgid "India (.in)"
-msgstr ""
+msgstr "インド (.in)"
 
 msgid "Info"
-msgstr ""
+msgstr "情報"
 
 msgid "Invalid order ID."
-msgstr ""
+msgstr "無効な注文IDです。"
 
 msgid "Invalid product ID."
-msgstr ""
+msgstr "無効な商品IDです。"
 
 msgid "Invoice"
-msgstr ""
+msgstr "請求書"
 
 msgid "Invoice ID:"
-msgstr ""
+msgstr "請求書ID:"
 
 msgid "Invoice Number:"
-msgstr ""
+msgstr "請求書番号:"
 
 msgid "Invoice Numbering"
-msgstr ""
+msgstr "請求書番号の採番"
 
 msgid "Invoice Status:"
-msgstr ""
+msgstr "請求書ステータス:"
 
 msgid "Item created in Zoho Books!"
-msgstr ""
+msgstr "Zoho Booksにアイテムを作成しました！"
 
 msgid "Item linked successfully!"
-msgstr ""
+msgstr "アイテムをリンクしました！"
 
 msgid "Item Mapping"
-msgstr ""
+msgstr "アイテムマッピング"
 
 msgid "Item updated in Zoho Books!"
-msgstr ""
+msgstr "Zoho Booksのアイテムを更新しました！"
 
 msgid "Japan (.jp)"
-msgstr ""
+msgstr "日本 (.jp)"
 
 msgid "Last Synced:"
-msgstr ""
+msgstr "最終同期:"
 
 msgid "Level:"
-msgstr ""
+msgstr "レベル:"
 
 msgid "Link"
-msgstr ""
+msgstr "リンク"
 
 msgid "Link Selected"
-msgstr ""
+msgstr "選択項目をリンク"
 
 msgid "Linked!"
-msgstr ""
+msgstr "リンクしました！"
 
 msgid "Linking..."
-msgstr ""
+msgstr "リンク中..."
 
 msgid "Loading organizations..."
-msgstr ""
+msgstr "組織を読み込み中..."
 
 msgid "Log Configuration"
-msgstr ""
+msgstr "ログ設定"
 
 msgid "Log Entry Details"
-msgstr ""
+msgstr "ログエントリの詳細"
 
 msgid "Log Settings"
-msgstr ""
+msgstr "ログ設定"
 
 msgid "Logs"
-msgstr ""
+msgstr "ログ"
 
 msgid "Manage Field Mappings"
-msgstr ""
+msgstr "フィールドマッピングを管理"
 
 msgid "Manage Payment Method Mapping"
-msgstr ""
+msgstr "支払い方法マッピングを管理"
 
 msgid "Manage Product Mapping"
-msgstr ""
+msgstr "商品マッピングを管理"
 
 msgid "Map Products to Zoho Items"
-msgstr ""
+msgstr "商品をZohoアイテムにマッピング"
 
 msgid "Map WooCommerce Products to Zoho Items"
-msgstr ""
+msgstr "WooCommerce商品をZohoアイテムにマッピング"
 
 msgid "Mapping removed."
-msgstr ""
+msgstr "マッピングを削除しました。"
 
 msgid "Mapping saved."
-msgstr ""
+msgstr "マッピングを保存しました。"
 
 msgid "Message"
-msgstr ""
+msgstr "メッセージ"
 
 msgid "Message:"
-msgstr ""
+msgstr "メッセージ:"
 
 msgid "minutes"
-msgstr ""
+msgstr "分"
 
 msgid "Network error while linking."
-msgstr ""
+msgstr "リンク中にネットワークエラーが発生しました。"
 
 msgid "Never"
-msgstr ""
+msgstr "なし"
 
 msgid "New orders will be synced automatically based on your trigger settings"
-msgstr ""
+msgstr "新規注文はトリガー設定に基づいて自動的に同期されます"
 
 msgid "Next"
-msgstr ""
+msgstr "次へ"
 
 msgid "No"
-msgstr ""
+msgstr "いいえ"
 
 msgid "No log entries found."
-msgstr ""
+msgstr "ログエントリが見つかりません。"
 
 msgid "No logs available"
-msgstr ""
+msgstr "利用可能なログがありません"
 
 msgid "No orders found matching your criteria."
-msgstr ""
+msgstr "条件に一致する注文が見つかりません。"
 
 msgid "No products found."
-msgstr ""
+msgstr "商品が見つかりません。"
 
 msgid "No published products found in WooCommerce."
-msgstr ""
+msgstr "WooCommerceに公開済みの商品が見つかりません。"
 
 msgid "Not Linked"
-msgstr ""
+msgstr "未リンク"
 
 msgid "Not linked"
-msgstr ""
+msgstr "未リンク"
 
 msgid "Not synced yet"
-msgstr ""
+msgstr "未同期"
 
 msgid "On Processing"
-msgstr ""
+msgstr "処理中に実行"
 
 msgid "Order"
-msgstr ""
+msgstr "注文"
 
 msgid "Order #%s"
-msgstr ""
+msgstr "注文 #%s"
 
 msgid "Order Date"
-msgstr ""
+msgstr "注文日"
 
 msgid "Order has no billing email address."
-msgstr ""
+msgstr "注文に請求先メールアドレスがありません。"
 
 msgid "Order has not been synced to Zoho Books"
-msgstr ""
+msgstr "注文はZoho Booksに同期されていません"
 
 msgid "Order ID"
-msgstr ""
+msgstr "注文ID"
 
 msgid "Order Notes"
-msgstr ""
+msgstr "注文メモ"
 
 msgid "Order Number"
-msgstr ""
+msgstr "注文番号"
 
 msgid "Order Status"
-msgstr ""
+msgstr "注文ステータス"
 
 msgid "Order Total"
-msgstr ""
+msgstr "注文合計"
 
 msgid "Orders"
-msgstr ""
+msgstr "注文"
 
 msgid "Organization"
-msgstr ""
+msgstr "組織"
 
 msgid "Organization ID"
-msgstr ""
+msgstr "組織ID"
 
 msgid "Overdue"
-msgstr ""
+msgstr "期限超過"
 
 msgid "Paid"
-msgstr ""
+msgstr "支払済み"
 
 msgid "Partially Paid"
-msgstr ""
+msgstr "一部支払済み"
 
 msgid "Payment"
-msgstr ""
+msgstr "支払い"
 
 msgid "Payment ID:"
-msgstr ""
+msgstr "支払いID:"
 
 msgid "Payment Mapping"
-msgstr ""
+msgstr "支払いマッピング"
 
 msgid "Payment Method"
-msgstr ""
+msgstr "支払い方法"
 
 msgid "Payment Method Mapping"
-msgstr ""
+msgstr "支払い方法マッピング"
 
 msgid "Payment recorded successfully!"
-msgstr ""
+msgstr "支払いを記録しました！"
 
 msgid "Payment service not configured"
-msgstr ""
+msgstr "支払いサービスが設定されていません"
 
 msgid "Pending"
-msgstr ""
+msgstr "保留中"
 
 msgid "Pending Approval"
-msgstr ""
+msgstr "承認待ち"
 
 msgid "Permission denied."
-msgstr ""
+msgstr "権限がありません。"
 
 msgid "Processing"
-msgstr ""
+msgstr "処理中"
 
 msgid "Product"
-msgstr ""
+msgstr "商品"
 
 msgid "Product already linked to a Zoho item."
-msgstr ""
+msgstr "商品は既にZohoアイテムにリンクされています。"
 
 msgid "Product Mapping"
-msgstr ""
+msgstr "商品マッピング"
 
 msgid "Product not found."
-msgstr ""
+msgstr "商品が見つかりません。"
 
 msgid "Product not linked to a Zoho item."
-msgstr ""
+msgstr "商品はZohoアイテムにリンクされていません。"
 
 msgid "Re-sync"
-msgstr ""
+msgstr "再同期"
 
 msgid "Refresh"
-msgstr ""
+msgstr "更新"
 
 msgid "Refresh Accounts"
-msgstr ""
+msgstr "アカウントを更新"
 
 msgid "Refresh Token"
-msgstr ""
+msgstr "リフレッシュトークン"
 
 msgid "Refund"
-msgstr ""
+msgstr "返金"
 
 msgid "Refund ID:"
-msgstr ""
+msgstr "返金ID:"
 
 msgid "Refund service not configured"
-msgstr ""
+msgstr "返金サービスが設定されていません"
 
 msgid "Refund synced successfully!"
-msgstr ""
+msgstr "返金を同期しました！"
 
 msgid "Remove"
-msgstr ""
+msgstr "削除"
 
 msgid "Retry Failed Syncs"
-msgstr ""
+msgstr "失敗した同期を再試行"
 
 msgid "Retry Settings"
-msgstr ""
+msgstr "再試行設定"
 
 msgid "Returning customer. Using existing Zoho contact."
-msgstr ""
+msgstr "リピーターのお客様です。既存のZoho連絡先を使用します。"
 
 msgid "Save & Continue"
-msgstr ""
+msgstr "保存して続行"
 
 msgid "Save Mappings"
-msgstr ""
+msgstr "マッピングを保存"
 
 msgid "Save Settings"
-msgstr ""
+msgstr "設定を保存"
 
 msgid "Search orders..."
-msgstr ""
+msgstr "注文を検索..."
 
 msgid "Search products..."
-msgstr ""
+msgstr "商品を検索..."
 
 msgid "Search Zoho Items"
-msgstr ""
+msgstr "Zohoアイテムを検索"
 
 msgid "Select All"
-msgstr ""
+msgstr "すべて選択"
 
 msgid "Select orders to sync"
-msgstr ""
+msgstr "同期する注文を選択"
 
 msgid "Select Organization"
-msgstr ""
+msgstr "組織を選択"
 
 msgid "Sent"
-msgstr ""
+msgstr "送信済み"
 
 msgid "Settings"
-msgstr ""
+msgstr "設定"
 
 msgid "Settings saved."
-msgstr ""
+msgstr "設定を保存しました。"
 
 msgid "Shipping Address 1"
-msgstr ""
+msgstr "配送先住所1"
 
 msgid "Shipping Address 2"
-msgstr ""
+msgstr "配送先住所2"
 
 msgid "Shipping City"
-msgstr ""
+msgstr "配送先市区町村"
 
 msgid "Shipping Company"
-msgstr ""
+msgstr "配送先会社名"
 
 msgid "Shipping Country"
-msgstr ""
+msgstr "配送先国"
 
 msgid "Shipping First Name"
-msgstr ""
+msgstr "配送先名"
 
 msgid "Shipping Full Name"
-msgstr ""
+msgstr "配送先氏名"
 
 msgid "Shipping Last Name"
-msgstr ""
+msgstr "配送先姓"
 
 msgid "Shipping Method"
-msgstr ""
+msgstr "配送方法"
 
 msgid "Shipping Phone"
-msgstr ""
+msgstr "配送先電話番号"
 
 msgid "Shipping Postcode"
-msgstr ""
+msgstr "配送先郵便番号"
 
 msgid "Shipping State"
-msgstr ""
+msgstr "配送先都道府県"
 
 msgid "Showing first 50 products. You can map additional products from ZBooks > Product Mapping after setup."
-msgstr ""
+msgstr "最初の50商品を表示しています。セットアップ後、ZBooks > 商品マッピングから追加の商品をマッピングできます。"
 
 msgid "Skip"
-msgstr ""
+msgstr "スキップ"
 
 msgid "Skip for Now"
-msgstr ""
+msgstr "今はスキップ"
 
 msgid "SKU"
-msgstr ""
+msgstr "SKU"
 
 msgid "Status"
-msgstr ""
+msgstr "ステータス"
 
 msgid "Status:"
-msgstr ""
+msgstr "ステータス:"
 
 msgid "Sync"
-msgstr ""
+msgstr "同期"
 
 msgid "Sync error"
-msgstr ""
+msgstr "同期エラー"
 
 msgid "Sync failed. Please try again."
-msgstr ""
+msgstr "同期に失敗しました。もう一度お試しください。"
 
 msgid "Sync Now"
-msgstr ""
+msgstr "今すぐ同期"
 
 msgid "Sync Orders to Zoho Books"
-msgstr ""
+msgstr "Zoho Booksへ注文を同期"
 
 msgid "Sync Refund"
-msgstr ""
+msgstr "返金を同期"
 
 msgid "Sync Selected"
-msgstr ""
+msgstr "選択項目を同期"
 
 msgid "Sync Settings"
-msgstr ""
+msgstr "同期設定"
 
 msgid "Sync Status"
-msgstr ""
+msgstr "同期ステータス"
 
 msgid "Sync successful!"
-msgstr ""
+msgstr "同期に成功しました！"
 
 msgid "Sync Triggers"
-msgstr ""
+msgstr "同期トリガー"
 
 msgid "Synced"
-msgstr ""
+msgstr "同期済み"
 
 msgid "Syncing..."
-msgstr ""
+msgstr "同期中..."
 
 msgid "Test Connection"
-msgstr ""
+msgstr "接続テスト"
 
 msgid "Timestamp"
-msgstr ""
+msgstr "タイムスタンプ"
 
 msgid "Timestamp:"
-msgstr ""
+msgstr "タイムスタンプ:"
 
 msgid "Total"
-msgstr ""
+msgstr "合計"
 
 msgid "Total:"
-msgstr ""
+msgstr "合計:"
 
 msgid "Unexpected response from Zoho."
-msgstr ""
+msgstr "Zohoから予期しない応答がありました。"
 
 msgid "Unlink"
-msgstr ""
+msgstr "リンク解除"
 
 msgid "Unpaid"
-msgstr ""
+msgstr "未払い"
 
 msgid "United States (.com)"
-msgstr ""
+msgstr "アメリカ (.com)"
 
 msgid "Use the Bulk Sync page to sync existing orders"
-msgstr ""
+msgstr "一括同期ページを使用して既存の注文を同期できます"
 
 msgid "View"
-msgstr ""
+msgstr "表示"
 
 msgid "View in Zoho Books"
-msgstr ""
+msgstr "Zoho Booksで表示"
 
 msgid "Void"
-msgstr ""
+msgstr "無効"
 
 msgid "Warnings"
-msgstr ""
+msgstr "警告"
 
 msgid "Welcome"
-msgstr ""
+msgstr "ようこそ"
 
 msgid "Welcome to ZBooks for WooCommerce"
-msgstr ""
+msgstr "ZBooks for WooCommerceへようこそ"
 
 msgid "WooCommerce Custom Field (meta key)"
-msgstr ""
+msgstr "WooCommerceカスタムフィールド（メタキー）"
 
 msgid "WooCommerce Field"
-msgstr ""
+msgstr "WooCommerceフィールド"
 
 msgid "WooCommerce Payment Method"
-msgstr ""
+msgstr "WooCommerce支払い方法"
 
 msgid "WooCommerce Product"
-msgstr ""
+msgstr "WooCommerce商品"
 
 msgid "Yes"
-msgstr ""
+msgstr "はい"
 
 msgid "You can manually sync orders from the order edit page"
-msgstr ""
+msgstr "注文編集ページから手動で注文を同期できます"
 
 msgid "You're All Set!"
-msgstr ""
+msgstr "準備完了です！"
 
 msgid "ZBooks"
-msgstr ""
+msgstr "ZBooks"
 
 msgid "ZBooks for WooCommerce"
-msgstr ""
+msgstr "ZBooks for WooCommerce"
 
 msgid "ZBooks for WooCommerce is now configured and ready to sync your WooCommerce orders to Zoho Books."
-msgstr ""
+msgstr "ZBooks for WooCommerceの設定が完了し、WooCommerceの注文をZoho Booksに同期する準備ができました。"
 
 msgid "ZBooks for WooCommerce requires WooCommerce to be installed and activated."
-msgstr ""
+msgstr "ZBooks for WooCommerceを使用するにはWooCommerceのインストールと有効化が必要です。"
 
 msgid "ZBooks Setup"
-msgstr ""
+msgstr "ZBooksセットアップ"
 
 msgid "ZBooks Setup Wizard"
-msgstr ""
+msgstr "ZBooksセットアップウィザード"
 
 msgid "ZBooks Sync Logs"
-msgstr ""
+msgstr "ZBooks同期ログ"
 
 msgid "Zoho API rate limit exceeded. Please try again later."
-msgstr ""
+msgstr "Zoho APIのレート制限を超えました。しばらくしてから再度お試しください。"
 
 msgid "Zoho Books API credentials not configured."
-msgstr ""
+msgstr "Zoho Books APIの認証情報が設定されていません。"
 
 msgid "Zoho Books Sync"
-msgstr ""
+msgstr "Zoho Books同期"
 
 msgid "Zoho Custom Field (API name)"
-msgstr ""
+msgstr "Zohoカスタムフィールド（API名）"
 
 msgid "Zoho Field"
-msgstr ""
+msgstr "Zohoフィールド"
 
 msgid "Zoho Item"
-msgstr ""
+msgstr "Zohoアイテム"
 
 msgid "Zoho Payment Account"
-msgstr ""
+msgstr "Zoho支払いアカウント"
 
 msgid "Zoho Payment Mode"
-msgstr ""
+msgstr "Zoho支払いモード"
 
 #. translators: %d: number of days
 msgid "Clear Old Logs (%d+ days)"
-msgstr ""
+msgstr "古いログをクリア（%d日以上）"
 
 #. translators: %d: number of days for log retention
 msgid "Delete log files older than %d days?"
-msgstr ""
+msgstr "%d日以上前のログファイルを削除しますか？"
 
 #. translators: %d: number of files deleted
 msgid "Deleted %d old log file(s)."
-msgstr ""
+msgstr "%d件の古いログファイルを削除しました。"
 
 #. translators: %d: number of products auto-mapped
 msgid "Auto-mapped %d product(s) by SKU!"
-msgstr ""
+msgstr "SKUで%d件の商品を自動マッピングしました！"
 
 #. translators: %s: Error message
 msgid "Failed to create Zoho contact: %s"
-msgstr ""
+msgstr "Zoho連絡先の作成に失敗しました: %s"
 
 #. translators: %s: Error message
 msgid "Failed to refresh Zoho access token: %s"
-msgstr ""
+msgstr "Zohoアクセストークンの更新に失敗しました: %s"
 
 #. translators: %s: Error message
 msgid "Failed to exchange grant code: %s"
-msgstr ""
+msgstr "認証コードの交換に失敗しました: %s"
 
 #. translators: %s: Error message
 msgid "Failed to sync order to Zoho Books: %s"
-msgstr ""
+msgstr "Zoho Booksへの注文同期に失敗しました: %s"
 
 #. translators: 1: Contact currency, 2: Order currency
 msgid "Currency mismatch: Contact is set to %1$s but order uses %2$s. Please update the contact currency in Zoho Books or use a different email."
-msgstr ""
+msgstr "通貨の不一致: 連絡先は%1$sに設定されていますが、注文は%2$sを使用しています。Zoho Booksで連絡先の通貨を更新するか、別のメールアドレスを使用してください。"
 
 #. translators: %1$s: Order number, %2$s: Payment method
 msgid "Payment for Order #%1$s via %2$s"
-msgstr ""
+msgstr "注文 #%1$s の支払い（%2$s経由）"
 
 #. translators: %s: Service name
 msgid "Service \"%s\" not found in container."
-msgstr ""
+msgstr "サービス「%s」がコンテナ内に見つかりません。"
 
 msgid "No refresh token received. Ensure the grant code has offline_access scope."
-msgstr ""
+msgstr "リフレッシュトークンを受信できませんでした。認証コードにoffline_accessスコープがあることを確認してください。"
 
 msgid "Check the settings page to adjust configuration anytime"
-msgstr ""
+msgstr "設定ページでいつでも設定を調整できます"
 
 msgid "What happens next?"
-msgstr ""
+msgstr "次のステップは？"
 
 msgid "API Setup"
-msgstr ""
+msgstr "APIセットアップ"

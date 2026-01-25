@@ -1,870 +1,873 @@
+# French (France) translation for ZBooks for WooCommerce.
 # Copyright (C) 2024 talas9
 # This file is distributed under the GPL-2.0+.
 msgid ""
 msgstr ""
-"Project-Id-Version: ZBooks for WooCommerce 1.0.0\n"
+"Project-Id-Version: ZBooks for WooCommerce 1.0.5\n"
 "Report-Msgid-Bugs-To: https://github.com/talas9/zbooks-for-woocommerce/issues\n"
 "POT-Creation-Date: 2024-01-25 00:00:00+00:00\n"
+"PO-Revision-Date: 2025-01-25 00:00:00+00:00\n"
+"Last-Translator: ZBooks Team\n"
+"Language-Team: French\n"
+"Language: fr_FR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: French <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
 msgid "-- Not Mapped --"
-msgstr ""
+msgstr "-- Non associe --"
 
 msgid "-- Select Account --"
-msgstr ""
+msgstr "-- Selectionnez un compte --"
 
 msgid "-- Select Mode --"
-msgstr ""
+msgstr "-- Selectionnez un mode --"
 
 msgid "Action"
-msgstr ""
+msgstr "Action"
 
 msgid "Actions"
-msgstr ""
+msgstr "Actions"
 
 msgid "Add Customer Mapping"
-msgstr ""
+msgstr "Ajouter une association client"
 
 msgid "Add Invoice Mapping"
-msgstr ""
+msgstr "Ajouter une association de facture"
 
 msgid "Advanced"
-msgstr ""
+msgstr "Avance"
 
 msgid "All"
-msgstr ""
+msgstr "Tout"
 
 msgid "Already linked."
-msgstr ""
+msgstr "Deja lie."
 
 msgid "An error occurred."
-msgstr ""
+msgstr "Une erreur s'est produite."
 
 msgid "API Credentials"
-msgstr ""
+msgstr "Identifiants API"
 
 msgid "Apply Payment"
-msgstr ""
+msgstr "Appliquer le paiement"
 
 msgid "Are you sure you want to sync the selected orders?"
-msgstr ""
+msgstr "Etes-vous sur de vouloir synchroniser les commandes selectionnees ?"
 
 msgid "Australia (.com.au)"
-msgstr ""
+msgstr "Australie (.com.au)"
 
 msgid "Auto-Map by SKU"
-msgstr ""
+msgstr "Association automatique par SKU"
 
 msgid "Back"
-msgstr ""
+msgstr "Retour"
 
 msgid "Bank"
-msgstr ""
+msgstr "Banque"
 
 msgid "Bank accounts refreshed."
-msgstr ""
+msgstr "Comptes bancaires actualises."
 
 msgid "Billing Address 1"
-msgstr ""
+msgstr "Adresse de facturation 1"
 
 msgid "Billing Address 2"
-msgstr ""
+msgstr "Adresse de facturation 2"
 
 msgid "Billing City"
-msgstr ""
+msgstr "Ville de facturation"
 
 msgid "Billing Company"
-msgstr ""
+msgstr "Entreprise de facturation"
 
 msgid "Billing Country"
-msgstr ""
+msgstr "Pays de facturation"
 
 msgid "Billing Email"
-msgstr ""
+msgstr "E-mail de facturation"
 
 msgid "Billing First Name"
-msgstr ""
+msgstr "Prenom de facturation"
 
 msgid "Billing Full Name"
-msgstr ""
+msgstr "Nom complet de facturation"
 
 msgid "Billing Last Name"
-msgstr ""
+msgstr "Nom de facturation"
 
 msgid "Billing Phone"
-msgstr ""
+msgstr "Telephone de facturation"
 
 msgid "Billing Postcode"
-msgstr ""
+msgstr "Code postal de facturation"
 
 msgid "Billing State"
-msgstr ""
+msgstr "Region de facturation"
 
 msgid "Bulk Sync"
-msgstr ""
+msgstr "Synchronisation en masse"
 
 msgid "Bulk Sync Orders to Zoho Books"
-msgstr ""
+msgstr "Synchronisation en masse des commandes vers Zoho Books"
 
 msgid "Cancel"
-msgstr ""
+msgstr "Annuler"
 
 msgid "Cash"
-msgstr ""
+msgstr "Especes"
 
 msgid "China (.com.cn)"
-msgstr ""
+msgstr "Chine (.com.cn)"
 
 msgid "Clear"
-msgstr ""
+msgstr "Effacer"
 
 msgid "Client ID"
-msgstr ""
+msgstr "ID client"
 
 msgid "Client Secret"
-msgstr ""
+msgstr "Secret client"
 
 msgid "Close"
-msgstr ""
+msgstr "Fermer"
 
 msgid "Complete"
-msgstr ""
+msgstr "Terminer"
 
 msgid "Completed"
-msgstr ""
+msgstr "Termine"
 
 msgid "Configuration incomplete."
-msgstr ""
+msgstr "Configuration incomplete."
 
 msgid "Configure Sync"
-msgstr ""
+msgstr "Configurer la synchronisation"
 
 msgid "Configure sync behavior for different order statuses."
-msgstr ""
+msgstr "Configurez le comportement de synchronisation pour les differents statuts de commande."
 
 msgid "Connection"
-msgstr ""
+msgstr "Connexion"
 
 msgid "Connection failed. Please check your credentials."
-msgstr ""
+msgstr "Echec de la connexion. Veuillez verifier vos identifiants."
 
 msgid "Connection successful!"
-msgstr ""
+msgstr "Connexion reussie !"
 
 msgid "Context / Details:"
-msgstr ""
+msgstr "Contexte / Details :"
 
 msgid "Copied!"
-msgstr ""
+msgstr "Copie !"
 
 msgid "Copy JSON"
-msgstr ""
+msgstr "Copier JSON"
 
 msgid "Coupon Codes"
-msgstr ""
+msgstr "Codes promo"
 
 msgid "Create"
-msgstr ""
+msgstr "Creer"
 
 msgid "Create & send invoice"
-msgstr ""
+msgstr "Creer et envoyer la facture"
 
 msgid "Create and submit invoice"
-msgstr ""
+msgstr "Creer et soumettre la facture"
 
 msgid "Create draft invoice"
-msgstr ""
+msgstr "Creer un brouillon de facture"
 
 msgid "Create in Zoho"
-msgstr ""
+msgstr "Creer dans Zoho"
 
 msgid "Create Selected in Zoho"
-msgstr ""
+msgstr "Creer la selection dans Zoho"
 
 msgid "Created!"
-msgstr ""
+msgstr "Cree !"
 
 msgid "Creating..."
-msgstr ""
+msgstr "Creation en cours..."
 
 msgid "Credit Note ID:"
-msgstr ""
+msgstr "ID de l'avoir :"
 
 msgid "Currency"
-msgstr ""
+msgstr "Devise"
 
 msgid "Currency Handling"
-msgstr ""
+msgstr "Gestion des devises"
 
 msgid "Customer"
-msgstr ""
+msgstr "Client"
 
 msgid "Customer Note"
-msgstr ""
+msgstr "Note du client"
 
 msgid "Datacenter"
-msgstr ""
+msgstr "Centre de donnees"
 
 msgid "Date"
-msgstr ""
+msgstr "Date"
 
 msgid "Date:"
-msgstr ""
+msgstr "Date :"
 
 msgid "Debug"
-msgstr ""
+msgstr "Debogage"
 
 msgid "Deposit To"
-msgstr ""
+msgstr "Deposer sur"
 
 msgid "Details"
-msgstr ""
+msgstr "Details"
 
 msgid "Display Name"
-msgstr ""
+msgstr "Nom d'affichage"
 
 msgid "Do nothing"
-msgstr ""
+msgstr "Ne rien faire"
 
 msgid "Draft"
-msgstr ""
+msgstr "Brouillon"
 
 msgid "Email Admin on Sync Errors"
-msgstr ""
+msgstr "Envoyer un e-mail a l'administrateur en cas d'erreur de synchronisation"
 
 msgid "Enable"
-msgstr ""
+msgstr "Activer"
 
 msgid "Enable automatic sync when orders are placed"
-msgstr ""
+msgstr "Activer la synchronisation automatique lors de la passation des commandes"
 
 msgid "Error:"
-msgstr ""
+msgstr "Erreur :"
 
 msgid "Errors"
-msgstr ""
+msgstr "Erreurs"
 
 msgid "Europe (.eu)"
-msgstr ""
+msgstr "Europe (.eu)"
 
 msgid "Every 15 Minutes"
-msgstr ""
+msgstr "Toutes les 15 minutes"
 
 msgid "Failed"
-msgstr ""
+msgstr "Echoue"
 
 msgid "Failed to apply payment."
-msgstr ""
+msgstr "Echec de l'application du paiement."
 
 msgid "Failed to connect to Zoho Books."
-msgstr ""
+msgstr "Echec de la connexion a Zoho Books."
 
 msgid "Failed to link item."
-msgstr ""
+msgstr "Echec de la liaison de l'article."
 
 msgid "Failed to refresh accounts."
-msgstr ""
+msgstr "Echec de l'actualisation des comptes."
 
 msgid "Failed to save mapping."
-msgstr ""
+msgstr "Echec de l'enregistrement de l'association."
 
 msgid "Fetching Zoho items..."
-msgstr ""
+msgstr "Recuperation des articles Zoho..."
 
 msgid "Field Mapping"
-msgstr ""
+msgstr "Association des champs"
 
 msgid "Field mappings saved successfully."
-msgstr ""
+msgstr "Associations des champs enregistrees avec succes."
 
 msgid "Filter"
-msgstr ""
+msgstr "Filtrer"
 
 msgid "Finish"
-msgstr ""
+msgstr "Terminer"
 
 msgid "Go to Settings"
-msgstr ""
+msgstr "Aller aux parametres"
 
 msgid "India (.in)"
-msgstr ""
+msgstr "Inde (.in)"
 
 msgid "Info"
-msgstr ""
+msgstr "Info"
 
 msgid "Invalid order ID."
-msgstr ""
+msgstr "ID de commande invalide."
 
 msgid "Invalid product ID."
-msgstr ""
+msgstr "ID de produit invalide."
 
 msgid "Invoice"
-msgstr ""
+msgstr "Facture"
 
 msgid "Invoice ID:"
-msgstr ""
+msgstr "ID de facture :"
 
 msgid "Invoice Number:"
-msgstr ""
+msgstr "Numero de facture :"
 
 msgid "Invoice Numbering"
-msgstr ""
+msgstr "Numerotation des factures"
 
 msgid "Invoice Status:"
-msgstr ""
+msgstr "Statut de la facture :"
 
 msgid "Item created in Zoho Books!"
-msgstr ""
+msgstr "Article cree dans Zoho Books !"
 
 msgid "Item linked successfully!"
-msgstr ""
+msgstr "Article lie avec succes !"
 
 msgid "Item Mapping"
-msgstr ""
+msgstr "Association des articles"
 
 msgid "Item updated in Zoho Books!"
-msgstr ""
+msgstr "Article mis a jour dans Zoho Books !"
 
 msgid "Japan (.jp)"
-msgstr ""
+msgstr "Japon (.jp)"
 
 msgid "Last Synced:"
-msgstr ""
+msgstr "Derniere synchronisation :"
 
 msgid "Level:"
-msgstr ""
+msgstr "Niveau :"
 
 msgid "Link"
-msgstr ""
+msgstr "Lier"
 
 msgid "Link Selected"
-msgstr ""
+msgstr "Lier la selection"
 
 msgid "Linked!"
-msgstr ""
+msgstr "Lie !"
 
 msgid "Linking..."
-msgstr ""
+msgstr "Liaison en cours..."
 
 msgid "Loading organizations..."
-msgstr ""
+msgstr "Chargement des organisations..."
 
 msgid "Log Configuration"
-msgstr ""
+msgstr "Configuration des journaux"
 
 msgid "Log Entry Details"
-msgstr ""
+msgstr "Details de l'entree du journal"
 
 msgid "Log Settings"
-msgstr ""
+msgstr "Parametres des journaux"
 
 msgid "Logs"
-msgstr ""
+msgstr "Journaux"
 
 msgid "Manage Field Mappings"
-msgstr ""
+msgstr "Gerer les associations de champs"
 
 msgid "Manage Payment Method Mapping"
-msgstr ""
+msgstr "Gerer l'association des modes de paiement"
 
 msgid "Manage Product Mapping"
-msgstr ""
+msgstr "Gerer l'association des produits"
 
 msgid "Map Products to Zoho Items"
-msgstr ""
+msgstr "Associer les produits aux articles Zoho"
 
 msgid "Map WooCommerce Products to Zoho Items"
-msgstr ""
+msgstr "Associer les produits WooCommerce aux articles Zoho"
 
 msgid "Mapping removed."
-msgstr ""
+msgstr "Association supprimee."
 
 msgid "Mapping saved."
-msgstr ""
+msgstr "Association enregistree."
 
 msgid "Message"
-msgstr ""
+msgstr "Message"
 
 msgid "Message:"
-msgstr ""
+msgstr "Message :"
 
 msgid "minutes"
-msgstr ""
+msgstr "minutes"
 
 msgid "Network error while linking."
-msgstr ""
+msgstr "Erreur reseau lors de la liaison."
 
 msgid "Never"
-msgstr ""
+msgstr "Jamais"
 
 msgid "New orders will be synced automatically based on your trigger settings"
-msgstr ""
+msgstr "Les nouvelles commandes seront synchronisees automatiquement selon vos parametres de declenchement"
 
 msgid "Next"
-msgstr ""
+msgstr "Suivant"
 
 msgid "No"
-msgstr ""
+msgstr "Non"
 
 msgid "No log entries found."
-msgstr ""
+msgstr "Aucune entree de journal trouvee."
 
 msgid "No logs available"
-msgstr ""
+msgstr "Aucun journal disponible"
 
 msgid "No orders found matching your criteria."
-msgstr ""
+msgstr "Aucune commande correspondant a vos criteres."
 
 msgid "No products found."
-msgstr ""
+msgstr "Aucun produit trouve."
 
 msgid "No published products found in WooCommerce."
-msgstr ""
+msgstr "Aucun produit publie trouve dans WooCommerce."
 
 msgid "Not Linked"
-msgstr ""
+msgstr "Non lie"
 
 msgid "Not linked"
-msgstr ""
+msgstr "Non lie"
 
 msgid "Not synced yet"
-msgstr ""
+msgstr "Pas encore synchronise"
 
 msgid "On Processing"
-msgstr ""
+msgstr "En cours de traitement"
 
 msgid "Order"
-msgstr ""
+msgstr "Commande"
 
 msgid "Order #%s"
-msgstr ""
+msgstr "Commande n%s"
 
 msgid "Order Date"
-msgstr ""
+msgstr "Date de commande"
 
 msgid "Order has no billing email address."
-msgstr ""
+msgstr "La commande n'a pas d'adresse e-mail de facturation."
 
 msgid "Order has not been synced to Zoho Books"
-msgstr ""
+msgstr "La commande n'a pas ete synchronisee avec Zoho Books"
 
 msgid "Order ID"
-msgstr ""
+msgstr "ID de commande"
 
 msgid "Order Notes"
-msgstr ""
+msgstr "Notes de commande"
 
 msgid "Order Number"
-msgstr ""
+msgstr "Numero de commande"
 
 msgid "Order Status"
-msgstr ""
+msgstr "Statut de la commande"
 
 msgid "Order Total"
-msgstr ""
+msgstr "Total de la commande"
 
 msgid "Orders"
-msgstr ""
+msgstr "Commandes"
 
 msgid "Organization"
-msgstr ""
+msgstr "Organisation"
 
 msgid "Organization ID"
-msgstr ""
+msgstr "ID de l'organisation"
 
 msgid "Overdue"
-msgstr ""
+msgstr "En retard"
 
 msgid "Paid"
-msgstr ""
+msgstr "Paye"
 
 msgid "Partially Paid"
-msgstr ""
+msgstr "Partiellement paye"
 
 msgid "Payment"
-msgstr ""
+msgstr "Paiement"
 
 msgid "Payment ID:"
-msgstr ""
+msgstr "ID de paiement :"
 
 msgid "Payment Mapping"
-msgstr ""
+msgstr "Association des paiements"
 
 msgid "Payment Method"
-msgstr ""
+msgstr "Mode de paiement"
 
 msgid "Payment Method Mapping"
-msgstr ""
+msgstr "Association des modes de paiement"
 
 msgid "Payment recorded successfully!"
-msgstr ""
+msgstr "Paiement enregistre avec succes !"
 
 msgid "Payment service not configured"
-msgstr ""
+msgstr "Service de paiement non configure"
 
 msgid "Pending"
-msgstr ""
+msgstr "En attente"
 
 msgid "Pending Approval"
-msgstr ""
+msgstr "En attente d'approbation"
 
 msgid "Permission denied."
-msgstr ""
+msgstr "Permission refusee."
 
 msgid "Processing"
-msgstr ""
+msgstr "En cours de traitement"
 
 msgid "Product"
-msgstr ""
+msgstr "Produit"
 
 msgid "Product already linked to a Zoho item."
-msgstr ""
+msgstr "Produit deja lie a un article Zoho."
 
 msgid "Product Mapping"
-msgstr ""
+msgstr "Association des produits"
 
 msgid "Product not found."
-msgstr ""
+msgstr "Produit non trouve."
 
 msgid "Product not linked to a Zoho item."
-msgstr ""
+msgstr "Produit non lie a un article Zoho."
 
 msgid "Re-sync"
-msgstr ""
+msgstr "Resynchroniser"
 
 msgid "Refresh"
-msgstr ""
+msgstr "Actualiser"
 
 msgid "Refresh Accounts"
-msgstr ""
+msgstr "Actualiser les comptes"
 
 msgid "Refresh Token"
-msgstr ""
+msgstr "Jeton de rafraichissement"
 
 msgid "Refund"
-msgstr ""
+msgstr "Remboursement"
 
 msgid "Refund ID:"
-msgstr ""
+msgstr "ID de remboursement :"
 
 msgid "Refund service not configured"
-msgstr ""
+msgstr "Service de remboursement non configure"
 
 msgid "Refund synced successfully!"
-msgstr ""
+msgstr "Remboursement synchronise avec succes !"
 
 msgid "Remove"
-msgstr ""
+msgstr "Supprimer"
 
 msgid "Retry Failed Syncs"
-msgstr ""
+msgstr "Reessayer les synchronisations echouees"
 
 msgid "Retry Settings"
-msgstr ""
+msgstr "Parametres de nouvelle tentative"
 
 msgid "Returning customer. Using existing Zoho contact."
-msgstr ""
+msgstr "Client existant. Utilisation du contact Zoho existant."
 
 msgid "Save & Continue"
-msgstr ""
+msgstr "Enregistrer et continuer"
 
 msgid "Save Mappings"
-msgstr ""
+msgstr "Enregistrer les associations"
 
 msgid "Save Settings"
-msgstr ""
+msgstr "Enregistrer les parametres"
 
 msgid "Search orders..."
-msgstr ""
+msgstr "Rechercher des commandes..."
 
 msgid "Search products..."
-msgstr ""
+msgstr "Rechercher des produits..."
 
 msgid "Search Zoho Items"
-msgstr ""
+msgstr "Rechercher des articles Zoho"
 
 msgid "Select All"
-msgstr ""
+msgstr "Tout selectionner"
 
 msgid "Select orders to sync"
-msgstr ""
+msgstr "Selectionnez les commandes a synchroniser"
 
 msgid "Select Organization"
-msgstr ""
+msgstr "Selectionnez une organisation"
 
 msgid "Sent"
-msgstr ""
+msgstr "Envoye"
 
 msgid "Settings"
-msgstr ""
+msgstr "Parametres"
 
 msgid "Settings saved."
-msgstr ""
+msgstr "Parametres enregistres."
 
 msgid "Shipping Address 1"
-msgstr ""
+msgstr "Adresse de livraison 1"
 
 msgid "Shipping Address 2"
-msgstr ""
+msgstr "Adresse de livraison 2"
 
 msgid "Shipping City"
-msgstr ""
+msgstr "Ville de livraison"
 
 msgid "Shipping Company"
-msgstr ""
+msgstr "Entreprise de livraison"
 
 msgid "Shipping Country"
-msgstr ""
+msgstr "Pays de livraison"
 
 msgid "Shipping First Name"
-msgstr ""
+msgstr "Prenom de livraison"
 
 msgid "Shipping Full Name"
-msgstr ""
+msgstr "Nom complet de livraison"
 
 msgid "Shipping Last Name"
-msgstr ""
+msgstr "Nom de livraison"
 
 msgid "Shipping Method"
-msgstr ""
+msgstr "Mode de livraison"
 
 msgid "Shipping Phone"
-msgstr ""
+msgstr "Telephone de livraison"
 
 msgid "Shipping Postcode"
-msgstr ""
+msgstr "Code postal de livraison"
 
 msgid "Shipping State"
-msgstr ""
+msgstr "Region de livraison"
 
 msgid "Showing first 50 products. You can map additional products from ZBooks > Product Mapping after setup."
-msgstr ""
+msgstr "Affichage des 50 premiers produits. Vous pouvez associer d'autres produits depuis ZBooks > Association des produits apres la configuration."
 
 msgid "Skip"
-msgstr ""
+msgstr "Ignorer"
 
 msgid "Skip for Now"
-msgstr ""
+msgstr "Ignorer pour le moment"
 
 msgid "SKU"
-msgstr ""
+msgstr "SKU"
 
 msgid "Status"
-msgstr ""
+msgstr "Statut"
 
 msgid "Status:"
-msgstr ""
+msgstr "Statut :"
 
 msgid "Sync"
-msgstr ""
+msgstr "Synchroniser"
 
 msgid "Sync error"
-msgstr ""
+msgstr "Erreur de synchronisation"
 
 msgid "Sync failed. Please try again."
-msgstr ""
+msgstr "Echec de la synchronisation. Veuillez reessayer."
 
 msgid "Sync Now"
-msgstr ""
+msgstr "Synchroniser maintenant"
 
 msgid "Sync Orders to Zoho Books"
-msgstr ""
+msgstr "Synchroniser les commandes vers Zoho Books"
 
 msgid "Sync Refund"
-msgstr ""
+msgstr "Synchroniser le remboursement"
 
 msgid "Sync Selected"
-msgstr ""
+msgstr "Synchroniser la selection"
 
 msgid "Sync Settings"
-msgstr ""
+msgstr "Parametres de synchronisation"
 
 msgid "Sync Status"
-msgstr ""
+msgstr "Statut de synchronisation"
 
 msgid "Sync successful!"
-msgstr ""
+msgstr "Synchronisation reussie !"
 
 msgid "Sync Triggers"
-msgstr ""
+msgstr "Declencheurs de synchronisation"
 
 msgid "Synced"
-msgstr ""
+msgstr "Synchronise"
 
 msgid "Syncing..."
-msgstr ""
+msgstr "Synchronisation en cours..."
 
 msgid "Test Connection"
-msgstr ""
+msgstr "Tester la connexion"
 
 msgid "Timestamp"
-msgstr ""
+msgstr "Horodatage"
 
 msgid "Timestamp:"
-msgstr ""
+msgstr "Horodatage :"
 
 msgid "Total"
-msgstr ""
+msgstr "Total"
 
 msgid "Total:"
-msgstr ""
+msgstr "Total :"
 
 msgid "Unexpected response from Zoho."
-msgstr ""
+msgstr "Reponse inattendue de Zoho."
 
 msgid "Unlink"
-msgstr ""
+msgstr "Dissocier"
 
 msgid "Unpaid"
-msgstr ""
+msgstr "Non paye"
 
 msgid "United States (.com)"
-msgstr ""
+msgstr "Etats-Unis (.com)"
 
 msgid "Use the Bulk Sync page to sync existing orders"
-msgstr ""
+msgstr "Utilisez la page Synchronisation en masse pour synchroniser les commandes existantes"
 
 msgid "View"
-msgstr ""
+msgstr "Voir"
 
 msgid "View in Zoho Books"
-msgstr ""
+msgstr "Voir dans Zoho Books"
 
 msgid "Void"
-msgstr ""
+msgstr "Annule"
 
 msgid "Warnings"
-msgstr ""
+msgstr "Avertissements"
 
 msgid "Welcome"
-msgstr ""
+msgstr "Bienvenue"
 
 msgid "Welcome to ZBooks for WooCommerce"
-msgstr ""
+msgstr "Bienvenue sur ZBooks pour WooCommerce"
 
 msgid "WooCommerce Custom Field (meta key)"
-msgstr ""
+msgstr "Champ personnalise WooCommerce (cle meta)"
 
 msgid "WooCommerce Field"
-msgstr ""
+msgstr "Champ WooCommerce"
 
 msgid "WooCommerce Payment Method"
-msgstr ""
+msgstr "Mode de paiement WooCommerce"
 
 msgid "WooCommerce Product"
-msgstr ""
+msgstr "Produit WooCommerce"
 
 msgid "Yes"
-msgstr ""
+msgstr "Oui"
 
 msgid "You can manually sync orders from the order edit page"
-msgstr ""
+msgstr "Vous pouvez synchroniser manuellement les commandes depuis la page de modification de commande"
 
 msgid "You're All Set!"
-msgstr ""
+msgstr "Vous etes pret !"
 
 msgid "ZBooks"
-msgstr ""
+msgstr "ZBooks"
 
 msgid "ZBooks for WooCommerce"
-msgstr ""
+msgstr "ZBooks pour WooCommerce"
 
 msgid "ZBooks for WooCommerce is now configured and ready to sync your WooCommerce orders to Zoho Books."
-msgstr ""
+msgstr "ZBooks pour WooCommerce est maintenant configure et pret a synchroniser vos commandes WooCommerce vers Zoho Books."
 
 msgid "ZBooks for WooCommerce requires WooCommerce to be installed and activated."
-msgstr ""
+msgstr "ZBooks pour WooCommerce necessite que WooCommerce soit installe et active."
 
 msgid "ZBooks Setup"
-msgstr ""
+msgstr "Configuration de ZBooks"
 
 msgid "ZBooks Setup Wizard"
-msgstr ""
+msgstr "Assistant de configuration ZBooks"
 
 msgid "ZBooks Sync Logs"
-msgstr ""
+msgstr "Journaux de synchronisation ZBooks"
 
 msgid "Zoho API rate limit exceeded. Please try again later."
-msgstr ""
+msgstr "Limite de requetes API Zoho depassee. Veuillez reessayer plus tard."
 
 msgid "Zoho Books API credentials not configured."
-msgstr ""
+msgstr "Identifiants API Zoho Books non configures."
 
 msgid "Zoho Books Sync"
-msgstr ""
+msgstr "Synchronisation Zoho Books"
 
 msgid "Zoho Custom Field (API name)"
-msgstr ""
+msgstr "Champ personnalise Zoho (nom API)"
 
 msgid "Zoho Field"
-msgstr ""
+msgstr "Champ Zoho"
 
 msgid "Zoho Item"
-msgstr ""
+msgstr "Article Zoho"
 
 msgid "Zoho Payment Account"
-msgstr ""
+msgstr "Compte de paiement Zoho"
 
 msgid "Zoho Payment Mode"
-msgstr ""
+msgstr "Mode de paiement Zoho"
 
 #. translators: %d: number of days
 msgid "Clear Old Logs (%d+ days)"
-msgstr ""
+msgstr "Effacer les anciens journaux (%d+ jours)"
 
 #. translators: %d: number of days for log retention
 msgid "Delete log files older than %d days?"
-msgstr ""
+msgstr "Supprimer les fichiers journaux de plus de %d jours ?"
 
 #. translators: %d: number of files deleted
 msgid "Deleted %d old log file(s)."
-msgstr ""
+msgstr "%d ancien(s) fichier(s) journal supprime(s)."
 
 #. translators: %d: number of products auto-mapped
 msgid "Auto-mapped %d product(s) by SKU!"
-msgstr ""
+msgstr "%d produit(s) associe(s) automatiquement par SKU !"
 
 #. translators: %s: Error message
 msgid "Failed to create Zoho contact: %s"
-msgstr ""
+msgstr "Echec de la creation du contact Zoho : %s"
 
 #. translators: %s: Error message
 msgid "Failed to refresh Zoho access token: %s"
-msgstr ""
+msgstr "Echec du rafraichissement du jeton d'acces Zoho : %s"
 
 #. translators: %s: Error message
 msgid "Failed to exchange grant code: %s"
-msgstr ""
+msgstr "Echec de l'echange du code d'autorisation : %s"
 
 #. translators: %s: Error message
 msgid "Failed to sync order to Zoho Books: %s"
-msgstr ""
+msgstr "Echec de la synchronisation de la commande vers Zoho Books : %s"
 
 #. translators: 1: Contact currency, 2: Order currency
 msgid "Currency mismatch: Contact is set to %1$s but order uses %2$s. Please update the contact currency in Zoho Books or use a different email."
-msgstr ""
+msgstr "Incompatibilite de devise : le contact est configure en %1$s mais la commande utilise %2$s. Veuillez mettre a jour la devise du contact dans Zoho Books ou utiliser une autre adresse e-mail."
 
 #. translators: %1$s: Order number, %2$s: Payment method
 msgid "Payment for Order #%1$s via %2$s"
-msgstr ""
+msgstr "Paiement de la commande n%1$s via %2$s"
 
 #. translators: %s: Service name
 msgid "Service \"%s\" not found in container."
-msgstr ""
+msgstr "Service \"%s\" non trouve dans le conteneur."
 
 msgid "No refresh token received. Ensure the grant code has offline_access scope."
-msgstr ""
+msgstr "Aucun jeton de rafraichissement recu. Assurez-vous que le code d'autorisation dispose de la portee offline_access."
 
 msgid "Check the settings page to adjust configuration anytime"
-msgstr ""
+msgstr "Consultez la page des parametres pour ajuster la configuration a tout moment"
 
 msgid "What happens next?"
-msgstr ""
+msgstr "Quelle est la suite ?"
 
 msgid "API Setup"
-msgstr ""
+msgstr "Configuration de l'API"

@@ -1,870 +1,873 @@
+# Chinese (Simplified) translation for ZBooks for WooCommerce.
 # Copyright (C) 2024 talas9
 # This file is distributed under the GPL-2.0+.
 msgid ""
 msgstr ""
-"Project-Id-Version: ZBooks for WooCommerce 1.0.0\n"
+"Project-Id-Version: ZBooks for WooCommerce 1.0.5\n"
 "Report-Msgid-Bugs-To: https://github.com/talas9/zbooks-for-woocommerce/issues\n"
 "POT-Creation-Date: 2024-01-25 00:00:00+00:00\n"
+"PO-Revision-Date: 2025-01-25 00:00:00+00:00\n"
+"Last-Translator: ZBooks Team\n"
+"Language-Team: Chinese (Simplified)\n"
+"Language: zh_CN\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: Chinese <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
 
 msgid "-- Not Mapped --"
-msgstr ""
+msgstr "-- 未映射 --"
 
 msgid "-- Select Account --"
-msgstr ""
+msgstr "-- 选择账户 --"
 
 msgid "-- Select Mode --"
-msgstr ""
+msgstr "-- 选择模式 --"
 
 msgid "Action"
-msgstr ""
+msgstr "操作"
 
 msgid "Actions"
-msgstr ""
+msgstr "操作"
 
 msgid "Add Customer Mapping"
-msgstr ""
+msgstr "添加客户映射"
 
 msgid "Add Invoice Mapping"
-msgstr ""
+msgstr "添加发票映射"
 
 msgid "Advanced"
-msgstr ""
+msgstr "高级"
 
 msgid "All"
-msgstr ""
+msgstr "全部"
 
 msgid "Already linked."
-msgstr ""
+msgstr "已关联。"
 
 msgid "An error occurred."
-msgstr ""
+msgstr "发生错误。"
 
 msgid "API Credentials"
-msgstr ""
+msgstr "API 凭证"
 
 msgid "Apply Payment"
-msgstr ""
+msgstr "应用付款"
 
 msgid "Are you sure you want to sync the selected orders?"
-msgstr ""
+msgstr "您确定要同步选中的订单吗？"
 
 msgid "Australia (.com.au)"
-msgstr ""
+msgstr "澳大利亚 (.com.au)"
 
 msgid "Auto-Map by SKU"
-msgstr ""
+msgstr "按 SKU 自动映射"
 
 msgid "Back"
-msgstr ""
+msgstr "返回"
 
 msgid "Bank"
-msgstr ""
+msgstr "银行"
 
 msgid "Bank accounts refreshed."
-msgstr ""
+msgstr "银行账户已刷新。"
 
 msgid "Billing Address 1"
-msgstr ""
+msgstr "账单地址 1"
 
 msgid "Billing Address 2"
-msgstr ""
+msgstr "账单地址 2"
 
 msgid "Billing City"
-msgstr ""
+msgstr "账单城市"
 
 msgid "Billing Company"
-msgstr ""
+msgstr "账单公司"
 
 msgid "Billing Country"
-msgstr ""
+msgstr "账单国家"
 
 msgid "Billing Email"
-msgstr ""
+msgstr "账单邮箱"
 
 msgid "Billing First Name"
-msgstr ""
+msgstr "账单名字"
 
 msgid "Billing Full Name"
-msgstr ""
+msgstr "账单全名"
 
 msgid "Billing Last Name"
-msgstr ""
+msgstr "账单姓氏"
 
 msgid "Billing Phone"
-msgstr ""
+msgstr "账单电话"
 
 msgid "Billing Postcode"
-msgstr ""
+msgstr "账单邮编"
 
 msgid "Billing State"
-msgstr ""
+msgstr "账单省份"
 
 msgid "Bulk Sync"
-msgstr ""
+msgstr "批量同步"
 
 msgid "Bulk Sync Orders to Zoho Books"
-msgstr ""
+msgstr "批量同步订单到 Zoho Books"
 
 msgid "Cancel"
-msgstr ""
+msgstr "取消"
 
 msgid "Cash"
-msgstr ""
+msgstr "现金"
 
 msgid "China (.com.cn)"
-msgstr ""
+msgstr "中国 (.com.cn)"
 
 msgid "Clear"
-msgstr ""
+msgstr "清除"
 
 msgid "Client ID"
-msgstr ""
+msgstr "Client ID"
 
 msgid "Client Secret"
-msgstr ""
+msgstr "Client Secret"
 
 msgid "Close"
-msgstr ""
+msgstr "关闭"
 
 msgid "Complete"
-msgstr ""
+msgstr "完成"
 
 msgid "Completed"
-msgstr ""
+msgstr "已完成"
 
 msgid "Configuration incomplete."
-msgstr ""
+msgstr "配置不完整。"
 
 msgid "Configure Sync"
-msgstr ""
+msgstr "配置同步"
 
 msgid "Configure sync behavior for different order statuses."
-msgstr ""
+msgstr "为不同的订单状态配置同步行为。"
 
 msgid "Connection"
-msgstr ""
+msgstr "连接"
 
 msgid "Connection failed. Please check your credentials."
-msgstr ""
+msgstr "连接失败。请检查您的凭证。"
 
 msgid "Connection successful!"
-msgstr ""
+msgstr "连接成功！"
 
 msgid "Context / Details:"
-msgstr ""
+msgstr "上下文/详情："
 
 msgid "Copied!"
-msgstr ""
+msgstr "已复制！"
 
 msgid "Copy JSON"
-msgstr ""
+msgstr "复制 JSON"
 
 msgid "Coupon Codes"
-msgstr ""
+msgstr "优惠券代码"
 
 msgid "Create"
-msgstr ""
+msgstr "创建"
 
 msgid "Create & send invoice"
-msgstr ""
+msgstr "创建并发送发票"
 
 msgid "Create and submit invoice"
-msgstr ""
+msgstr "创建并提交发票"
 
 msgid "Create draft invoice"
-msgstr ""
+msgstr "创建草稿发票"
 
 msgid "Create in Zoho"
-msgstr ""
+msgstr "在 Zoho 中创建"
 
 msgid "Create Selected in Zoho"
-msgstr ""
+msgstr "在 Zoho 中创建选中项"
 
 msgid "Created!"
-msgstr ""
+msgstr "已创建！"
 
 msgid "Creating..."
-msgstr ""
+msgstr "创建中..."
 
 msgid "Credit Note ID:"
-msgstr ""
+msgstr "贷项通知单 ID："
 
 msgid "Currency"
-msgstr ""
+msgstr "货币"
 
 msgid "Currency Handling"
-msgstr ""
+msgstr "货币处理"
 
 msgid "Customer"
-msgstr ""
+msgstr "客户"
 
 msgid "Customer Note"
-msgstr ""
+msgstr "客户备注"
 
 msgid "Datacenter"
-msgstr ""
+msgstr "数据中心"
 
 msgid "Date"
-msgstr ""
+msgstr "日期"
 
 msgid "Date:"
-msgstr ""
+msgstr "日期："
 
 msgid "Debug"
-msgstr ""
+msgstr "调试"
 
 msgid "Deposit To"
-msgstr ""
+msgstr "存入至"
 
 msgid "Details"
-msgstr ""
+msgstr "详情"
 
 msgid "Display Name"
-msgstr ""
+msgstr "显示名称"
 
 msgid "Do nothing"
-msgstr ""
+msgstr "不执行任何操作"
 
 msgid "Draft"
-msgstr ""
+msgstr "草稿"
 
 msgid "Email Admin on Sync Errors"
-msgstr ""
+msgstr "同步出错时邮件通知管理员"
 
 msgid "Enable"
-msgstr ""
+msgstr "启用"
 
 msgid "Enable automatic sync when orders are placed"
-msgstr ""
+msgstr "下单时启用自动同步"
 
 msgid "Error:"
-msgstr ""
+msgstr "错误："
 
 msgid "Errors"
-msgstr ""
+msgstr "错误"
 
 msgid "Europe (.eu)"
-msgstr ""
+msgstr "欧洲 (.eu)"
 
 msgid "Every 15 Minutes"
-msgstr ""
+msgstr "每 15 分钟"
 
 msgid "Failed"
-msgstr ""
+msgstr "失败"
 
 msgid "Failed to apply payment."
-msgstr ""
+msgstr "应用付款失败。"
 
 msgid "Failed to connect to Zoho Books."
-msgstr ""
+msgstr "连接 Zoho Books 失败。"
 
 msgid "Failed to link item."
-msgstr ""
+msgstr "关联商品失败。"
 
 msgid "Failed to refresh accounts."
-msgstr ""
+msgstr "刷新账户失败。"
 
 msgid "Failed to save mapping."
-msgstr ""
+msgstr "保存映射失败。"
 
 msgid "Fetching Zoho items..."
-msgstr ""
+msgstr "正在获取 Zoho 商品..."
 
 msgid "Field Mapping"
-msgstr ""
+msgstr "字段映射"
 
 msgid "Field mappings saved successfully."
-msgstr ""
+msgstr "字段映射保存成功。"
 
 msgid "Filter"
-msgstr ""
+msgstr "筛选"
 
 msgid "Finish"
-msgstr ""
+msgstr "完成"
 
 msgid "Go to Settings"
-msgstr ""
+msgstr "前往设置"
 
 msgid "India (.in)"
-msgstr ""
+msgstr "印度 (.in)"
 
 msgid "Info"
-msgstr ""
+msgstr "信息"
 
 msgid "Invalid order ID."
-msgstr ""
+msgstr "无效的订单 ID。"
 
 msgid "Invalid product ID."
-msgstr ""
+msgstr "无效的商品 ID。"
 
 msgid "Invoice"
-msgstr ""
+msgstr "发票"
 
 msgid "Invoice ID:"
-msgstr ""
+msgstr "发票 ID："
 
 msgid "Invoice Number:"
-msgstr ""
+msgstr "发票编号："
 
 msgid "Invoice Numbering"
-msgstr ""
+msgstr "发票编号规则"
 
 msgid "Invoice Status:"
-msgstr ""
+msgstr "发票状态："
 
 msgid "Item created in Zoho Books!"
-msgstr ""
+msgstr "已在 Zoho Books 中创建商品！"
 
 msgid "Item linked successfully!"
-msgstr ""
+msgstr "商品关联成功！"
 
 msgid "Item Mapping"
-msgstr ""
+msgstr "商品映射"
 
 msgid "Item updated in Zoho Books!"
-msgstr ""
+msgstr "已在 Zoho Books 中更新商品！"
 
 msgid "Japan (.jp)"
-msgstr ""
+msgstr "日本 (.jp)"
 
 msgid "Last Synced:"
-msgstr ""
+msgstr "上次同步："
 
 msgid "Level:"
-msgstr ""
+msgstr "级别："
 
 msgid "Link"
-msgstr ""
+msgstr "关联"
 
 msgid "Link Selected"
-msgstr ""
+msgstr "关联选中项"
 
 msgid "Linked!"
-msgstr ""
+msgstr "已关联！"
 
 msgid "Linking..."
-msgstr ""
+msgstr "关联中..."
 
 msgid "Loading organizations..."
-msgstr ""
+msgstr "正在加载组织..."
 
 msgid "Log Configuration"
-msgstr ""
+msgstr "日志配置"
 
 msgid "Log Entry Details"
-msgstr ""
+msgstr "日志条目详情"
 
 msgid "Log Settings"
-msgstr ""
+msgstr "日志设置"
 
 msgid "Logs"
-msgstr ""
+msgstr "日志"
 
 msgid "Manage Field Mappings"
-msgstr ""
+msgstr "管理字段映射"
 
 msgid "Manage Payment Method Mapping"
-msgstr ""
+msgstr "管理支付方式映射"
 
 msgid "Manage Product Mapping"
-msgstr ""
+msgstr "管理商品映射"
 
 msgid "Map Products to Zoho Items"
-msgstr ""
+msgstr "将商品映射到 Zoho 项目"
 
 msgid "Map WooCommerce Products to Zoho Items"
-msgstr ""
+msgstr "将 WooCommerce 商品映射到 Zoho 项目"
 
 msgid "Mapping removed."
-msgstr ""
+msgstr "映射已移除。"
 
 msgid "Mapping saved."
-msgstr ""
+msgstr "映射已保存。"
 
 msgid "Message"
-msgstr ""
+msgstr "消息"
 
 msgid "Message:"
-msgstr ""
+msgstr "消息："
 
 msgid "minutes"
-msgstr ""
+msgstr "分钟"
 
 msgid "Network error while linking."
-msgstr ""
+msgstr "关联时发生网络错误。"
 
 msgid "Never"
-msgstr ""
+msgstr "从不"
 
 msgid "New orders will be synced automatically based on your trigger settings"
-msgstr ""
+msgstr "新订单将根据您的触发器设置自动同步"
 
 msgid "Next"
-msgstr ""
+msgstr "下一步"
 
 msgid "No"
-msgstr ""
+msgstr "否"
 
 msgid "No log entries found."
-msgstr ""
+msgstr "未找到日志条目。"
 
 msgid "No logs available"
-msgstr ""
+msgstr "暂无日志"
 
 msgid "No orders found matching your criteria."
-msgstr ""
+msgstr "未找到符合条件的订单。"
 
 msgid "No products found."
-msgstr ""
+msgstr "未找到商品。"
 
 msgid "No published products found in WooCommerce."
-msgstr ""
+msgstr "在 WooCommerce 中未找到已发布的商品。"
 
 msgid "Not Linked"
-msgstr ""
+msgstr "未关联"
 
 msgid "Not linked"
-msgstr ""
+msgstr "未关联"
 
 msgid "Not synced yet"
-msgstr ""
+msgstr "尚未同步"
 
 msgid "On Processing"
-msgstr ""
+msgstr "处理中时"
 
 msgid "Order"
-msgstr ""
+msgstr "订单"
 
 msgid "Order #%s"
-msgstr ""
+msgstr "订单 #%s"
 
 msgid "Order Date"
-msgstr ""
+msgstr "订单日期"
 
 msgid "Order has no billing email address."
-msgstr ""
+msgstr "订单没有账单邮箱地址。"
 
 msgid "Order has not been synced to Zoho Books"
-msgstr ""
+msgstr "订单尚未同步到 Zoho Books"
 
 msgid "Order ID"
-msgstr ""
+msgstr "订单 ID"
 
 msgid "Order Notes"
-msgstr ""
+msgstr "订单备注"
 
 msgid "Order Number"
-msgstr ""
+msgstr "订单编号"
 
 msgid "Order Status"
-msgstr ""
+msgstr "订单状态"
 
 msgid "Order Total"
-msgstr ""
+msgstr "订单总额"
 
 msgid "Orders"
-msgstr ""
+msgstr "订单"
 
 msgid "Organization"
-msgstr ""
+msgstr "组织"
 
 msgid "Organization ID"
-msgstr ""
+msgstr "组织 ID"
 
 msgid "Overdue"
-msgstr ""
+msgstr "逾期"
 
 msgid "Paid"
-msgstr ""
+msgstr "已付款"
 
 msgid "Partially Paid"
-msgstr ""
+msgstr "部分付款"
 
 msgid "Payment"
-msgstr ""
+msgstr "付款"
 
 msgid "Payment ID:"
-msgstr ""
+msgstr "付款 ID："
 
 msgid "Payment Mapping"
-msgstr ""
+msgstr "付款映射"
 
 msgid "Payment Method"
-msgstr ""
+msgstr "支付方式"
 
 msgid "Payment Method Mapping"
-msgstr ""
+msgstr "支付方式映射"
 
 msgid "Payment recorded successfully!"
-msgstr ""
+msgstr "付款记录成功！"
 
 msgid "Payment service not configured"
-msgstr ""
+msgstr "付款服务未配置"
 
 msgid "Pending"
-msgstr ""
+msgstr "待处理"
 
 msgid "Pending Approval"
-msgstr ""
+msgstr "待审批"
 
 msgid "Permission denied."
-msgstr ""
+msgstr "权限被拒绝。"
 
 msgid "Processing"
-msgstr ""
+msgstr "处理中"
 
 msgid "Product"
-msgstr ""
+msgstr "商品"
 
 msgid "Product already linked to a Zoho item."
-msgstr ""
+msgstr "商品已关联到 Zoho 项目。"
 
 msgid "Product Mapping"
-msgstr ""
+msgstr "商品映射"
 
 msgid "Product not found."
-msgstr ""
+msgstr "未找到商品。"
 
 msgid "Product not linked to a Zoho item."
-msgstr ""
+msgstr "商品未关联到 Zoho 项目。"
 
 msgid "Re-sync"
-msgstr ""
+msgstr "重新同步"
 
 msgid "Refresh"
-msgstr ""
+msgstr "刷新"
 
 msgid "Refresh Accounts"
-msgstr ""
+msgstr "刷新账户"
 
 msgid "Refresh Token"
-msgstr ""
+msgstr "Refresh Token"
 
 msgid "Refund"
-msgstr ""
+msgstr "退款"
 
 msgid "Refund ID:"
-msgstr ""
+msgstr "退款 ID："
 
 msgid "Refund service not configured"
-msgstr ""
+msgstr "退款服务未配置"
 
 msgid "Refund synced successfully!"
-msgstr ""
+msgstr "退款同步成功！"
 
 msgid "Remove"
-msgstr ""
+msgstr "移除"
 
 msgid "Retry Failed Syncs"
-msgstr ""
+msgstr "重试失败的同步"
 
 msgid "Retry Settings"
-msgstr ""
+msgstr "重试设置"
 
 msgid "Returning customer. Using existing Zoho contact."
-msgstr ""
+msgstr "回头客。使用现有的 Zoho 联系人。"
 
 msgid "Save & Continue"
-msgstr ""
+msgstr "保存并继续"
 
 msgid "Save Mappings"
-msgstr ""
+msgstr "保存映射"
 
 msgid "Save Settings"
-msgstr ""
+msgstr "保存设置"
 
 msgid "Search orders..."
-msgstr ""
+msgstr "搜索订单..."
 
 msgid "Search products..."
-msgstr ""
+msgstr "搜索商品..."
 
 msgid "Search Zoho Items"
-msgstr ""
+msgstr "搜索 Zoho 项目"
 
 msgid "Select All"
-msgstr ""
+msgstr "全选"
 
 msgid "Select orders to sync"
-msgstr ""
+msgstr "选择要同步的订单"
 
 msgid "Select Organization"
-msgstr ""
+msgstr "选择组织"
 
 msgid "Sent"
-msgstr ""
+msgstr "已发送"
 
 msgid "Settings"
-msgstr ""
+msgstr "设置"
 
 msgid "Settings saved."
-msgstr ""
+msgstr "设置已保存。"
 
 msgid "Shipping Address 1"
-msgstr ""
+msgstr "收货地址 1"
 
 msgid "Shipping Address 2"
-msgstr ""
+msgstr "收货地址 2"
 
 msgid "Shipping City"
-msgstr ""
+msgstr "收货城市"
 
 msgid "Shipping Company"
-msgstr ""
+msgstr "收货公司"
 
 msgid "Shipping Country"
-msgstr ""
+msgstr "收货国家"
 
 msgid "Shipping First Name"
-msgstr ""
+msgstr "收货人名字"
 
 msgid "Shipping Full Name"
-msgstr ""
+msgstr "收货人全名"
 
 msgid "Shipping Last Name"
-msgstr ""
+msgstr "收货人姓氏"
 
 msgid "Shipping Method"
-msgstr ""
+msgstr "配送方式"
 
 msgid "Shipping Phone"
-msgstr ""
+msgstr "收货电话"
 
 msgid "Shipping Postcode"
-msgstr ""
+msgstr "收货邮编"
 
 msgid "Shipping State"
-msgstr ""
+msgstr "收货省份"
 
 msgid "Showing first 50 products. You can map additional products from ZBooks > Product Mapping after setup."
-msgstr ""
+msgstr "显示前 50 个商品。设置完成后，您可以从 ZBooks > 商品映射中映射更多商品。"
 
 msgid "Skip"
-msgstr ""
+msgstr "跳过"
 
 msgid "Skip for Now"
-msgstr ""
+msgstr "暂时跳过"
 
 msgid "SKU"
-msgstr ""
+msgstr "SKU"
 
 msgid "Status"
-msgstr ""
+msgstr "状态"
 
 msgid "Status:"
-msgstr ""
+msgstr "状态："
 
 msgid "Sync"
-msgstr ""
+msgstr "同步"
 
 msgid "Sync error"
-msgstr ""
+msgstr "同步错误"
 
 msgid "Sync failed. Please try again."
-msgstr ""
+msgstr "同步失败。请重试。"
 
 msgid "Sync Now"
-msgstr ""
+msgstr "立即同步"
 
 msgid "Sync Orders to Zoho Books"
-msgstr ""
+msgstr "同步订单到 Zoho Books"
 
 msgid "Sync Refund"
-msgstr ""
+msgstr "同步退款"
 
 msgid "Sync Selected"
-msgstr ""
+msgstr "同步选中项"
 
 msgid "Sync Settings"
-msgstr ""
+msgstr "同步设置"
 
 msgid "Sync Status"
-msgstr ""
+msgstr "同步状态"
 
 msgid "Sync successful!"
-msgstr ""
+msgstr "同步成功！"
 
 msgid "Sync Triggers"
-msgstr ""
+msgstr "同步触发器"
 
 msgid "Synced"
-msgstr ""
+msgstr "已同步"
 
 msgid "Syncing..."
-msgstr ""
+msgstr "同步中..."
 
 msgid "Test Connection"
-msgstr ""
+msgstr "测试连接"
 
 msgid "Timestamp"
-msgstr ""
+msgstr "时间戳"
 
 msgid "Timestamp:"
-msgstr ""
+msgstr "时间戳："
 
 msgid "Total"
-msgstr ""
+msgstr "合计"
 
 msgid "Total:"
-msgstr ""
+msgstr "合计："
 
 msgid "Unexpected response from Zoho."
-msgstr ""
+msgstr "来自 Zoho 的意外响应。"
 
 msgid "Unlink"
-msgstr ""
+msgstr "取消关联"
 
 msgid "Unpaid"
-msgstr ""
+msgstr "未付款"
 
 msgid "United States (.com)"
-msgstr ""
+msgstr "美国 (.com)"
 
 msgid "Use the Bulk Sync page to sync existing orders"
-msgstr ""
+msgstr "使用批量同步页面同步现有订单"
 
 msgid "View"
-msgstr ""
+msgstr "查看"
 
 msgid "View in Zoho Books"
-msgstr ""
+msgstr "在 Zoho Books 中查看"
 
 msgid "Void"
-msgstr ""
+msgstr "已作废"
 
 msgid "Warnings"
-msgstr ""
+msgstr "警告"
 
 msgid "Welcome"
-msgstr ""
+msgstr "欢迎"
 
 msgid "Welcome to ZBooks for WooCommerce"
-msgstr ""
+msgstr "欢迎使用 ZBooks for WooCommerce"
 
 msgid "WooCommerce Custom Field (meta key)"
-msgstr ""
+msgstr "WooCommerce 自定义字段（meta key）"
 
 msgid "WooCommerce Field"
-msgstr ""
+msgstr "WooCommerce 字段"
 
 msgid "WooCommerce Payment Method"
-msgstr ""
+msgstr "WooCommerce 支付方式"
 
 msgid "WooCommerce Product"
-msgstr ""
+msgstr "WooCommerce 商品"
 
 msgid "Yes"
-msgstr ""
+msgstr "是"
 
 msgid "You can manually sync orders from the order edit page"
-msgstr ""
+msgstr "您可以从订单编辑页面手动同步订单"
 
 msgid "You're All Set!"
-msgstr ""
+msgstr "设置完成！"
 
 msgid "ZBooks"
-msgstr ""
+msgstr "ZBooks"
 
 msgid "ZBooks for WooCommerce"
-msgstr ""
+msgstr "ZBooks for WooCommerce"
 
 msgid "ZBooks for WooCommerce is now configured and ready to sync your WooCommerce orders to Zoho Books."
-msgstr ""
+msgstr "ZBooks for WooCommerce 已配置完成，可以将您的 WooCommerce 订单同步到 Zoho Books。"
 
 msgid "ZBooks for WooCommerce requires WooCommerce to be installed and activated."
-msgstr ""
+msgstr "ZBooks for WooCommerce 需要安装并激活 WooCommerce。"
 
 msgid "ZBooks Setup"
-msgstr ""
+msgstr "ZBooks 设置"
 
 msgid "ZBooks Setup Wizard"
-msgstr ""
+msgstr "ZBooks 设置向导"
 
 msgid "ZBooks Sync Logs"
-msgstr ""
+msgstr "ZBooks 同步日志"
 
 msgid "Zoho API rate limit exceeded. Please try again later."
-msgstr ""
+msgstr "Zoho API 请求次数超限。请稍后重试。"
 
 msgid "Zoho Books API credentials not configured."
-msgstr ""
+msgstr "Zoho Books API 凭证未配置。"
 
 msgid "Zoho Books Sync"
-msgstr ""
+msgstr "Zoho Books 同步"
 
 msgid "Zoho Custom Field (API name)"
-msgstr ""
+msgstr "Zoho 自定义字段（API 名称）"
 
 msgid "Zoho Field"
-msgstr ""
+msgstr "Zoho 字段"
 
 msgid "Zoho Item"
-msgstr ""
+msgstr "Zoho 项目"
 
 msgid "Zoho Payment Account"
-msgstr ""
+msgstr "Zoho 付款账户"
 
 msgid "Zoho Payment Mode"
-msgstr ""
+msgstr "Zoho 付款方式"
 
 #. translators: %d: number of days
 msgid "Clear Old Logs (%d+ days)"
-msgstr ""
+msgstr "清除旧日志（%d 天以上）"
 
 #. translators: %d: number of days for log retention
 msgid "Delete log files older than %d days?"
-msgstr ""
+msgstr "删除 %d 天前的日志文件？"
 
 #. translators: %d: number of files deleted
 msgid "Deleted %d old log file(s)."
-msgstr ""
+msgstr "已删除 %d 个旧日志文件。"
 
 #. translators: %d: number of products auto-mapped
 msgid "Auto-mapped %d product(s) by SKU!"
-msgstr ""
+msgstr "已按 SKU 自动映射 %d 个商品！"
 
 #. translators: %s: Error message
 msgid "Failed to create Zoho contact: %s"
-msgstr ""
+msgstr "创建 Zoho 联系人失败：%s"
 
 #. translators: %s: Error message
 msgid "Failed to refresh Zoho access token: %s"
-msgstr ""
+msgstr "刷新 Zoho 访问令牌失败：%s"
 
 #. translators: %s: Error message
 msgid "Failed to exchange grant code: %s"
-msgstr ""
+msgstr "交换授权码失败：%s"
 
 #. translators: %s: Error message
 msgid "Failed to sync order to Zoho Books: %s"
-msgstr ""
+msgstr "同步订单到 Zoho Books 失败：%s"
 
 #. translators: 1: Contact currency, 2: Order currency
 msgid "Currency mismatch: Contact is set to %1$s but order uses %2$s. Please update the contact currency in Zoho Books or use a different email."
-msgstr ""
+msgstr "货币不匹配：联系人设置为 %1$s，但订单使用 %2$s。请在 Zoho Books 中更新联系人货币或使用其他邮箱。"
 
 #. translators: %1$s: Order number, %2$s: Payment method
 msgid "Payment for Order #%1$s via %2$s"
-msgstr ""
+msgstr "订单 #%1$s 通过 %2$s 付款"
 
 #. translators: %s: Service name
 msgid "Service \"%s\" not found in container."
-msgstr ""
+msgstr "容器中未找到服务 \"%s\"。"
 
 msgid "No refresh token received. Ensure the grant code has offline_access scope."
-msgstr ""
+msgstr "未收到 Refresh Token。请确保授权码具有 offline_access 权限范围。"
 
 msgid "Check the settings page to adjust configuration anytime"
-msgstr ""
+msgstr "随时查看设置页面以调整配置"
 
 msgid "What happens next?"
-msgstr ""
+msgstr "接下来会发生什么？"
 
 msgid "API Setup"
-msgstr ""
+msgstr "API 设置"

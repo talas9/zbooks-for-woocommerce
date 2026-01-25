@@ -1,870 +1,873 @@
+# Hindi (India) translation for ZBooks for WooCommerce.
 # Copyright (C) 2024 talas9
 # This file is distributed under the GPL-2.0+.
 msgid ""
 msgstr ""
-"Project-Id-Version: ZBooks for WooCommerce 1.0.0\n"
+"Project-Id-Version: ZBooks for WooCommerce 1.0.5\n"
 "Report-Msgid-Bugs-To: https://github.com/talas9/zbooks-for-woocommerce/issues\n"
 "POT-Creation-Date: 2024-01-25 00:00:00+00:00\n"
+"PO-Revision-Date: 2025-01-25 00:00:00+00:00\n"
+"Last-Translator: ZBooks Team\n"
+"Language-Team: Hindi\n"
+"Language: hi_IN\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: Hindi <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 msgid "-- Not Mapped --"
-msgstr ""
+msgstr "-- मैप नहीं किया गया --"
 
 msgid "-- Select Account --"
-msgstr ""
+msgstr "-- खाता चुनें --"
 
 msgid "-- Select Mode --"
-msgstr ""
+msgstr "-- मोड चुनें --"
 
 msgid "Action"
-msgstr ""
+msgstr "कार्रवाई"
 
 msgid "Actions"
-msgstr ""
+msgstr "कार्रवाइयाँ"
 
 msgid "Add Customer Mapping"
-msgstr ""
+msgstr "ग्राहक मैपिंग जोड़ें"
 
 msgid "Add Invoice Mapping"
-msgstr ""
+msgstr "इनवॉइस मैपिंग जोड़ें"
 
 msgid "Advanced"
-msgstr ""
+msgstr "उन्नत"
 
 msgid "All"
-msgstr ""
+msgstr "सभी"
 
 msgid "Already linked."
-msgstr ""
+msgstr "पहले से लिंक है।"
 
 msgid "An error occurred."
-msgstr ""
+msgstr "एक त्रुटि हुई।"
 
 msgid "API Credentials"
-msgstr ""
+msgstr "API क्रेडेंशियल"
 
 msgid "Apply Payment"
-msgstr ""
+msgstr "भुगतान लागू करें"
 
 msgid "Are you sure you want to sync the selected orders?"
-msgstr ""
+msgstr "क्या आप वाकई चयनित ऑर्डर को सिंक करना चाहते हैं?"
 
 msgid "Australia (.com.au)"
-msgstr ""
+msgstr "ऑस्ट्रेलिया (.com.au)"
 
 msgid "Auto-Map by SKU"
-msgstr ""
+msgstr "SKU द्वारा स्वचालित मैप करें"
 
 msgid "Back"
-msgstr ""
+msgstr "वापस"
 
 msgid "Bank"
-msgstr ""
+msgstr "बैंक"
 
 msgid "Bank accounts refreshed."
-msgstr ""
+msgstr "बैंक खाते रीफ्रेश हो गए।"
 
 msgid "Billing Address 1"
-msgstr ""
+msgstr "बिलिंग पता 1"
 
 msgid "Billing Address 2"
-msgstr ""
+msgstr "बिलिंग पता 2"
 
 msgid "Billing City"
-msgstr ""
+msgstr "बिलिंग शहर"
 
 msgid "Billing Company"
-msgstr ""
+msgstr "बिलिंग कंपनी"
 
 msgid "Billing Country"
-msgstr ""
+msgstr "बिलिंग देश"
 
 msgid "Billing Email"
-msgstr ""
+msgstr "बिलिंग ईमेल"
 
 msgid "Billing First Name"
-msgstr ""
+msgstr "बिलिंग प्रथम नाम"
 
 msgid "Billing Full Name"
-msgstr ""
+msgstr "बिलिंग पूरा नाम"
 
 msgid "Billing Last Name"
-msgstr ""
+msgstr "बिलिंग अंतिम नाम"
 
 msgid "Billing Phone"
-msgstr ""
+msgstr "बिलिंग फोन"
 
 msgid "Billing Postcode"
-msgstr ""
+msgstr "बिलिंग पिनकोड"
 
 msgid "Billing State"
-msgstr ""
+msgstr "बिलिंग राज्य"
 
 msgid "Bulk Sync"
-msgstr ""
+msgstr "बल्क सिंक"
 
 msgid "Bulk Sync Orders to Zoho Books"
-msgstr ""
+msgstr "Zoho Books में बल्क सिंक ऑर्डर"
 
 msgid "Cancel"
-msgstr ""
+msgstr "रद्द करें"
 
 msgid "Cash"
-msgstr ""
+msgstr "नकद"
 
 msgid "China (.com.cn)"
-msgstr ""
+msgstr "चीन (.com.cn)"
 
 msgid "Clear"
-msgstr ""
+msgstr "साफ़ करें"
 
 msgid "Client ID"
-msgstr ""
+msgstr "Client ID"
 
 msgid "Client Secret"
-msgstr ""
+msgstr "Client Secret"
 
 msgid "Close"
-msgstr ""
+msgstr "बंद करें"
 
 msgid "Complete"
-msgstr ""
+msgstr "पूर्ण"
 
 msgid "Completed"
-msgstr ""
+msgstr "पूर्ण हुआ"
 
 msgid "Configuration incomplete."
-msgstr ""
+msgstr "कॉन्फ़िगरेशन अधूरा है।"
 
 msgid "Configure Sync"
-msgstr ""
+msgstr "सिंक कॉन्फ़िगर करें"
 
 msgid "Configure sync behavior for different order statuses."
-msgstr ""
+msgstr "विभिन्न ऑर्डर स्थितियों के लिए सिंक व्यवहार कॉन्फ़िगर करें।"
 
 msgid "Connection"
-msgstr ""
+msgstr "कनेक्शन"
 
 msgid "Connection failed. Please check your credentials."
-msgstr ""
+msgstr "कनेक्शन विफल। कृपया अपने क्रेडेंशियल जाँचें।"
 
 msgid "Connection successful!"
-msgstr ""
+msgstr "कनेक्शन सफल!"
 
 msgid "Context / Details:"
-msgstr ""
+msgstr "संदर्भ / विवरण:"
 
 msgid "Copied!"
-msgstr ""
+msgstr "कॉपी हो गया!"
 
 msgid "Copy JSON"
-msgstr ""
+msgstr "JSON कॉपी करें"
 
 msgid "Coupon Codes"
-msgstr ""
+msgstr "कूपन कोड"
 
 msgid "Create"
-msgstr ""
+msgstr "बनाएँ"
 
 msgid "Create & send invoice"
-msgstr ""
+msgstr "इनवॉइस बनाएँ और भेजें"
 
 msgid "Create and submit invoice"
-msgstr ""
+msgstr "इनवॉइस बनाएँ और सबमिट करें"
 
 msgid "Create draft invoice"
-msgstr ""
+msgstr "ड्राफ्ट इनवॉइस बनाएँ"
 
 msgid "Create in Zoho"
-msgstr ""
+msgstr "Zoho में बनाएँ"
 
 msgid "Create Selected in Zoho"
-msgstr ""
+msgstr "चयनित को Zoho में बनाएँ"
 
 msgid "Created!"
-msgstr ""
+msgstr "बन गया!"
 
 msgid "Creating..."
-msgstr ""
+msgstr "बना रहे हैं..."
 
 msgid "Credit Note ID:"
-msgstr ""
+msgstr "क्रेडिट नोट ID:"
 
 msgid "Currency"
-msgstr ""
+msgstr "मुद्रा"
 
 msgid "Currency Handling"
-msgstr ""
+msgstr "मुद्रा प्रबंधन"
 
 msgid "Customer"
-msgstr ""
+msgstr "ग्राहक"
 
 msgid "Customer Note"
-msgstr ""
+msgstr "ग्राहक नोट"
 
 msgid "Datacenter"
-msgstr ""
+msgstr "डेटासेंटर"
 
 msgid "Date"
-msgstr ""
+msgstr "तारीख"
 
 msgid "Date:"
-msgstr ""
+msgstr "तारीख:"
 
 msgid "Debug"
-msgstr ""
+msgstr "डीबग"
 
 msgid "Deposit To"
-msgstr ""
+msgstr "जमा करें"
 
 msgid "Details"
-msgstr ""
+msgstr "विवरण"
 
 msgid "Display Name"
-msgstr ""
+msgstr "प्रदर्शन नाम"
 
 msgid "Do nothing"
-msgstr ""
+msgstr "कुछ न करें"
 
 msgid "Draft"
-msgstr ""
+msgstr "ड्राफ्ट"
 
 msgid "Email Admin on Sync Errors"
-msgstr ""
+msgstr "सिंक त्रुटियों पर व्यवस्थापक को ईमेल करें"
 
 msgid "Enable"
-msgstr ""
+msgstr "सक्षम करें"
 
 msgid "Enable automatic sync when orders are placed"
-msgstr ""
+msgstr "ऑर्डर देने पर स्वचालित सिंक सक्षम करें"
 
 msgid "Error:"
-msgstr ""
+msgstr "त्रुटि:"
 
 msgid "Errors"
-msgstr ""
+msgstr "त्रुटियाँ"
 
 msgid "Europe (.eu)"
-msgstr ""
+msgstr "यूरोप (.eu)"
 
 msgid "Every 15 Minutes"
-msgstr ""
+msgstr "प्रत्येक 15 मिनट"
 
 msgid "Failed"
-msgstr ""
+msgstr "विफल"
 
 msgid "Failed to apply payment."
-msgstr ""
+msgstr "भुगतान लागू करने में विफल।"
 
 msgid "Failed to connect to Zoho Books."
-msgstr ""
+msgstr "Zoho Books से कनेक्ट करने में विफल।"
 
 msgid "Failed to link item."
-msgstr ""
+msgstr "आइटम लिंक करने में विफल।"
 
 msgid "Failed to refresh accounts."
-msgstr ""
+msgstr "खाते रीफ्रेश करने में विफल।"
 
 msgid "Failed to save mapping."
-msgstr ""
+msgstr "मैपिंग सहेजने में विफल।"
 
 msgid "Fetching Zoho items..."
-msgstr ""
+msgstr "Zoho आइटम प्राप्त कर रहे हैं..."
 
 msgid "Field Mapping"
-msgstr ""
+msgstr "फ़ील्ड मैपिंग"
 
 msgid "Field mappings saved successfully."
-msgstr ""
+msgstr "फ़ील्ड मैपिंग सफलतापूर्वक सहेजी गई।"
 
 msgid "Filter"
-msgstr ""
+msgstr "फ़िल्टर"
 
 msgid "Finish"
-msgstr ""
+msgstr "समाप्त"
 
 msgid "Go to Settings"
-msgstr ""
+msgstr "सेटिंग्स पर जाएँ"
 
 msgid "India (.in)"
-msgstr ""
+msgstr "भारत (.in)"
 
 msgid "Info"
-msgstr ""
+msgstr "जानकारी"
 
 msgid "Invalid order ID."
-msgstr ""
+msgstr "अमान्य ऑर्डर ID।"
 
 msgid "Invalid product ID."
-msgstr ""
+msgstr "अमान्य उत्पाद ID।"
 
 msgid "Invoice"
-msgstr ""
+msgstr "इनवॉइस"
 
 msgid "Invoice ID:"
-msgstr ""
+msgstr "इनवॉइस ID:"
 
 msgid "Invoice Number:"
-msgstr ""
+msgstr "इनवॉइस नंबर:"
 
 msgid "Invoice Numbering"
-msgstr ""
+msgstr "इनवॉइस क्रमांकन"
 
 msgid "Invoice Status:"
-msgstr ""
+msgstr "इनवॉइस स्थिति:"
 
 msgid "Item created in Zoho Books!"
-msgstr ""
+msgstr "Zoho Books में आइटम बन गया!"
 
 msgid "Item linked successfully!"
-msgstr ""
+msgstr "आइटम सफलतापूर्वक लिंक हो गया!"
 
 msgid "Item Mapping"
-msgstr ""
+msgstr "आइटम मैपिंग"
 
 msgid "Item updated in Zoho Books!"
-msgstr ""
+msgstr "Zoho Books में आइटम अपडेट हो गया!"
 
 msgid "Japan (.jp)"
-msgstr ""
+msgstr "जापान (.jp)"
 
 msgid "Last Synced:"
-msgstr ""
+msgstr "अंतिम सिंक:"
 
 msgid "Level:"
-msgstr ""
+msgstr "स्तर:"
 
 msgid "Link"
-msgstr ""
+msgstr "लिंक"
 
 msgid "Link Selected"
-msgstr ""
+msgstr "चयनित लिंक करें"
 
 msgid "Linked!"
-msgstr ""
+msgstr "लिंक हो गया!"
 
 msgid "Linking..."
-msgstr ""
+msgstr "लिंक कर रहे हैं..."
 
 msgid "Loading organizations..."
-msgstr ""
+msgstr "संगठन लोड हो रहे हैं..."
 
 msgid "Log Configuration"
-msgstr ""
+msgstr "लॉग कॉन्फ़िगरेशन"
 
 msgid "Log Entry Details"
-msgstr ""
+msgstr "लॉग प्रविष्टि विवरण"
 
 msgid "Log Settings"
-msgstr ""
+msgstr "लॉग सेटिंग्स"
 
 msgid "Logs"
-msgstr ""
+msgstr "लॉग"
 
 msgid "Manage Field Mappings"
-msgstr ""
+msgstr "फ़ील्ड मैपिंग प्रबंधित करें"
 
 msgid "Manage Payment Method Mapping"
-msgstr ""
+msgstr "भुगतान विधि मैपिंग प्रबंधित करें"
 
 msgid "Manage Product Mapping"
-msgstr ""
+msgstr "उत्पाद मैपिंग प्रबंधित करें"
 
 msgid "Map Products to Zoho Items"
-msgstr ""
+msgstr "उत्पादों को Zoho आइटम से मैप करें"
 
 msgid "Map WooCommerce Products to Zoho Items"
-msgstr ""
+msgstr "WooCommerce उत्पादों को Zoho आइटम से मैप करें"
 
 msgid "Mapping removed."
-msgstr ""
+msgstr "मैपिंग हटा दी गई।"
 
 msgid "Mapping saved."
-msgstr ""
+msgstr "मैपिंग सहेजी गई।"
 
 msgid "Message"
-msgstr ""
+msgstr "संदेश"
 
 msgid "Message:"
-msgstr ""
+msgstr "संदेश:"
 
 msgid "minutes"
-msgstr ""
+msgstr "मिनट"
 
 msgid "Network error while linking."
-msgstr ""
+msgstr "लिंक करते समय नेटवर्क त्रुटि।"
 
 msgid "Never"
-msgstr ""
+msgstr "कभी नहीं"
 
 msgid "New orders will be synced automatically based on your trigger settings"
-msgstr ""
+msgstr "नए ऑर्डर आपकी ट्रिगर सेटिंग्स के आधार पर स्वचालित रूप से सिंक होंगे"
 
 msgid "Next"
-msgstr ""
+msgstr "अगला"
 
 msgid "No"
-msgstr ""
+msgstr "नहीं"
 
 msgid "No log entries found."
-msgstr ""
+msgstr "कोई लॉग प्रविष्टि नहीं मिली।"
 
 msgid "No logs available"
-msgstr ""
+msgstr "कोई लॉग उपलब्ध नहीं"
 
 msgid "No orders found matching your criteria."
-msgstr ""
+msgstr "आपके मानदंडों से मेल खाने वाले कोई ऑर्डर नहीं मिले।"
 
 msgid "No products found."
-msgstr ""
+msgstr "कोई उत्पाद नहीं मिले।"
 
 msgid "No published products found in WooCommerce."
-msgstr ""
+msgstr "WooCommerce में कोई प्रकाशित उत्पाद नहीं मिले।"
 
 msgid "Not Linked"
-msgstr ""
+msgstr "लिंक नहीं है"
 
 msgid "Not linked"
-msgstr ""
+msgstr "लिंक नहीं है"
 
 msgid "Not synced yet"
-msgstr ""
+msgstr "अभी तक सिंक नहीं हुआ"
 
 msgid "On Processing"
-msgstr ""
+msgstr "प्रोसेसिंग पर"
 
 msgid "Order"
-msgstr ""
+msgstr "ऑर्डर"
 
 msgid "Order #%s"
-msgstr ""
+msgstr "ऑर्डर #%s"
 
 msgid "Order Date"
-msgstr ""
+msgstr "ऑर्डर तारीख"
 
 msgid "Order has no billing email address."
-msgstr ""
+msgstr "ऑर्डर में कोई बिलिंग ईमेल पता नहीं है।"
 
 msgid "Order has not been synced to Zoho Books"
-msgstr ""
+msgstr "ऑर्डर Zoho Books में सिंक नहीं हुआ है"
 
 msgid "Order ID"
-msgstr ""
+msgstr "ऑर्डर ID"
 
 msgid "Order Notes"
-msgstr ""
+msgstr "ऑर्डर नोट्स"
 
 msgid "Order Number"
-msgstr ""
+msgstr "ऑर्डर नंबर"
 
 msgid "Order Status"
-msgstr ""
+msgstr "ऑर्डर स्थिति"
 
 msgid "Order Total"
-msgstr ""
+msgstr "ऑर्डर कुल"
 
 msgid "Orders"
-msgstr ""
+msgstr "ऑर्डर"
 
 msgid "Organization"
-msgstr ""
+msgstr "संगठन"
 
 msgid "Organization ID"
-msgstr ""
+msgstr "संगठन ID"
 
 msgid "Overdue"
-msgstr ""
+msgstr "अतिदेय"
 
 msgid "Paid"
-msgstr ""
+msgstr "भुगतान किया गया"
 
 msgid "Partially Paid"
-msgstr ""
+msgstr "आंशिक भुगतान"
 
 msgid "Payment"
-msgstr ""
+msgstr "भुगतान"
 
 msgid "Payment ID:"
-msgstr ""
+msgstr "भुगतान ID:"
 
 msgid "Payment Mapping"
-msgstr ""
+msgstr "भुगतान मैपिंग"
 
 msgid "Payment Method"
-msgstr ""
+msgstr "भुगतान विधि"
 
 msgid "Payment Method Mapping"
-msgstr ""
+msgstr "भुगतान विधि मैपिंग"
 
 msgid "Payment recorded successfully!"
-msgstr ""
+msgstr "भुगतान सफलतापूर्वक दर्ज हो गया!"
 
 msgid "Payment service not configured"
-msgstr ""
+msgstr "भुगतान सेवा कॉन्फ़िगर नहीं है"
 
 msgid "Pending"
-msgstr ""
+msgstr "लंबित"
 
 msgid "Pending Approval"
-msgstr ""
+msgstr "अनुमोदन लंबित"
 
 msgid "Permission denied."
-msgstr ""
+msgstr "अनुमति अस्वीकृत।"
 
 msgid "Processing"
-msgstr ""
+msgstr "प्रोसेसिंग"
 
 msgid "Product"
-msgstr ""
+msgstr "उत्पाद"
 
 msgid "Product already linked to a Zoho item."
-msgstr ""
+msgstr "उत्पाद पहले से Zoho आइटम से लिंक है।"
 
 msgid "Product Mapping"
-msgstr ""
+msgstr "उत्पाद मैपिंग"
 
 msgid "Product not found."
-msgstr ""
+msgstr "उत्पाद नहीं मिला।"
 
 msgid "Product not linked to a Zoho item."
-msgstr ""
+msgstr "उत्पाद Zoho आइटम से लिंक नहीं है।"
 
 msgid "Re-sync"
-msgstr ""
+msgstr "पुनः सिंक"
 
 msgid "Refresh"
-msgstr ""
+msgstr "रीफ्रेश"
 
 msgid "Refresh Accounts"
-msgstr ""
+msgstr "खाते रीफ्रेश करें"
 
 msgid "Refresh Token"
-msgstr ""
+msgstr "Refresh Token"
 
 msgid "Refund"
-msgstr ""
+msgstr "रिफंड"
 
 msgid "Refund ID:"
-msgstr ""
+msgstr "रिफंड ID:"
 
 msgid "Refund service not configured"
-msgstr ""
+msgstr "रिफंड सेवा कॉन्फ़िगर नहीं है"
 
 msgid "Refund synced successfully!"
-msgstr ""
+msgstr "रिफंड सफलतापूर्वक सिंक हो गया!"
 
 msgid "Remove"
-msgstr ""
+msgstr "हटाएँ"
 
 msgid "Retry Failed Syncs"
-msgstr ""
+msgstr "विफल सिंक पुनः प्रयास करें"
 
 msgid "Retry Settings"
-msgstr ""
+msgstr "पुनः प्रयास सेटिंग्स"
 
 msgid "Returning customer. Using existing Zoho contact."
-msgstr ""
+msgstr "लौटने वाला ग्राहक। मौजूदा Zoho संपर्क का उपयोग कर रहे हैं।"
 
 msgid "Save & Continue"
-msgstr ""
+msgstr "सहेजें और जारी रखें"
 
 msgid "Save Mappings"
-msgstr ""
+msgstr "मैपिंग सहेजें"
 
 msgid "Save Settings"
-msgstr ""
+msgstr "सेटिंग्स सहेजें"
 
 msgid "Search orders..."
-msgstr ""
+msgstr "ऑर्डर खोजें..."
 
 msgid "Search products..."
-msgstr ""
+msgstr "उत्पाद खोजें..."
 
 msgid "Search Zoho Items"
-msgstr ""
+msgstr "Zoho आइटम खोजें"
 
 msgid "Select All"
-msgstr ""
+msgstr "सभी चुनें"
 
 msgid "Select orders to sync"
-msgstr ""
+msgstr "सिंक करने के लिए ऑर्डर चुनें"
 
 msgid "Select Organization"
-msgstr ""
+msgstr "संगठन चुनें"
 
 msgid "Sent"
-msgstr ""
+msgstr "भेजा गया"
 
 msgid "Settings"
-msgstr ""
+msgstr "सेटिंग्स"
 
 msgid "Settings saved."
-msgstr ""
+msgstr "सेटिंग्स सहेजी गईं।"
 
 msgid "Shipping Address 1"
-msgstr ""
+msgstr "शिपिंग पता 1"
 
 msgid "Shipping Address 2"
-msgstr ""
+msgstr "शिपिंग पता 2"
 
 msgid "Shipping City"
-msgstr ""
+msgstr "शिपिंग शहर"
 
 msgid "Shipping Company"
-msgstr ""
+msgstr "शिपिंग कंपनी"
 
 msgid "Shipping Country"
-msgstr ""
+msgstr "शिपिंग देश"
 
 msgid "Shipping First Name"
-msgstr ""
+msgstr "शिपिंग प्रथम नाम"
 
 msgid "Shipping Full Name"
-msgstr ""
+msgstr "शिपिंग पूरा नाम"
 
 msgid "Shipping Last Name"
-msgstr ""
+msgstr "शिपिंग अंतिम नाम"
 
 msgid "Shipping Method"
-msgstr ""
+msgstr "शिपिंग विधि"
 
 msgid "Shipping Phone"
-msgstr ""
+msgstr "शिपिंग फोन"
 
 msgid "Shipping Postcode"
-msgstr ""
+msgstr "शिपिंग पिनकोड"
 
 msgid "Shipping State"
-msgstr ""
+msgstr "शिपिंग राज्य"
 
 msgid "Showing first 50 products. You can map additional products from ZBooks > Product Mapping after setup."
-msgstr ""
+msgstr "पहले 50 उत्पाद दिखा रहे हैं। आप सेटअप के बाद ZBooks > उत्पाद मैपिंग से अतिरिक्त उत्पाद मैप कर सकते हैं।"
 
 msgid "Skip"
-msgstr ""
+msgstr "छोड़ें"
 
 msgid "Skip for Now"
-msgstr ""
+msgstr "अभी के लिए छोड़ें"
 
 msgid "SKU"
-msgstr ""
+msgstr "SKU"
 
 msgid "Status"
-msgstr ""
+msgstr "स्थिति"
 
 msgid "Status:"
-msgstr ""
+msgstr "स्थिति:"
 
 msgid "Sync"
-msgstr ""
+msgstr "सिंक"
 
 msgid "Sync error"
-msgstr ""
+msgstr "सिंक त्रुटि"
 
 msgid "Sync failed. Please try again."
-msgstr ""
+msgstr "सिंक विफल। कृपया पुनः प्रयास करें।"
 
 msgid "Sync Now"
-msgstr ""
+msgstr "अभी सिंक करें"
 
 msgid "Sync Orders to Zoho Books"
-msgstr ""
+msgstr "ऑर्डर Zoho Books में सिंक करें"
 
 msgid "Sync Refund"
-msgstr ""
+msgstr "रिफंड सिंक करें"
 
 msgid "Sync Selected"
-msgstr ""
+msgstr "चयनित सिंक करें"
 
 msgid "Sync Settings"
-msgstr ""
+msgstr "सिंक सेटिंग्स"
 
 msgid "Sync Status"
-msgstr ""
+msgstr "सिंक स्थिति"
 
 msgid "Sync successful!"
-msgstr ""
+msgstr "सिंक सफल!"
 
 msgid "Sync Triggers"
-msgstr ""
+msgstr "सिंक ट्रिगर"
 
 msgid "Synced"
-msgstr ""
+msgstr "सिंक हो गया"
 
 msgid "Syncing..."
-msgstr ""
+msgstr "सिंक हो रहा है..."
 
 msgid "Test Connection"
-msgstr ""
+msgstr "कनेक्शन जाँचें"
 
 msgid "Timestamp"
-msgstr ""
+msgstr "समय-मुद्रा"
 
 msgid "Timestamp:"
-msgstr ""
+msgstr "समय-मुद्रा:"
 
 msgid "Total"
-msgstr ""
+msgstr "कुल"
 
 msgid "Total:"
-msgstr ""
+msgstr "कुल:"
 
 msgid "Unexpected response from Zoho."
-msgstr ""
+msgstr "Zoho से अप्रत्याशित प्रतिक्रिया।"
 
 msgid "Unlink"
-msgstr ""
+msgstr "अनलिंक"
 
 msgid "Unpaid"
-msgstr ""
+msgstr "भुगतान नहीं हुआ"
 
 msgid "United States (.com)"
-msgstr ""
+msgstr "संयुक्त राज्य अमेरिका (.com)"
 
 msgid "Use the Bulk Sync page to sync existing orders"
-msgstr ""
+msgstr "मौजूदा ऑर्डर सिंक करने के लिए बल्क सिंक पेज का उपयोग करें"
 
 msgid "View"
-msgstr ""
+msgstr "देखें"
 
 msgid "View in Zoho Books"
-msgstr ""
+msgstr "Zoho Books में देखें"
 
 msgid "Void"
-msgstr ""
+msgstr "शून्य"
 
 msgid "Warnings"
-msgstr ""
+msgstr "चेतावनियाँ"
 
 msgid "Welcome"
-msgstr ""
+msgstr "स्वागत है"
 
 msgid "Welcome to ZBooks for WooCommerce"
-msgstr ""
+msgstr "ZBooks for WooCommerce में आपका स्वागत है"
 
 msgid "WooCommerce Custom Field (meta key)"
-msgstr ""
+msgstr "WooCommerce कस्टम फ़ील्ड (meta key)"
 
 msgid "WooCommerce Field"
-msgstr ""
+msgstr "WooCommerce फ़ील्ड"
 
 msgid "WooCommerce Payment Method"
-msgstr ""
+msgstr "WooCommerce भुगतान विधि"
 
 msgid "WooCommerce Product"
-msgstr ""
+msgstr "WooCommerce उत्पाद"
 
 msgid "Yes"
-msgstr ""
+msgstr "हाँ"
 
 msgid "You can manually sync orders from the order edit page"
-msgstr ""
+msgstr "आप ऑर्डर संपादन पेज से मैन्युअल रूप से ऑर्डर सिंक कर सकते हैं"
 
 msgid "You're All Set!"
-msgstr ""
+msgstr "आप तैयार हैं!"
 
 msgid "ZBooks"
-msgstr ""
+msgstr "ZBooks"
 
 msgid "ZBooks for WooCommerce"
-msgstr ""
+msgstr "ZBooks for WooCommerce"
 
 msgid "ZBooks for WooCommerce is now configured and ready to sync your WooCommerce orders to Zoho Books."
-msgstr ""
+msgstr "ZBooks for WooCommerce अब कॉन्फ़िगर हो गया है और आपके WooCommerce ऑर्डर को Zoho Books में सिंक करने के लिए तैयार है।"
 
 msgid "ZBooks for WooCommerce requires WooCommerce to be installed and activated."
-msgstr ""
+msgstr "ZBooks for WooCommerce के लिए WooCommerce को स्थापित और सक्रिय होना आवश्यक है।"
 
 msgid "ZBooks Setup"
-msgstr ""
+msgstr "ZBooks सेटअप"
 
 msgid "ZBooks Setup Wizard"
-msgstr ""
+msgstr "ZBooks सेटअप विज़ार्ड"
 
 msgid "ZBooks Sync Logs"
-msgstr ""
+msgstr "ZBooks सिंक लॉग"
 
 msgid "Zoho API rate limit exceeded. Please try again later."
-msgstr ""
+msgstr "Zoho API दर सीमा पार हो गई। कृपया बाद में पुनः प्रयास करें।"
 
 msgid "Zoho Books API credentials not configured."
-msgstr ""
+msgstr "Zoho Books API क्रेडेंशियल कॉन्फ़िगर नहीं हैं।"
 
 msgid "Zoho Books Sync"
-msgstr ""
+msgstr "Zoho Books सिंक"
 
 msgid "Zoho Custom Field (API name)"
-msgstr ""
+msgstr "Zoho कस्टम फ़ील्ड (API name)"
 
 msgid "Zoho Field"
-msgstr ""
+msgstr "Zoho फ़ील्ड"
 
 msgid "Zoho Item"
-msgstr ""
+msgstr "Zoho आइटम"
 
 msgid "Zoho Payment Account"
-msgstr ""
+msgstr "Zoho भुगतान खाता"
 
 msgid "Zoho Payment Mode"
-msgstr ""
+msgstr "Zoho भुगतान मोड"
 
 #. translators: %d: number of days
 msgid "Clear Old Logs (%d+ days)"
-msgstr ""
+msgstr "पुराने लॉग साफ़ करें (%d+ दिन)"
 
 #. translators: %d: number of days for log retention
 msgid "Delete log files older than %d days?"
-msgstr ""
+msgstr "%d दिनों से पुरानी लॉग फ़ाइलें हटाएँ?"
 
 #. translators: %d: number of files deleted
 msgid "Deleted %d old log file(s)."
-msgstr ""
+msgstr "%d पुरानी लॉग फ़ाइल(फ़ाइलें) हटा दी गईं।"
 
 #. translators: %d: number of products auto-mapped
 msgid "Auto-mapped %d product(s) by SKU!"
-msgstr ""
+msgstr "SKU द्वारा %d उत्पाद(उत्पाद) स्वचालित मैप हो गए!"
 
 #. translators: %s: Error message
 msgid "Failed to create Zoho contact: %s"
-msgstr ""
+msgstr "Zoho संपर्क बनाने में विफल: %s"
 
 #. translators: %s: Error message
 msgid "Failed to refresh Zoho access token: %s"
-msgstr ""
+msgstr "Zoho access token रीफ्रेश करने में विफल: %s"
 
 #. translators: %s: Error message
 msgid "Failed to exchange grant code: %s"
-msgstr ""
+msgstr "Grant code का आदान-प्रदान करने में विफल: %s"
 
 #. translators: %s: Error message
 msgid "Failed to sync order to Zoho Books: %s"
-msgstr ""
+msgstr "ऑर्डर को Zoho Books में सिंक करने में विफल: %s"
 
 #. translators: 1: Contact currency, 2: Order currency
 msgid "Currency mismatch: Contact is set to %1$s but order uses %2$s. Please update the contact currency in Zoho Books or use a different email."
-msgstr ""
+msgstr "मुद्रा मेल नहीं खाती: संपर्क %1$s पर सेट है लेकिन ऑर्डर %2$s का उपयोग करता है। कृपया Zoho Books में संपर्क मुद्रा अपडेट करें या कोई अलग ईमेल उपयोग करें।"
 
 #. translators: %1$s: Order number, %2$s: Payment method
 msgid "Payment for Order #%1$s via %2$s"
-msgstr ""
+msgstr "ऑर्डर #%1$s के लिए %2$s द्वारा भुगतान"
 
 #. translators: %s: Service name
 msgid "Service \"%s\" not found in container."
-msgstr ""
+msgstr "सेवा \"%s\" कंटेनर में नहीं मिली।"
 
 msgid "No refresh token received. Ensure the grant code has offline_access scope."
-msgstr ""
+msgstr "कोई refresh token प्राप्त नहीं हुआ। सुनिश्चित करें कि grant code में offline_access scope है।"
 
 msgid "Check the settings page to adjust configuration anytime"
-msgstr ""
+msgstr "कॉन्फ़िगरेशन को कभी भी समायोजित करने के लिए सेटिंग्स पेज देखें"
 
 msgid "What happens next?"
-msgstr ""
+msgstr "आगे क्या होगा?"
 
 msgid "API Setup"
-msgstr ""
+msgstr "API सेटअप"

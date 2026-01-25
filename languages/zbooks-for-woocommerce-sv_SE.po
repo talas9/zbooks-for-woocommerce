@@ -1,870 +1,873 @@
+# Swedish translation for ZBooks for WooCommerce.
 # Copyright (C) 2024 talas9
 # This file is distributed under the GPL-2.0+.
 msgid ""
 msgstr ""
-"Project-Id-Version: ZBooks for WooCommerce 1.0.0\n"
+"Project-Id-Version: ZBooks for WooCommerce 1.0.5\n"
 "Report-Msgid-Bugs-To: https://github.com/talas9/zbooks-for-woocommerce/issues\n"
 "POT-Creation-Date: 2024-01-25 00:00:00+00:00\n"
+"PO-Revision-Date: 2025-01-25 00:00:00+00:00\n"
+"Last-Translator: ZBooks Team\n"
+"Language-Team: Swedish\n"
+"Language: sv_SE\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: Swedish <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 msgid "-- Not Mapped --"
-msgstr ""
+msgstr "-- Ej mappad --"
 
 msgid "-- Select Account --"
-msgstr ""
+msgstr "-- Välj konto --"
 
 msgid "-- Select Mode --"
-msgstr ""
+msgstr "-- Välj läge --"
 
 msgid "Action"
-msgstr ""
+msgstr "Åtgärd"
 
 msgid "Actions"
-msgstr ""
+msgstr "Åtgärder"
 
 msgid "Add Customer Mapping"
-msgstr ""
+msgstr "Lägg till kundmappning"
 
 msgid "Add Invoice Mapping"
-msgstr ""
+msgstr "Lägg till fakturamappning"
 
 msgid "Advanced"
-msgstr ""
+msgstr "Avancerat"
 
 msgid "All"
-msgstr ""
+msgstr "Alla"
 
 msgid "Already linked."
-msgstr ""
+msgstr "Redan länkad."
 
 msgid "An error occurred."
-msgstr ""
+msgstr "Ett fel uppstod."
 
 msgid "API Credentials"
-msgstr ""
+msgstr "API-uppgifter"
 
 msgid "Apply Payment"
-msgstr ""
+msgstr "Registrera betalning"
 
 msgid "Are you sure you want to sync the selected orders?"
-msgstr ""
+msgstr "Är du säker på att du vill synkronisera de valda beställningarna?"
 
 msgid "Australia (.com.au)"
-msgstr ""
+msgstr "Australien (.com.au)"
 
 msgid "Auto-Map by SKU"
-msgstr ""
+msgstr "Automappa efter SKU"
 
 msgid "Back"
-msgstr ""
+msgstr "Tillbaka"
 
 msgid "Bank"
-msgstr ""
+msgstr "Bank"
 
 msgid "Bank accounts refreshed."
-msgstr ""
+msgstr "Bankkonton uppdaterade."
 
 msgid "Billing Address 1"
-msgstr ""
+msgstr "Faktureringsadress 1"
 
 msgid "Billing Address 2"
-msgstr ""
+msgstr "Faktureringsadress 2"
 
 msgid "Billing City"
-msgstr ""
+msgstr "Faktureringsort"
 
 msgid "Billing Company"
-msgstr ""
+msgstr "Faktureringsföretag"
 
 msgid "Billing Country"
-msgstr ""
+msgstr "Faktureringsland"
 
 msgid "Billing Email"
-msgstr ""
+msgstr "Faktureringsmail"
 
 msgid "Billing First Name"
-msgstr ""
+msgstr "Faktureringsförnamn"
 
 msgid "Billing Full Name"
-msgstr ""
+msgstr "Faktureringsnamn (fullständigt)"
 
 msgid "Billing Last Name"
-msgstr ""
+msgstr "Faktureringsefternamn"
 
 msgid "Billing Phone"
-msgstr ""
+msgstr "Faktureringstelefon"
 
 msgid "Billing Postcode"
-msgstr ""
+msgstr "Faktureringspostnummer"
 
 msgid "Billing State"
-msgstr ""
+msgstr "Faktureringsregion"
 
 msgid "Bulk Sync"
-msgstr ""
+msgstr "Masssynkronisering"
 
 msgid "Bulk Sync Orders to Zoho Books"
-msgstr ""
+msgstr "Masssynkronisera beställningar till Zoho Books"
 
 msgid "Cancel"
-msgstr ""
+msgstr "Avbryt"
 
 msgid "Cash"
-msgstr ""
+msgstr "Kontant"
 
 msgid "China (.com.cn)"
-msgstr ""
+msgstr "Kina (.com.cn)"
 
 msgid "Clear"
-msgstr ""
+msgstr "Rensa"
 
 msgid "Client ID"
-msgstr ""
+msgstr "Klient-ID"
 
 msgid "Client Secret"
-msgstr ""
+msgstr "Klienthemlighet"
 
 msgid "Close"
-msgstr ""
+msgstr "Stäng"
 
 msgid "Complete"
-msgstr ""
+msgstr "Slutför"
 
 msgid "Completed"
-msgstr ""
+msgstr "Slutförd"
 
 msgid "Configuration incomplete."
-msgstr ""
+msgstr "Konfigurationen är ofullständig."
 
 msgid "Configure Sync"
-msgstr ""
+msgstr "Konfigurera synkronisering"
 
 msgid "Configure sync behavior for different order statuses."
-msgstr ""
+msgstr "Konfigurera synkroniseringsbeteende för olika beställningsstatusar."
 
 msgid "Connection"
-msgstr ""
+msgstr "Anslutning"
 
 msgid "Connection failed. Please check your credentials."
-msgstr ""
+msgstr "Anslutningen misslyckades. Kontrollera dina uppgifter."
 
 msgid "Connection successful!"
-msgstr ""
+msgstr "Anslutningen lyckades!"
 
 msgid "Context / Details:"
-msgstr ""
+msgstr "Kontext / Detaljer:"
 
 msgid "Copied!"
-msgstr ""
+msgstr "Kopierat!"
 
 msgid "Copy JSON"
-msgstr ""
+msgstr "Kopiera JSON"
 
 msgid "Coupon Codes"
-msgstr ""
+msgstr "Rabattkoder"
 
 msgid "Create"
-msgstr ""
+msgstr "Skapa"
 
 msgid "Create & send invoice"
-msgstr ""
+msgstr "Skapa och skicka faktura"
 
 msgid "Create and submit invoice"
-msgstr ""
+msgstr "Skapa och skicka in faktura"
 
 msgid "Create draft invoice"
-msgstr ""
+msgstr "Skapa fakturautkast"
 
 msgid "Create in Zoho"
-msgstr ""
+msgstr "Skapa i Zoho"
 
 msgid "Create Selected in Zoho"
-msgstr ""
+msgstr "Skapa valda i Zoho"
 
 msgid "Created!"
-msgstr ""
+msgstr "Skapad!"
 
 msgid "Creating..."
-msgstr ""
+msgstr "Skapar..."
 
 msgid "Credit Note ID:"
-msgstr ""
+msgstr "Kreditnota-ID:"
 
 msgid "Currency"
-msgstr ""
+msgstr "Valuta"
 
 msgid "Currency Handling"
-msgstr ""
+msgstr "Valutahantering"
 
 msgid "Customer"
-msgstr ""
+msgstr "Kund"
 
 msgid "Customer Note"
-msgstr ""
+msgstr "Kundanteckning"
 
 msgid "Datacenter"
-msgstr ""
+msgstr "Datacenter"
 
 msgid "Date"
-msgstr ""
+msgstr "Datum"
 
 msgid "Date:"
-msgstr ""
+msgstr "Datum:"
 
 msgid "Debug"
-msgstr ""
+msgstr "Felsökning"
 
 msgid "Deposit To"
-msgstr ""
+msgstr "Sätt in på"
 
 msgid "Details"
-msgstr ""
+msgstr "Detaljer"
 
 msgid "Display Name"
-msgstr ""
+msgstr "Visningsnamn"
 
 msgid "Do nothing"
-msgstr ""
+msgstr "Gör ingenting"
 
 msgid "Draft"
-msgstr ""
+msgstr "Utkast"
 
 msgid "Email Admin on Sync Errors"
-msgstr ""
+msgstr "Skicka e-post till admin vid synkfel"
 
 msgid "Enable"
-msgstr ""
+msgstr "Aktivera"
 
 msgid "Enable automatic sync when orders are placed"
-msgstr ""
+msgstr "Aktivera automatisk synkronisering när beställningar läggs"
 
 msgid "Error:"
-msgstr ""
+msgstr "Fel:"
 
 msgid "Errors"
-msgstr ""
+msgstr "Fel"
 
 msgid "Europe (.eu)"
-msgstr ""
+msgstr "Europa (.eu)"
 
 msgid "Every 15 Minutes"
-msgstr ""
+msgstr "Var 15:e minut"
 
 msgid "Failed"
-msgstr ""
+msgstr "Misslyckades"
 
 msgid "Failed to apply payment."
-msgstr ""
+msgstr "Kunde inte registrera betalning."
 
 msgid "Failed to connect to Zoho Books."
-msgstr ""
+msgstr "Kunde inte ansluta till Zoho Books."
 
 msgid "Failed to link item."
-msgstr ""
+msgstr "Kunde inte länka artikel."
 
 msgid "Failed to refresh accounts."
-msgstr ""
+msgstr "Kunde inte uppdatera konton."
 
 msgid "Failed to save mapping."
-msgstr ""
+msgstr "Kunde inte spara mappning."
 
 msgid "Fetching Zoho items..."
-msgstr ""
+msgstr "Hämtar Zoho-artiklar..."
 
 msgid "Field Mapping"
-msgstr ""
+msgstr "Fältmappning"
 
 msgid "Field mappings saved successfully."
-msgstr ""
+msgstr "Fältmappningar sparades."
 
 msgid "Filter"
-msgstr ""
+msgstr "Filtrera"
 
 msgid "Finish"
-msgstr ""
+msgstr "Slutför"
 
 msgid "Go to Settings"
-msgstr ""
+msgstr "Gå till inställningar"
 
 msgid "India (.in)"
-msgstr ""
+msgstr "Indien (.in)"
 
 msgid "Info"
-msgstr ""
+msgstr "Info"
 
 msgid "Invalid order ID."
-msgstr ""
+msgstr "Ogiltigt beställnings-ID."
 
 msgid "Invalid product ID."
-msgstr ""
+msgstr "Ogiltigt produkt-ID."
 
 msgid "Invoice"
-msgstr ""
+msgstr "Faktura"
 
 msgid "Invoice ID:"
-msgstr ""
+msgstr "Faktura-ID:"
 
 msgid "Invoice Number:"
-msgstr ""
+msgstr "Fakturanummer:"
 
 msgid "Invoice Numbering"
-msgstr ""
+msgstr "Fakturanumrering"
 
 msgid "Invoice Status:"
-msgstr ""
+msgstr "Fakturastatus:"
 
 msgid "Item created in Zoho Books!"
-msgstr ""
+msgstr "Artikel skapad i Zoho Books!"
 
 msgid "Item linked successfully!"
-msgstr ""
+msgstr "Artikel länkad!"
 
 msgid "Item Mapping"
-msgstr ""
+msgstr "Artikelmappning"
 
 msgid "Item updated in Zoho Books!"
-msgstr ""
+msgstr "Artikel uppdaterad i Zoho Books!"
 
 msgid "Japan (.jp)"
-msgstr ""
+msgstr "Japan (.jp)"
 
 msgid "Last Synced:"
-msgstr ""
+msgstr "Senast synkad:"
 
 msgid "Level:"
-msgstr ""
+msgstr "Nivå:"
 
 msgid "Link"
-msgstr ""
+msgstr "Länka"
 
 msgid "Link Selected"
-msgstr ""
+msgstr "Länka valda"
 
 msgid "Linked!"
-msgstr ""
+msgstr "Länkad!"
 
 msgid "Linking..."
-msgstr ""
+msgstr "Länkar..."
 
 msgid "Loading organizations..."
-msgstr ""
+msgstr "Laddar organisationer..."
 
 msgid "Log Configuration"
-msgstr ""
+msgstr "Loggkonfiguration"
 
 msgid "Log Entry Details"
-msgstr ""
+msgstr "Loggpostdetaljer"
 
 msgid "Log Settings"
-msgstr ""
+msgstr "Logginställningar"
 
 msgid "Logs"
-msgstr ""
+msgstr "Loggar"
 
 msgid "Manage Field Mappings"
-msgstr ""
+msgstr "Hantera fältmappningar"
 
 msgid "Manage Payment Method Mapping"
-msgstr ""
+msgstr "Hantera mappning av betalningsmetoder"
 
 msgid "Manage Product Mapping"
-msgstr ""
+msgstr "Hantera produktmappning"
 
 msgid "Map Products to Zoho Items"
-msgstr ""
+msgstr "Mappa produkter till Zoho-artiklar"
 
 msgid "Map WooCommerce Products to Zoho Items"
-msgstr ""
+msgstr "Mappa WooCommerce-produkter till Zoho-artiklar"
 
 msgid "Mapping removed."
-msgstr ""
+msgstr "Mappning borttagen."
 
 msgid "Mapping saved."
-msgstr ""
+msgstr "Mappning sparad."
 
 msgid "Message"
-msgstr ""
+msgstr "Meddelande"
 
 msgid "Message:"
-msgstr ""
+msgstr "Meddelande:"
 
 msgid "minutes"
-msgstr ""
+msgstr "minuter"
 
 msgid "Network error while linking."
-msgstr ""
+msgstr "Nätverksfel vid länkning."
 
 msgid "Never"
-msgstr ""
+msgstr "Aldrig"
 
 msgid "New orders will be synced automatically based on your trigger settings"
-msgstr ""
+msgstr "Nya beställningar synkroniseras automatiskt baserat på dina triggerinställningar"
 
 msgid "Next"
-msgstr ""
+msgstr "Nästa"
 
 msgid "No"
-msgstr ""
+msgstr "Nej"
 
 msgid "No log entries found."
-msgstr ""
+msgstr "Inga loggposter hittades."
 
 msgid "No logs available"
-msgstr ""
+msgstr "Inga loggar tillgängliga"
 
 msgid "No orders found matching your criteria."
-msgstr ""
+msgstr "Inga beställningar hittades som matchar dina kriterier."
 
 msgid "No products found."
-msgstr ""
+msgstr "Inga produkter hittades."
 
 msgid "No published products found in WooCommerce."
-msgstr ""
+msgstr "Inga publicerade produkter hittades i WooCommerce."
 
 msgid "Not Linked"
-msgstr ""
+msgstr "Ej länkad"
 
 msgid "Not linked"
-msgstr ""
+msgstr "Ej länkad"
 
 msgid "Not synced yet"
-msgstr ""
+msgstr "Inte synkad ännu"
 
 msgid "On Processing"
-msgstr ""
+msgstr "Vid behandling"
 
 msgid "Order"
-msgstr ""
+msgstr "Beställning"
 
 msgid "Order #%s"
-msgstr ""
+msgstr "Beställning #%s"
 
 msgid "Order Date"
-msgstr ""
+msgstr "Beställningsdatum"
 
 msgid "Order has no billing email address."
-msgstr ""
+msgstr "Beställningen saknar e-postadress för fakturering."
 
 msgid "Order has not been synced to Zoho Books"
-msgstr ""
+msgstr "Beställningen har inte synkroniserats till Zoho Books"
 
 msgid "Order ID"
-msgstr ""
+msgstr "Beställnings-ID"
 
 msgid "Order Notes"
-msgstr ""
+msgstr "Beställningsanteckningar"
 
 msgid "Order Number"
-msgstr ""
+msgstr "Beställningsnummer"
 
 msgid "Order Status"
-msgstr ""
+msgstr "Beställningsstatus"
 
 msgid "Order Total"
-msgstr ""
+msgstr "Beställningssumma"
 
 msgid "Orders"
-msgstr ""
+msgstr "Beställningar"
 
 msgid "Organization"
-msgstr ""
+msgstr "Organisation"
 
 msgid "Organization ID"
-msgstr ""
+msgstr "Organisations-ID"
 
 msgid "Overdue"
-msgstr ""
+msgstr "Förfallen"
 
 msgid "Paid"
-msgstr ""
+msgstr "Betald"
 
 msgid "Partially Paid"
-msgstr ""
+msgstr "Delvis betald"
 
 msgid "Payment"
-msgstr ""
+msgstr "Betalning"
 
 msgid "Payment ID:"
-msgstr ""
+msgstr "Betalnings-ID:"
 
 msgid "Payment Mapping"
-msgstr ""
+msgstr "Betalningsmappning"
 
 msgid "Payment Method"
-msgstr ""
+msgstr "Betalningsmetod"
 
 msgid "Payment Method Mapping"
-msgstr ""
+msgstr "Mappning av betalningsmetoder"
 
 msgid "Payment recorded successfully!"
-msgstr ""
+msgstr "Betalning registrerad!"
 
 msgid "Payment service not configured"
-msgstr ""
+msgstr "Betalningstjänsten är inte konfigurerad"
 
 msgid "Pending"
-msgstr ""
+msgstr "Väntande"
 
 msgid "Pending Approval"
-msgstr ""
+msgstr "Väntar på godkännande"
 
 msgid "Permission denied."
-msgstr ""
+msgstr "Åtkomst nekad."
 
 msgid "Processing"
-msgstr ""
+msgstr "Behandlas"
 
 msgid "Product"
-msgstr ""
+msgstr "Produkt"
 
 msgid "Product already linked to a Zoho item."
-msgstr ""
+msgstr "Produkten är redan länkad till en Zoho-artikel."
 
 msgid "Product Mapping"
-msgstr ""
+msgstr "Produktmappning"
 
 msgid "Product not found."
-msgstr ""
+msgstr "Produkten hittades inte."
 
 msgid "Product not linked to a Zoho item."
-msgstr ""
+msgstr "Produkten är inte länkad till en Zoho-artikel."
 
 msgid "Re-sync"
-msgstr ""
+msgstr "Synka igen"
 
 msgid "Refresh"
-msgstr ""
+msgstr "Uppdatera"
 
 msgid "Refresh Accounts"
-msgstr ""
+msgstr "Uppdatera konton"
 
 msgid "Refresh Token"
-msgstr ""
+msgstr "Uppdateringstoken"
 
 msgid "Refund"
-msgstr ""
+msgstr "Återbetalning"
 
 msgid "Refund ID:"
-msgstr ""
+msgstr "Återbetalnings-ID:"
 
 msgid "Refund service not configured"
-msgstr ""
+msgstr "Återbetalningstjänsten är inte konfigurerad"
 
 msgid "Refund synced successfully!"
-msgstr ""
+msgstr "Återbetalning synkroniserad!"
 
 msgid "Remove"
-msgstr ""
+msgstr "Ta bort"
 
 msgid "Retry Failed Syncs"
-msgstr ""
+msgstr "Försök igen med misslyckade synkroniseringar"
 
 msgid "Retry Settings"
-msgstr ""
+msgstr "Inställningar för omförsök"
 
 msgid "Returning customer. Using existing Zoho contact."
-msgstr ""
+msgstr "Återkommande kund. Använder befintlig Zoho-kontakt."
 
 msgid "Save & Continue"
-msgstr ""
+msgstr "Spara och fortsätt"
 
 msgid "Save Mappings"
-msgstr ""
+msgstr "Spara mappningar"
 
 msgid "Save Settings"
-msgstr ""
+msgstr "Spara inställningar"
 
 msgid "Search orders..."
-msgstr ""
+msgstr "Sök beställningar..."
 
 msgid "Search products..."
-msgstr ""
+msgstr "Sök produkter..."
 
 msgid "Search Zoho Items"
-msgstr ""
+msgstr "Sök Zoho-artiklar"
 
 msgid "Select All"
-msgstr ""
+msgstr "Välj alla"
 
 msgid "Select orders to sync"
-msgstr ""
+msgstr "Välj beställningar att synkronisera"
 
 msgid "Select Organization"
-msgstr ""
+msgstr "Välj organisation"
 
 msgid "Sent"
-msgstr ""
+msgstr "Skickad"
 
 msgid "Settings"
-msgstr ""
+msgstr "Inställningar"
 
 msgid "Settings saved."
-msgstr ""
+msgstr "Inställningar sparade."
 
 msgid "Shipping Address 1"
-msgstr ""
+msgstr "Leveransadress 1"
 
 msgid "Shipping Address 2"
-msgstr ""
+msgstr "Leveransadress 2"
 
 msgid "Shipping City"
-msgstr ""
+msgstr "Leveransort"
 
 msgid "Shipping Company"
-msgstr ""
+msgstr "Leveransföretag"
 
 msgid "Shipping Country"
-msgstr ""
+msgstr "Leveransland"
 
 msgid "Shipping First Name"
-msgstr ""
+msgstr "Leveransförnamn"
 
 msgid "Shipping Full Name"
-msgstr ""
+msgstr "Leveransnamn (fullständigt)"
 
 msgid "Shipping Last Name"
-msgstr ""
+msgstr "Leveransefternamn"
 
 msgid "Shipping Method"
-msgstr ""
+msgstr "Leveransmetod"
 
 msgid "Shipping Phone"
-msgstr ""
+msgstr "Leveranstelefon"
 
 msgid "Shipping Postcode"
-msgstr ""
+msgstr "Leveranspostnummer"
 
 msgid "Shipping State"
-msgstr ""
+msgstr "Leveransregion"
 
 msgid "Showing first 50 products. You can map additional products from ZBooks > Product Mapping after setup."
-msgstr ""
+msgstr "Visar de första 50 produkterna. Du kan mappa fler produkter under ZBooks > Produktmappning efter installationen."
 
 msgid "Skip"
-msgstr ""
+msgstr "Hoppa över"
 
 msgid "Skip for Now"
-msgstr ""
+msgstr "Hoppa över för nu"
 
 msgid "SKU"
-msgstr ""
+msgstr "SKU"
 
 msgid "Status"
-msgstr ""
+msgstr "Status"
 
 msgid "Status:"
-msgstr ""
+msgstr "Status:"
 
 msgid "Sync"
-msgstr ""
+msgstr "Synkronisera"
 
 msgid "Sync error"
-msgstr ""
+msgstr "Synkroniseringsfel"
 
 msgid "Sync failed. Please try again."
-msgstr ""
+msgstr "Synkroniseringen misslyckades. Försök igen."
 
 msgid "Sync Now"
-msgstr ""
+msgstr "Synkronisera nu"
 
 msgid "Sync Orders to Zoho Books"
-msgstr ""
+msgstr "Synkronisera beställningar till Zoho Books"
 
 msgid "Sync Refund"
-msgstr ""
+msgstr "Synkronisera återbetalning"
 
 msgid "Sync Selected"
-msgstr ""
+msgstr "Synkronisera valda"
 
 msgid "Sync Settings"
-msgstr ""
+msgstr "Synkroniseringsinställningar"
 
 msgid "Sync Status"
-msgstr ""
+msgstr "Synkroniseringsstatus"
 
 msgid "Sync successful!"
-msgstr ""
+msgstr "Synkroniseringen lyckades!"
 
 msgid "Sync Triggers"
-msgstr ""
+msgstr "Synkroniseringstriggers"
 
 msgid "Synced"
-msgstr ""
+msgstr "Synkroniserad"
 
 msgid "Syncing..."
-msgstr ""
+msgstr "Synkroniserar..."
 
 msgid "Test Connection"
-msgstr ""
+msgstr "Testa anslutning"
 
 msgid "Timestamp"
-msgstr ""
+msgstr "Tidsstämpel"
 
 msgid "Timestamp:"
-msgstr ""
+msgstr "Tidsstämpel:"
 
 msgid "Total"
-msgstr ""
+msgstr "Totalt"
 
 msgid "Total:"
-msgstr ""
+msgstr "Totalt:"
 
 msgid "Unexpected response from Zoho."
-msgstr ""
+msgstr "Oväntat svar från Zoho."
 
 msgid "Unlink"
-msgstr ""
+msgstr "Ta bort länk"
 
 msgid "Unpaid"
-msgstr ""
+msgstr "Obetald"
 
 msgid "United States (.com)"
-msgstr ""
+msgstr "USA (.com)"
 
 msgid "Use the Bulk Sync page to sync existing orders"
-msgstr ""
+msgstr "Använd sidan för masssynkronisering för att synkronisera befintliga beställningar"
 
 msgid "View"
-msgstr ""
+msgstr "Visa"
 
 msgid "View in Zoho Books"
-msgstr ""
+msgstr "Visa i Zoho Books"
 
 msgid "Void"
-msgstr ""
+msgstr "Makulerad"
 
 msgid "Warnings"
-msgstr ""
+msgstr "Varningar"
 
 msgid "Welcome"
-msgstr ""
+msgstr "Välkommen"
 
 msgid "Welcome to ZBooks for WooCommerce"
-msgstr ""
+msgstr "Välkommen till ZBooks for WooCommerce"
 
 msgid "WooCommerce Custom Field (meta key)"
-msgstr ""
+msgstr "WooCommerce anpassat fält (meta key)"
 
 msgid "WooCommerce Field"
-msgstr ""
+msgstr "WooCommerce-fält"
 
 msgid "WooCommerce Payment Method"
-msgstr ""
+msgstr "WooCommerce-betalningsmetod"
 
 msgid "WooCommerce Product"
-msgstr ""
+msgstr "WooCommerce-produkt"
 
 msgid "Yes"
-msgstr ""
+msgstr "Ja"
 
 msgid "You can manually sync orders from the order edit page"
-msgstr ""
+msgstr "Du kan manuellt synkronisera beställningar från beställningsredigeringssidan"
 
 msgid "You're All Set!"
-msgstr ""
+msgstr "Allt är klart!"
 
 msgid "ZBooks"
-msgstr ""
+msgstr "ZBooks"
 
 msgid "ZBooks for WooCommerce"
-msgstr ""
+msgstr "ZBooks for WooCommerce"
 
 msgid "ZBooks for WooCommerce is now configured and ready to sync your WooCommerce orders to Zoho Books."
-msgstr ""
+msgstr "ZBooks for WooCommerce är nu konfigurerad och redo att synkronisera dina WooCommerce-beställningar till Zoho Books."
 
 msgid "ZBooks for WooCommerce requires WooCommerce to be installed and activated."
-msgstr ""
+msgstr "ZBooks for WooCommerce kräver att WooCommerce är installerat och aktiverat."
 
 msgid "ZBooks Setup"
-msgstr ""
+msgstr "ZBooks-installation"
 
 msgid "ZBooks Setup Wizard"
-msgstr ""
+msgstr "ZBooks installationsguide"
 
 msgid "ZBooks Sync Logs"
-msgstr ""
+msgstr "ZBooks synkroniseringsloggar"
 
 msgid "Zoho API rate limit exceeded. Please try again later."
-msgstr ""
+msgstr "Zoho API-gränsen överskriden. Försök igen senare."
 
 msgid "Zoho Books API credentials not configured."
-msgstr ""
+msgstr "Zoho Books API-uppgifter är inte konfigurerade."
 
 msgid "Zoho Books Sync"
-msgstr ""
+msgstr "Zoho Books-synkronisering"
 
 msgid "Zoho Custom Field (API name)"
-msgstr ""
+msgstr "Zoho anpassat fält (API-namn)"
 
 msgid "Zoho Field"
-msgstr ""
+msgstr "Zoho-fält"
 
 msgid "Zoho Item"
-msgstr ""
+msgstr "Zoho-artikel"
 
 msgid "Zoho Payment Account"
-msgstr ""
+msgstr "Zoho-betalkonto"
 
 msgid "Zoho Payment Mode"
-msgstr ""
+msgstr "Zoho-betalningsläge"
 
 #. translators: %d: number of days
 msgid "Clear Old Logs (%d+ days)"
-msgstr ""
+msgstr "Rensa gamla loggar (%d+ dagar)"
 
 #. translators: %d: number of days for log retention
 msgid "Delete log files older than %d days?"
-msgstr ""
+msgstr "Ta bort loggfiler äldre än %d dagar?"
 
 #. translators: %d: number of files deleted
 msgid "Deleted %d old log file(s)."
-msgstr ""
+msgstr "Raderade %d gammal(a) loggfil(er)."
 
 #. translators: %d: number of products auto-mapped
 msgid "Auto-mapped %d product(s) by SKU!"
-msgstr ""
+msgstr "Automappade %d produkt(er) efter SKU!"
 
 #. translators: %s: Error message
 msgid "Failed to create Zoho contact: %s"
-msgstr ""
+msgstr "Kunde inte skapa Zoho-kontakt: %s"
 
 #. translators: %s: Error message
 msgid "Failed to refresh Zoho access token: %s"
-msgstr ""
+msgstr "Kunde inte uppdatera Zoho-åtkomsttoken: %s"
 
 #. translators: %s: Error message
 msgid "Failed to exchange grant code: %s"
-msgstr ""
+msgstr "Kunde inte utbyta behörighetskod: %s"
 
 #. translators: %s: Error message
 msgid "Failed to sync order to Zoho Books: %s"
-msgstr ""
+msgstr "Kunde inte synkronisera beställning till Zoho Books: %s"
 
 #. translators: 1: Contact currency, 2: Order currency
 msgid "Currency mismatch: Contact is set to %1$s but order uses %2$s. Please update the contact currency in Zoho Books or use a different email."
-msgstr ""
+msgstr "Valutafel: Kontakten är inställd på %1$s men beställningen använder %2$s. Uppdatera kontaktens valuta i Zoho Books eller använd en annan e-postadress."
 
 #. translators: %1$s: Order number, %2$s: Payment method
 msgid "Payment for Order #%1$s via %2$s"
-msgstr ""
+msgstr "Betalning för beställning #%1$s via %2$s"
 
 #. translators: %s: Service name
 msgid "Service \"%s\" not found in container."
-msgstr ""
+msgstr "Tjänsten \"%s\" hittades inte i containern."
 
 msgid "No refresh token received. Ensure the grant code has offline_access scope."
-msgstr ""
+msgstr "Ingen uppdateringstoken mottagen. Kontrollera att behörighetskoden har offline_access-scope."
 
 msgid "Check the settings page to adjust configuration anytime"
-msgstr ""
+msgstr "Gå till inställningssidan för att justera konfigurationen när som helst"
 
 msgid "What happens next?"
-msgstr ""
+msgstr "Vad händer nu?"
 
 msgid "API Setup"
-msgstr ""
+msgstr "API-konfiguration"
