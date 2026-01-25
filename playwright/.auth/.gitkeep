@@ -1,2 +1,0 @@
-# This directory stores authenticated browser state for Playwright tests.
-# The actual auth state files (*.json) are gitignored.

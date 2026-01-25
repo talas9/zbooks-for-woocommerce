@@ -4,7 +4,7 @@ Tags: woocommerce, zoho, zoho-books, invoice, sync
 Requires at least: 6.9
 Tested up to: 6.9
 Requires PHP: 8.2
-Stable tag: 1.0.0
+Stable tag: 1.0.4
 License: GPL-2.0+
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -16,16 +16,44 @@ ZBooks for WooCommerce seamlessly integrates your WooCommerce store with Zoho Bo
 
 = Features =
 
+**Order & Invoice Sync**
 * **Automatic Sync** - Sync orders to Zoho Books when order status changes
 * **Manual Sync** - One-click sync button on order admin page
+* **Bulk Sync** - Sync existing orders by date range or selection
 * **Configurable Triggers** - Choose which order statuses trigger sync
 * **Draft/Submit Control** - Create invoices as draft or submit immediately
-* **Bulk Sync** - Sync existing orders by date range or selection
+* **Invoice Numbering** - Use Zoho auto-numbering or WooCommerce order numbers
+
+**Payment Reconciliation**
+* **Automatic Payments** - Apply payments to invoices when orders are paid
+* **Payment Method Mapping** - Map WooCommerce payment methods to Zoho payment modes
+* **Deposit Accounts** - Route payments to specific bank/cash accounts in Zoho
+* **Bank Fees Tracking** - Capture gateway fees (Stripe, PayPal, etc.) and record in Zoho
+* **Fee Account Mapping** - Assign payment fees to expense accounts
+
+**Refunds & Credit Notes**
+* **Refund Sync** - Automatically create credit notes for WooCommerce refunds
+* **Partial Refunds** - Support for partial and full refund amounts
+
+**Customer & Product Management**
 * **Customer Sync** - Automatically create/match Zoho contacts
 * **Product Linking** - Link WooCommerce products to Zoho Books items
 * **Inventory Tracking** - Optional inventory sync (requires Zoho Inventory)
+
+**Shipping & Fees**
+* **Shipping Charges** - Sync shipping costs with invoices
+* **Shipping Account Mapping** - Assign shipping to specific revenue accounts
+* **Fee Items** - Include WooCommerce fee line items
+
+**Customization**
+* **Custom Field Mapping** - Map WooCommerce order data to Zoho custom fields
+* **Mark as Sent** - Control automatic "sent" status on invoices
+
+**Administration**
+* **Setup Wizard** - Guided configuration for new installations
+* **Log Viewer** - Detailed sync logs with filtering and search
 * **Retry Failed Syncs** - Configurable retry logic for failed syncs
-* **Rate Limiting** - Respects Zoho's 100 requests/minute limit
+* **Rate Limiting** - Respects Zoho's API rate limits
 
 = Requirements =
 
@@ -73,6 +101,18 @@ Yes! On any product page, you can either create a new Zoho item or search and li
 
 Inventory tracking is optional and requires Zoho Inventory integration with your Zoho Books account. When creating a Zoho item, you can choose whether to enable inventory tracking.
 
+= Does the plugin track payment gateway fees? =
+
+Yes! The plugin automatically captures transaction fees from popular gateways like Stripe, PayPal, Square, and WooCommerce Payments. These are recorded as bank charges in Zoho Books when you configure a fee expense account in the payment mapping settings.
+
+= Can I map payments to specific bank accounts? =
+
+Yes, you can configure each WooCommerce payment method to deposit into a specific Zoho Books bank or cash account. Go to WooCommerce > Settings > ZBooks > Payments to set up the mapping.
+
+= Are refunds synced to Zoho? =
+
+Yes, when you process a refund in WooCommerce, the plugin automatically creates a credit note in Zoho Books for the refund amount.
+
 == Screenshots ==
 
 1. Plugin settings page
@@ -82,16 +122,44 @@ Inventory tracking is optional and requires Zoho Inventory integration with your
 
 == Changelog ==
 
+= 1.0.4 =
+* Enhanced bulk sync with better progress tracking
+* Improved error handling for API requests
+* Fixed edge cases in payment reconciliation
+
+= 1.0.3 =
+* Added payment method mapping to Zoho deposit accounts
+* Bank fee tracking from payment gateways (Stripe, PayPal, etc.)
+* Fee account mapping for expense categorization
+* Shipping account configuration
+
+= 1.0.2 =
+* Payment reconciliation - automatically apply payments to invoices
+* Refund sync as credit notes in Zoho Books
+* Custom field mapping support
+* Invoice numbering options (auto or order number)
+* Mark as sent toggle
+
+= 1.0.1 =
+* Setup wizard for guided configuration
+* Log viewer with filtering and search
+* Improved sync status display
+* Bug fixes and performance improvements
+
 = 1.0.0 =
 * Initial release
 * Automatic order sync on status change
 * Manual sync from order page
 * Bulk sync by date range
 * Customer contact sync
+* Product linking to Zoho items
 * Configurable retry logic
 * Rate limiting support
 
 == Upgrade Notice ==
+
+= 1.0.4 =
+Enhanced bulk sync and improved error handling.
 
 = 1.0.0 =
 Initial release of ZBooks for WooCommerce.
