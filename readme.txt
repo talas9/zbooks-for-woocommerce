@@ -4,7 +4,7 @@ Tags: woocommerce, zoho, zoho-books, invoice, sync
 Requires at least: 6.9
 Tested up to: 6.7
 Requires PHP: 8.2
-Stable tag: 1.0.11
+Stable tag: 1.0.12
 License: GPL-2.0+
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -141,6 +141,11 @@ Yes, each reconciliation report can be exported to CSV format for further analys
 5. Reconciliation report with discrepancy detection
 
 == Changelog ==
+
+= 1.0.12 =
+* **NEW: Test runner script** - `run_all_tests.sh` for running all tests locally
+* **CI: Branch protection** - PR to main now requires all tests to pass and admin approval
+* Improved GitHub Actions workflow with unified test status check
 
 = 1.0.11 =
 * **Fix: Bitcoin payment reference** - Uses order number for Bitcoin payments (transaction hashes exceed Zoho's 50 char limit). Transaction hash is added to order notes for reference. Other payment methods continue using transaction ID
