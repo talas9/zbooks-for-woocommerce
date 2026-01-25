@@ -1,0 +1,64 @@
+# WordPress.org Plugin Distribution Ignore File
+# This file tells the 10up/action-wordpress-plugin-deploy action what to exclude
+
+# Git and GitHub
+.git
+.github
+.gitignore
+.gitattributes
+
+# WordPress.org assets (screenshots, banners - deployed separately)
+.wordpress-org
+
+# Development files
+.editorconfig
+.distignore
+.cursorignore
+
+# Claude/AI
+.claude
+CLAUDE.md
+
+# Node.js
+node_modules
+package.json
+package-lock.json
+
+# Composer dev files (composer.json MUST be included if vendor/ exists)
+composer.lock
+
+# Testing
+tests
+phpcs.xml
+phpcs.xml.dist
+phpunit.xml
+phpunit.xml.dist
+test-*.php
+playwright
+playwright.config.ts
+playwright-report
+test-results
+.wp-env.json
+.wp-env.override.json
+
+# Build/CI scripts
+bin
+*.sh
+
+# IDE and OS files
+.DS_Store
+*.swp
+*.swo
+.idea
+.vscode
+*.sublime-*
+
+# Documentation (except readme.txt which is required)
+*.md
+!readme.md
+docs
+
+# Other
+dist
+temp
+*.log

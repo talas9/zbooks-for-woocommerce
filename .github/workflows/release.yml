@@ -44,14 +44,24 @@ jobs:
         run: |
           mkdir -p dist/zbooks-for-woocommerce
           # Copy files to subfolder (excluding dev files)
+          # WordPress.org requirements:
+          # - No .sh files (shell scripts not permitted)
+          # - Must include composer.json if vendor/ exists
+          # - Must include readme.txt
+          # - No dev dependencies in vendor/
           rsync -av --exclude='.git' --exclude='.github' --exclude='.wordpress-org' \
             --exclude='node_modules' --exclude='tests' --exclude='playwright' \
             --exclude='playwright-report' --exclude='test-results' --exclude='.wp-env*' \
             --exclude='phpcs.xml*' --exclude='phpunit.xml*' --exclude='composer.lock' \
-            --exclude='package-lock.json' --exclude='*.md' --exclude='dist' \
+            --exclude='package-lock.json' --exclude='package.json' --exclude='dist' \
             --exclude='bin' --exclude='.claude' --exclude='.cursorignore' \
-            --exclude='test-*.php' --exclude='CLAUDE.md' \
+            --exclude='test-*.php' --exclude='CLAUDE.md' --exclude='.distignore' \
+            --exclude='*.sh' --exclude='.DS_Store' --exclude='.editorconfig' \
+            --exclude='docs' --exclude='temp' --exclude='*.log' \
+            --exclude='.gitignore' --exclude='.gitattributes' \
             . dist/zbooks-for-woocommerce/
+          # Remove any markdown files except readme.txt (which we have instead of readme.md)
+          find dist/zbooks-for-woocommerce -name "*.md" -type f -delete
           # Create zip with proper folder structure
           cd dist && zip -r zbooks-for-woocommerce-${{ steps.version.outputs.VERSION }}.zip zbooks-for-woocommerce
           rm -rf zbooks-for-woocommerce

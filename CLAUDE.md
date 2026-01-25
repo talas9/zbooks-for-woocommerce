@@ -3,14 +3,14 @@
 
 ## PROJECT
 DEF NAME = zbooks-for-woocommerce
-DEF DESC = TODO: Project description
-DEF STACK = TODO: Tech stack (e.g., PHP, WordPress, React)
+DEF DESC = WooCommerce to Zoho Books integration plugin - sync orders, invoices, payments, refunds
+DEF STACK = PHP 8.2+, WordPress 6.9+, WooCommerce 10.4+, Zoho Books API
 DEF ROOT = /Users/talas9/Projects/zbooks-for-woocommerce
 
 ## ENV
-DEF NODE = TODO: version
-DEF PHP = TODO: version
-DEF DB = TODO: mysql/postgres
+DEF NODE = 18+ (for E2E tests with Playwright)
+DEF PHP = 8.2+
+DEF DB = mysql (WordPress)
 
 ## PATHS
 DEF SRC = src/
@@ -47,8 +47,14 @@ R11: !secrets-in-logs (!API keys,!passwords,!tokens in logs)
 R12: !credentials-in-code (use env vars)
 
 ### CODE QUALITY (R13-R14)
-R13: TODO: Add your coding standards
-R14: TODO: Add testing requirements
+R13: WordPress Coding Standards (WPCS) - run `./vendor/bin/phpcs` before commit
+R14: PHPUnit tests required for new features - run `./vendor/bin/phpunit`
+
+### WPORG COMPLIANCE (R15-R18)
+R15: !load_plugin_textdomain (WordPress.org auto-loads translations since WP 4.6)
+R16: readme.txt "Tested up to" must match current WordPress version (6.9)
+R17: No .sh files in distribution (WordPress.org rejects shell scripts)
+R18: composer.json required if vendor/ exists in distribution
 
 ## AGENT_CSP_* (prefix prompts for subagents)
 
@@ -418,13 +424,74 @@ PHASE 7: COMMIT
 !PAT CREATE_NO_EXPLORE: write tests without finding target ->BAD; EXPLORE first
 
 ## CMD (build commands)
-CMD BUILD = TODO: your build command
-CMD TEST = TODO: your test command
-CMD LINT = TODO: your lint command
-CMD DEV = TODO: your dev server command
+CMD BUILD = composer install --no-dev --optimize-autoloader
+CMD TEST = ./vendor/bin/phpunit
+CMD LINT = ./vendor/bin/phpcs
+CMD DEV = wp-env start
+CMD E2E = npx playwright test
 
 ## FILES (key files)
-TODO: List key files and their purpose
+zbooks-for-woocommerce.php = Main plugin file, bootstrap, constants
+src/Plugin.php = Main plugin singleton, service container, hooks
+src/Api/ZohoClient.php = Zoho Books API client
+src/Api/TokenManager.php = OAuth token management (encrypted storage)
+src/Service/SyncOrchestrator.php = Order sync coordination
+src/Admin/SetupWizard.php = First-time setup wizard
+readme.txt = WordPress.org plugin readme (required)
+composer.json = PHP dependencies (required if vendor/ exists)
+.distignore = WordPress.org deploy exclusions
+
+## WPORG_PACKAGING (WordPress.org Plugin Packaging Rules)
+# These rules MUST be followed when creating plugin zip files for WordPress.org
+
+### REQUIRED FILES (must be in zip)
+REQ readme.txt = Plugin readme (required by WordPress.org)
+REQ composer.json = Required if vendor/ directory exists
+REQ zbooks-for-woocommerce.php = Main plugin file
+REQ LICENSE = GPL-2.0+ license file
+
+### FORBIDDEN FILES (will cause rejection)
+!ALLOW *.sh = Shell scripts not permitted
+!ALLOW .DS_Store = macOS files not permitted
+!ALLOW *.md = Markdown files (use readme.txt instead)
+!ALLOW tests/ = Test files not permitted
+!ALLOW .git/ = Git directory not permitted
+!ALLOW .github/ = GitHub directory not permitted
+!ALLOW node_modules/ = Node modules not permitted
+!ALLOW phpcs.xml* = PHPCS config not permitted
+!ALLOW phpunit.xml* = PHPUnit config not permitted
+!ALLOW composer.lock = Lock file not permitted
+!ALLOW package*.json = NPM files not permitted
+
+### BUILD REQUIREMENTS
+REQ composer-no-dev = Must run `composer install --no-dev` (no dev dependencies)
+REQ folder-structure = Zip must have plugin-slug/ as root folder
+REQ tested-up-to = readme.txt "Tested up to" must match current WordPress version
+REQ no-load-textdomain = Do NOT use load_plugin_textdomain() for WordPress.org hosted plugins (auto-loaded since WP 4.6)
+
+### ZIP BUILD COMMAND (manual)
+```bash
+# 1. Install production dependencies only
+composer install --no-dev --optimize-autoloader
+
+# 2. Create plugin directory structure
+mkdir -p dist/zbooks-for-woocommerce
+
+# 3. Copy required files
+cp zbooks-for-woocommerce.php LICENSE readme.txt composer.json dist/zbooks-for-woocommerce/
+cp -R src assets languages vendor dist/zbooks-for-woocommerce/
+
+# 4. Create zip (exclude forbidden files)
+cd dist && zip -rq zbooks-for-woocommerce-VERSION.zip zbooks-for-woocommerce -x "*.DS_Store" -x "*.sh"
+
+# 5. Cleanup
+rm -rf dist/zbooks-for-woocommerce
+```
+
+### GITHUB WORKFLOW
+# See .github/workflows/release.yml for automated release builds
+# See .github/workflows/deploy-wporg.yml for WordPress.org SVN deploy
+# See .distignore for file exclusion list
 
 ## CHECKLIST (before submit)
 CHK TESTS: all tests pass
@@ -432,6 +499,6 @@ CHK SECURITY: no secrets exposed
 CHK STYLE: follows project conventions
 
 ## VERSION
-CSP_VER = 1.0
-RULES_COUNT = 14
-LAST_UPDATE = 2026-01-24
+CSP_VER = 1.1
+RULES_COUNT = 18
+LAST_UPDATE = 2026-01-25

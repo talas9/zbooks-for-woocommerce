@@ -2,7 +2,7 @@
 Contributors: talas9
 Tags: woocommerce, zoho, zoho-books, invoice, sync
 Requires at least: 6.9
-Tested up to: 6.7
+Tested up to: 6.9
 Requires PHP: 8.2
 Stable tag: 1.0.12
 License: GPL-2.0+

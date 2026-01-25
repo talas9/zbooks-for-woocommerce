@@ -85,19 +85,6 @@ function zbooks_autoloader_missing_notice(): void {
 }
 
 /**
- * Load plugin textdomain for translations.
- */
-function zbooks_load_textdomain(): void {
-	load_plugin_textdomain(
-		'zbooks-for-woocommerce',
-		false,
-		dirname( ZBOOKS_PLUGIN_BASENAME ) . '/languages'
-	);
-}
-
-add_action( 'init', 'Zbooks\zbooks_load_textdomain' );
-
-/**
  * Initialize the plugin.
  */
 function zbooks_init(): void {

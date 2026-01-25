@@ -52,6 +52,8 @@ zbooks-for-woocommerce*.json
 firebase-debug.log
 
 # Temp files
+/temp/
+/tmp/
 *.tmp
 *.temp
 
