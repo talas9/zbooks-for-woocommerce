@@ -73,6 +73,14 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         run: npx playwright install-deps chromium
 
+      - name: Cache Docker images
+        uses: satackey/action-docker-layer-caching@v0.0.11
+        continue-on-error: true
+        with:
+          key: docker-layer-${{ runner.os }}-${{ hashFiles('.wp-env.json') }}
+          restore-keys: |
+            docker-layer-${{ runner.os }}-
+
       - name: Start wp-env
         run: npm run env:start
         continue-on-error: true
