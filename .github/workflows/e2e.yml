@@ -16,6 +16,8 @@ jobs:
   e2e:
     name: End-to-End Tests
     runs-on: ubuntu-latest
+    env:
+      HAS_ZOHO_SECRETS: ${{ secrets.ZOHO_CLIENT_ID != '' }}
 
     steps:
       - name: Checkout code
@@ -76,7 +78,7 @@ jobs:
           echo "WordPress is ready!"
 
       - name: Setup Zoho credentials (tests environment)
-        if: ${{ secrets.ZOHO_CLIENT_ID != '' }}
+        if: env.HAS_ZOHO_SECRETS == 'true'
         run: npm run env:setup:tests
         env:
           ZOHO_CLIENT_ID: ${{ secrets.ZOHO_CLIENT_ID }}
