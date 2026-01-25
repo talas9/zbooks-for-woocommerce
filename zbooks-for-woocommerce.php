@@ -3,7 +3,7 @@
  * Plugin Name: ZBooks for WooCommerce
  * Plugin URI: https://github.com/talas9/zbooks-for-woocommerce
  * Description: Sync WooCommerce orders to Zoho Books automatically or manually.
- * Version: 1.0.9
+ * Version: 1.0.10
  * Author: talas9
  * Author URI: https://github.com/talas9
  * License: GPL-2.0+
@@ -26,7 +26,7 @@ namespace Zbooks;
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'ZBOOKS_VERSION', '1.0.9' );
+define( 'ZBOOKS_VERSION', '1.0.10' );
 define( 'ZBOOKS_PLUGIN_FILE', __FILE__ );
 define( 'ZBOOKS_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'ZBOOKS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
@@ -37,6 +37,9 @@ define( 'ZBOOKS_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
  */
 if ( file_exists( ZBOOKS_PLUGIN_DIR . 'vendor/autoload.php' ) ) {
 	require_once ZBOOKS_PLUGIN_DIR . 'vendor/autoload.php';
+	define( 'ZBOOKS_AUTOLOADER_LOADED', true );
+} else {
+	define( 'ZBOOKS_AUTOLOADER_LOADED', false );
 }
 
 /**
@@ -67,6 +70,20 @@ function zbooks_woocommerce_missing_notice(): void {
 }
 
 /**
+ * Display admin notice if autoloader is missing.
+ */
+function zbooks_autoloader_missing_notice(): void {
+	?>
+	<div class="notice notice-error">
+		<p>
+			<strong><?php esc_html_e( 'ZBooks for WooCommerce Error:', 'zbooks-for-woocommerce' ); ?></strong>
+			<?php esc_html_e( 'Required files are missing. Please delete the plugin folder completely and reinstall from a fresh download.', 'zbooks-for-woocommerce' ); ?>
+		</p>
+	</div>
+	<?php
+}
+
+/**
  * Load plugin textdomain for translations.
  */
 function zbooks_load_textdomain(): void {
@@ -83,6 +100,12 @@ add_action( 'init', 'Zbooks\zbooks_load_textdomain' );
  * Initialize the plugin.
  */
 function zbooks_init(): void {
+	// Check if autoloader was loaded successfully.
+	if ( ! ZBOOKS_AUTOLOADER_LOADED ) {
+		add_action( 'admin_notices', 'Zbooks\zbooks_autoloader_missing_notice' );
+		return;
+	}
+
 	if ( ! zbooks_is_woocommerce_active() ) {
 		add_action( 'admin_notices', 'Zbooks\zbooks_woocommerce_missing_notice' );
 		return;
@@ -138,6 +161,19 @@ add_action( 'plugins_loaded', 'Zbooks\zbooks_init' );
  * Activation hook.
  */
 function zbooks_activate(): void {
+	// Check if autoloader was loaded successfully.
+	if ( ! ZBOOKS_AUTOLOADER_LOADED ) {
+		deactivate_plugins( ZBOOKS_PLUGIN_BASENAME );
+		wp_die(
+			esc_html__(
+				'ZBooks for WooCommerce: Autoloader not found. Please delete the plugin folder completely and reinstall from a fresh download.',
+				'zbooks-for-woocommerce'
+			),
+			'Plugin Activation Error',
+			[ 'back_link' => true ]
+		);
+	}
+
 	if ( ! zbooks_is_woocommerce_active() ) {
 		deactivate_plugins( ZBOOKS_PLUGIN_BASENAME );
 		wp_die(

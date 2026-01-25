@@ -321,17 +321,14 @@ class PaymentService {
 	/**
 	 * Get payment reference number from order.
 	 *
+	 * Always uses the order number for consistency and to avoid issues
+	 * with long transaction IDs (e.g., Bitcoin hashes are 64 chars but
+	 * Zoho has a 50 character limit).
+	 *
 	 * @param WC_Order $order WooCommerce order.
-	 * @return string Reference number.
+	 * @return string Reference number (order number).
 	 */
 	private function get_payment_reference( WC_Order $order ): string {
-		// Try to get transaction ID first.
-		$transaction_id = $order->get_transaction_id();
-		if ( ! empty( $transaction_id ) ) {
-			return $transaction_id;
-		}
-
-		// Fallback to order number.
 		return $order->get_order_number();
 	}
 

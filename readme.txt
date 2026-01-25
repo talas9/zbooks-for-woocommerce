@@ -4,7 +4,7 @@ Tags: woocommerce, zoho, zoho-books, invoice, sync
 Requires at least: 6.9
 Tested up to: 6.7
 Requires PHP: 8.2
-Stable tag: 1.0.9
+Stable tag: 1.0.10
 License: GPL-2.0+
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -141,6 +141,11 @@ Yes, each reconciliation report can be exported to CSV format for further analys
 5. Reconciliation report with discrepancy detection
 
 == Changelog ==
+
+= 1.0.10 =
+* **Fix: Improved upgrade error handling** - Better error messages when autoloader is missing
+* Clearer instructions for resolving activation issues during upgrades
+* Fix: Payment reference truncated to 50 chars (Zoho Books limit)
 
 = 1.0.9 =
 * Updated translation template with new strings
