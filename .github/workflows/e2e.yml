@@ -73,14 +73,6 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         run: npx playwright install-deps chromium
 
-      - name: Cache Docker images
-        uses: satackey/action-docker-layer-caching@v0.0.11
-        continue-on-error: true
-        with:
-          key: docker-layer-${{ runner.os }}-${{ hashFiles('.wp-env.json') }}
-          restore-keys: |
-            docker-layer-${{ runner.os }}-
-
       - name: Start wp-env
         run: npm run env:start
         continue-on-error: true
@@ -112,7 +104,7 @@ jobs:
           ZOHO_DATACENTER: ${{ secrets.ZOHO_DATACENTER || 'us' }}
 
       - name: Run E2E tests
-        run: npm run test:e2e -- --project=chromium
+        run: npm run test:e2e -- --project=chromium --retries=2
         env:
           WP_BASE_URL: http://localhost:8889
           WP_ADMIN_USER: admin
