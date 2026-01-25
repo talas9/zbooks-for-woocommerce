@@ -42,27 +42,19 @@ jobs:
 
       - name: Create plugin zip
         run: |
-          mkdir -p dist
-          zip -r dist/zbooks-for-woocommerce-${{ steps.version.outputs.VERSION }}.zip . \
-            -x "*.git*" \
-            -x "*.github*" \
-            -x ".wordpress-org/*" \
-            -x "node_modules/*" \
-            -x "tests/*" \
-            -x "playwright/*" \
-            -x "playwright-report/*" \
-            -x "test-results/*" \
-            -x ".wp-env*" \
-            -x "phpcs.xml*" \
-            -x "phpunit.xml*" \
-            -x "composer.lock" \
-            -x "package-lock.json" \
-            -x "*.md" \
-            -x "dist/*" \
-            -x "bin/*" \
-            -x ".claude/*" \
-            -x ".cursorignore" \
-            -x "test-*.php"
+          mkdir -p dist/zbooks-for-woocommerce
+          # Copy files to subfolder (excluding dev files)
+          rsync -av --exclude='.git' --exclude='.github' --exclude='.wordpress-org' \
+            --exclude='node_modules' --exclude='tests' --exclude='playwright' \
+            --exclude='playwright-report' --exclude='test-results' --exclude='.wp-env*' \
+            --exclude='phpcs.xml*' --exclude='phpunit.xml*' --exclude='composer.lock' \
+            --exclude='package-lock.json' --exclude='*.md' --exclude='dist' \
+            --exclude='bin' --exclude='.claude' --exclude='.cursorignore' \
+            --exclude='test-*.php' --exclude='CLAUDE.md' \
+            . dist/zbooks-for-woocommerce/
+          # Create zip with proper folder structure
+          cd dist && zip -r zbooks-for-woocommerce-${{ steps.version.outputs.VERSION }}.zip zbooks-for-woocommerce
+          rm -rf zbooks-for-woocommerce
 
       - name: Generate changelog
         id: changelog
