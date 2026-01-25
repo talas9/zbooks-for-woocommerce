@@ -4,7 +4,7 @@ Tags: woocommerce, zoho, zoho-books, invoice, sync
 Requires at least: 6.9
 Tested up to: 6.7
 Requires PHP: 8.2
-Stable tag: 1.0.5
+Stable tag: 1.0.6
 License: GPL-2.0+
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -142,6 +142,14 @@ Yes, each reconciliation report can be exported to CSV format for further analys
 
 == Changelog ==
 
+= 1.0.6 =
+* **NEW: Complete translations** for 19 languages (Arabic, Chinese, Danish, Dutch, English UK, French, German, Hindi, Italian, Japanese, Korean, Polish, Portuguese, Russian, Spanish, Swedish, Turkish, Ukrainian, Urdu)
+* Added project documentation (Getting Started, Configuration, Troubleshooting, FAQ)
+* Added GitHub issue templates for bug reports and feature requests
+* Applied WordPress Coding Standards formatting across all PHP files
+* Added .editorconfig for consistent coding style
+* Improved CI compatibility
+
 = 1.0.5 =
 * **NEW: Reconciliation Tab** - Compare WooCommerce orders with Zoho Books invoices
 * Discrepancy detection for missing, unsynced, or mismatched records
@@ -186,6 +194,9 @@ Yes, each reconciliation report can be exported to CSV format for further analys
 * Rate limiting support
 
 == Upgrade Notice ==
+
+= 1.0.6 =
+Added complete translations for 19 languages and project documentation.
 
 = 1.0.5 =
 New reconciliation feature to compare and verify sync between WooCommerce and Zoho Books.
