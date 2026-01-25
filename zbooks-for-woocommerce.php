@@ -88,10 +88,11 @@ function zbooks_init(): void {
 		return;
 	}
 
-	// Check for plugin upgrade.
-	zbooks_maybe_upgrade();
-
+	// Initialize plugin first (sets up autoloader).
 	Plugin::get_instance();
+
+	// Check for plugin upgrade after autoloader is ready.
+	zbooks_maybe_upgrade();
 }
 
 /**
