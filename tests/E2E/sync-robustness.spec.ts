@@ -851,47 +851,44 @@ test.describe('Sync Robustness E2E Tests', () => {
 				await page.reload();
 				await page.waitForLoadState('networkidle');
 
-				{
-						// ========== VERIFY WORDPRESS SIDE ==========
-						const meta = await getZohoOrderMeta(orderId);
-						console.log('WP Order meta after payment:', meta);
+				// ========== VERIFY WORDPRESS SIDE ==========
+				const meta = await getZohoOrderMeta(orderId);
+				console.log('WP Order meta after payment:', meta);
 
-						// Should have payment ID or payment error
-						const hasPaymentResult =
-							meta['_zbooks_zoho_payment_id'] || meta['_zbooks_payment_error'];
-						expect(hasPaymentResult).toBeTruthy();
+				// Should have payment ID or payment error
+				const hasPaymentResult =
+					meta['_zbooks_zoho_payment_id'] || meta['_zbooks_payment_error'];
+				expect(hasPaymentResult).toBeTruthy();
 
-						// ========== VERIFY ZOHO SIDE ==========
-						if (meta['_zbooks_zoho_payment_id']) {
-							console.log('Verifying payment in Zoho Books...');
+				// ========== VERIFY ZOHO SIDE ==========
+				if (meta['_zbooks_zoho_payment_id']) {
+					console.log('Verifying payment in Zoho Books...');
 
-							const zohoPayment = await verifyZohoPayment(meta['_zbooks_zoho_payment_id']);
-							console.log('Zoho Payment:', zohoPayment);
+					const zohoPayment = await verifyZohoPayment(meta['_zbooks_zoho_payment_id']);
+					console.log('Zoho Payment:', zohoPayment);
 
-							if (zohoPayment.success && zohoPayment.exists) {
-								// Payment exists in Zoho
-								expect(zohoPayment.payment_id).toBe(meta['_zbooks_zoho_payment_id']);
-								expect(zohoPayment.amount).toBeGreaterThan(0);
+					if (zohoPayment.success && zohoPayment.exists) {
+						// Payment exists in Zoho
+						expect(zohoPayment.payment_id).toBe(meta['_zbooks_zoho_payment_id']);
+						expect(zohoPayment.amount).toBeGreaterThan(0);
 
-								// Payment should be applied to the invoice
-								if (meta['_zbooks_zoho_invoice_id'] && zohoPayment.invoices) {
-									const appliedToInvoice = zohoPayment.invoices.some(
-										(inv) => inv.invoice_id === meta['_zbooks_zoho_invoice_id']
-									);
-									console.log(`Payment applied to invoice: ${appliedToInvoice}`);
-								}
-							}
+						// Payment should be applied to the invoice
+						if (meta['_zbooks_zoho_invoice_id'] && zohoPayment.invoices) {
+							const appliedToInvoice = zohoPayment.invoices.some(
+								(inv) => inv.invoice_id === meta['_zbooks_zoho_invoice_id']
+							);
+							console.log(`Payment applied to invoice: ${appliedToInvoice}`);
+						}
+					}
 
-							// Verify invoice balance updated
-							if (meta['_zbooks_zoho_invoice_id']) {
-								const zohoInvoice = await verifyZohoInvoice(meta['_zbooks_zoho_invoice_id']);
-								console.log('Zoho Invoice after payment:', zohoInvoice);
+					// Verify invoice balance updated
+					if (meta['_zbooks_zoho_invoice_id']) {
+						const zohoInvoice = await verifyZohoInvoice(meta['_zbooks_zoho_invoice_id']);
+						console.log('Zoho Invoice after payment:', zohoInvoice);
 
-								if (zohoInvoice.success && zohoInvoice.exists) {
-									// Invoice should have reduced balance or be paid
-									console.log(`Invoice status: ${zohoInvoice.status}, balance: ${zohoInvoice.balance}`);
-								}
-							}
+						if (zohoInvoice.success && zohoInvoice.exists) {
+							// Invoice should have reduced balance or be paid
+							console.log(`Invoice status: ${zohoInvoice.status}, balance: ${zohoInvoice.balance}`);
 						}
 					}
 				}
