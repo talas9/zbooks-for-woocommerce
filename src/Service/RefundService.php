@@ -71,7 +71,7 @@ class RefundService {
      * @param WC_Order_Refund $refund     WooCommerce refund.
      * @param string          $invoice_id Zoho invoice ID.
      * @param string          $contact_id Zoho contact ID.
-     * @return array{success: bool, credit_note_id: ?string, refund_id: ?string, error: ?string}
+     * @return array{success: bool, credit_note_id: ?string, credit_note_number: ?string, refund_id: ?string, error: ?string}
      */
     public function process_refund(
         WC_Order $order,
@@ -98,6 +98,7 @@ class RefundService {
             return [
                 'success' => true,
                 'credit_note_id' => null,
+                'credit_note_number' => null,
                 'refund_id' => null,
                 'error' => null,
             ];
@@ -105,16 +106,20 @@ class RefundService {
 
         try {
             // Step 1: Create credit note from invoice.
-            $credit_note_id = $this->create_credit_note($order, $refund, $invoice_id, $contact_id);
+            $credit_note_result = $this->create_credit_note($order, $refund, $invoice_id, $contact_id);
 
-            if (!$credit_note_id) {
+            if (!$credit_note_result['id']) {
                 return [
                     'success' => false,
                     'credit_note_id' => null,
+                    'credit_note_number' => null,
                     'refund_id' => null,
                     'error' => __('Failed to create credit note', 'zbooks-for-woocommerce'),
                 ];
             }
+
+            $credit_note_id = $credit_note_result['id'];
+            $credit_note_number = $credit_note_result['number'];
 
             // Step 2: Apply credit note to invoice.
             $this->apply_credit_to_invoice($credit_note_id, $invoice_id, $refund_amount);
@@ -136,12 +141,14 @@ class RefundService {
                 'refund_id' => $refund_id,
                 'amount' => $refund_amount,
                 'credit_note_id' => $credit_note_id,
+                'credit_note_number' => $credit_note_number,
                 'zoho_refund_id' => $zoho_refund_id,
             ]);
 
             return [
                 'success' => true,
                 'credit_note_id' => $credit_note_id,
+                'credit_note_number' => $credit_note_number,
                 'refund_id' => $zoho_refund_id,
                 'error' => null,
             ];
@@ -158,6 +165,7 @@ class RefundService {
             return [
                 'success' => false,
                 'credit_note_id' => null,
+                'credit_note_number' => null,
                 'refund_id' => null,
                 'error' => $e->getMessage(),
             ];
@@ -171,14 +179,14 @@ class RefundService {
      * @param WC_Order_Refund $refund     WooCommerce refund.
      * @param string          $invoice_id Zoho invoice ID.
      * @param string          $contact_id Zoho contact ID.
-     * @return string|null Credit note ID or null on failure.
+     * @return array{id: ?string, number: ?string} Credit note ID and number.
      */
     private function create_credit_note(
         WC_Order $order,
         WC_Order_Refund $refund,
         string $invoice_id,
         string $contact_id
-    ): ?string {
+    ): array {
         $refund_amount = abs((float) $refund->get_total());
         $refund_reason = $refund->get_reason() ?: __('Refund', 'zbooks-for-woocommerce');
 
@@ -229,18 +237,22 @@ class RefundService {
                 $response = json_decode(wp_json_encode($response), true);
             }
 
-            $credit_note_id = $response['creditnote_id']
-                ?? $response['creditnote']['creditnote_id']
-                ?? $response['credit_note']['creditnote_id']
-                ?? null;
+            $credit_note = $response['creditnote'] ?? $response['credit_note'] ?? $response;
+
+            $credit_note_id = $credit_note['creditnote_id'] ?? null;
+            $credit_note_number = $credit_note['creditnote_number'] ?? null;
 
             if ($credit_note_id) {
                 $this->logger->debug('Credit note created', [
                     'credit_note_id' => $credit_note_id,
+                    'credit_note_number' => $credit_note_number,
                 ]);
             }
 
-            return $credit_note_id ? (string) $credit_note_id : null;
+            return [
+                'id' => $credit_note_id ? (string) $credit_note_id : null,
+                'number' => $credit_note_number,
+            ];
         } catch (\Exception $e) {
             $this->logger->error('Failed to create credit note', [
                 'order_id' => $order->get_id(),

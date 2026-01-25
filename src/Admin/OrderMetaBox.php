@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Zbooks\Admin;
 
 use WC_Order;
+use Zbooks\Api\ZohoClient;
 use Zbooks\Helper\ZohoUrlHelper;
 use Zbooks\Repository\OrderMetaRepository;
 
@@ -30,12 +31,21 @@ class OrderMetaBox {
     private OrderMetaRepository $repository;
 
     /**
+     * Zoho client.
+     *
+     * @var ZohoClient|null
+     */
+    private ?ZohoClient $zoho_client;
+
+    /**
      * Constructor.
      *
-     * @param OrderMetaRepository $repository Order meta repository.
+     * @param OrderMetaRepository $repository   Order meta repository.
+     * @param ZohoClient|null     $zoho_client  Zoho client (optional, for fetching display names).
      */
-    public function __construct(OrderMetaRepository $repository) {
+    public function __construct(OrderMetaRepository $repository, ?ZohoClient $zoho_client = null) {
         $this->repository = $repository;
+        $this->zoho_client = $zoho_client;
         $this->register_hooks();
     }
 
@@ -91,11 +101,27 @@ class OrderMetaBox {
 
         $status = $this->repository->get_sync_status($order);
         $invoice_id = $this->repository->get_invoice_id($order);
+        $invoice_number = $this->repository->get_invoice_number($order);
         $contact_id = $this->repository->get_contact_id($order);
+        $contact_name = $this->repository->get_contact_name($order);
         $payment_id = $this->repository->get_payment_id($order);
+        $payment_number = $this->repository->get_payment_number($order);
         $refunds = $this->repository->get_refund_ids($order);
         $error = $this->repository->get_sync_error($order);
         $last_attempt = $this->repository->get_last_sync_attempt($order);
+
+        // Fetch missing display names from Zoho (for orders synced before this feature).
+        if ($this->zoho_client) {
+            if ($invoice_id && !$invoice_number) {
+                $invoice_number = $this->fetch_and_cache_invoice_number($order, $invoice_id);
+            }
+            if ($contact_id && !$contact_name) {
+                $contact_name = $this->fetch_and_cache_contact_name($order, $contact_id);
+            }
+            if ($payment_id && !$payment_number) {
+                $payment_number = $this->fetch_and_cache_payment_number($order, $payment_id);
+            }
+        }
         ?>
         <div class="zbooks-meta-box">
             <p>
@@ -113,9 +139,9 @@ class OrderMetaBox {
 
             <?php if ($invoice_id) : ?>
                 <p>
-                    <strong><?php esc_html_e('Invoice ID:', 'zbooks-for-woocommerce'); ?></strong>
+                    <strong><?php esc_html_e('Invoice:', 'zbooks-for-woocommerce'); ?></strong>
                     <a href="<?php echo esc_url(ZohoUrlHelper::invoice($invoice_id)); ?>" target="_blank">
-                        <?php echo esc_html($invoice_id); ?>
+                        <?php echo esc_html($invoice_number ?? $invoice_id); ?>
                     </a>
                 </p>
             <?php endif; ?>
@@ -123,17 +149,17 @@ class OrderMetaBox {
             <?php if ($contact_id) : ?>
                 <p>
                     <strong><?php esc_html_e('Customer:', 'zbooks-for-woocommerce'); ?></strong>
-                    <a href="<?php echo esc_url(ZohoUrlHelper::contact($contact_id)); ?>" target="_blank" style="font-size: 12px;">
-                        <?php echo esc_html($contact_id); ?>
+                    <a href="<?php echo esc_url(ZohoUrlHelper::contact($contact_id)); ?>" target="_blank">
+                        <?php echo esc_html($contact_name ?? $contact_id); ?>
                     </a>
                 </p>
             <?php endif; ?>
 
             <?php if ($payment_id) : ?>
                 <p>
-                    <strong><?php esc_html_e('Payment ID:', 'zbooks-for-woocommerce'); ?></strong>
+                    <strong><?php esc_html_e('Payment:', 'zbooks-for-woocommerce'); ?></strong>
                     <a href="<?php echo esc_url(ZohoUrlHelper::payment($payment_id)); ?>" target="_blank">
-                        <?php echo esc_html($payment_id); ?>
+                        <?php echo esc_html($payment_number ?? $payment_id); ?>
                     </a>
                     <span class="zbooks-status zbooks-status-synced" style="font-size: 11px; margin-left: 5px;">
                         <?php esc_html_e('Paid', 'zbooks-for-woocommerce'); ?>
@@ -174,7 +200,7 @@ class OrderMetaBox {
                                 <div style="margin-top: 4px; font-size: 12px;">
                                     <span style="color: #646970;"><?php esc_html_e('Credit Note:', 'zbooks-for-woocommerce'); ?></span>
                                     <a href="<?php echo esc_url(ZohoUrlHelper::credit_note($refund_data['zoho_credit_note_id'])); ?>" target="_blank">
-                                        <?php echo esc_html($refund_data['zoho_credit_note_id']); ?>
+                                        <?php echo esc_html($refund_data['zoho_credit_note_number'] ?? $refund_data['zoho_credit_note_id']); ?>
                                     </a>
                                 </div>
                             <?php endif; ?>
@@ -240,4 +266,70 @@ class OrderMetaBox {
         <?php
     }
 
+    /**
+     * Fetch invoice number from Zoho and cache it.
+     *
+     * @param WC_Order $order      WooCommerce order.
+     * @param string   $invoice_id Zoho invoice ID.
+     * @return string|null Invoice number or null.
+     */
+    private function fetch_and_cache_invoice_number(WC_Order $order, string $invoice_id): ?string {
+        try {
+            $response = $this->zoho_client->raw_request('GET', '/invoices/' . $invoice_id);
+            $invoice_number = $response['invoice']['invoice_number'] ?? null;
+
+            if ($invoice_number) {
+                $this->repository->set_invoice_number($order, $invoice_number);
+            }
+
+            return $invoice_number;
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Fetch contact name from Zoho and cache it.
+     *
+     * @param WC_Order $order      WooCommerce order.
+     * @param string   $contact_id Zoho contact ID.
+     * @return string|null Contact name or null.
+     */
+    private function fetch_and_cache_contact_name(WC_Order $order, string $contact_id): ?string {
+        try {
+            $response = $this->zoho_client->raw_request('GET', '/contacts/' . $contact_id);
+            $contact = $response['contact'] ?? [];
+            $contact_name = $contact['contact_name'] ?? $contact['company_name'] ?? null;
+
+            if ($contact_name) {
+                $this->repository->set_contact_name($order, $contact_name);
+            }
+
+            return $contact_name;
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Fetch payment number from Zoho and cache it.
+     *
+     * @param WC_Order $order      WooCommerce order.
+     * @param string   $payment_id Zoho payment ID.
+     * @return string|null Payment number or null.
+     */
+    private function fetch_and_cache_payment_number(WC_Order $order, string $payment_id): ?string {
+        try {
+            $response = $this->zoho_client->raw_request('GET', '/customerpayments/' . $payment_id);
+            $payment_number = $response['payment']['payment_number'] ?? null;
+
+            if ($payment_number) {
+                $this->repository->set_payment_number($order, $payment_number);
+            }
+
+            return $payment_number;
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
 }

@@ -3,7 +3,7 @@
  * Plugin Name: ZBooks for WooCommerce
  * Plugin URI: https://github.com/talas9/zbooks-for-woocommerce
  * Description: Sync WooCommerce orders to Zoho Books automatically or manually.
- * Version: 1.0.4
+ * Version: 1.0.5
  * Author: talas9
  * Author URI: https://github.com/talas9
  * License: GPL-2.0+
@@ -26,7 +26,7 @@ namespace Zbooks;
 
 defined('ABSPATH') || exit;
 
-define('ZBOOKS_VERSION', '1.0.4');
+define('ZBOOKS_VERSION', '1.0.5');
 define('ZBOOKS_PLUGIN_FILE', __FILE__);
 define('ZBOOKS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('ZBOOKS_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -117,6 +117,10 @@ function zbooks_activate(): void {
     // Set transient to trigger setup wizard redirect.
     set_transient('zbooks_activation_redirect', true, 30);
 
+    // Create reconciliation reports table.
+    $reconciliation_repo = new Repository\ReconciliationRepository();
+    $reconciliation_repo->create_table();
+
     // Set default options.
     $default_options = [
         'zbooks_sync_triggers' => [
@@ -131,6 +135,16 @@ function zbooks_activate(): void {
             'mode' => 'max_retries',
             'max_count' => 5,
             'backoff_minutes' => 15,
+        ],
+        'zbooks_reconciliation_settings' => [
+            'enabled' => false, // Disabled by default.
+            'frequency' => 'weekly',
+            'day_of_week' => 1,
+            'day_of_month' => 1,
+            'amount_tolerance' => 0.05,
+            'email_enabled' => false,
+            'email_on_discrepancy_only' => true,
+            'email_address' => get_option('admin_email'),
         ],
     ];
 

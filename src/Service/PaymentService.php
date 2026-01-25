@@ -128,19 +128,23 @@ class PaymentService {
                 $response = json_decode(wp_json_encode($response), true);
             }
 
-            $payment_id = (string) ($response['payment_id'] ?? $response['payment']['payment_id'] ?? '');
+            $payment_data = $response['payment'] ?? $response;
+            $payment_id = (string) ($payment_data['payment_id'] ?? '');
+            $payment_number = $payment_data['payment_number'] ?? null;
 
             $this->logger->info('Payment applied successfully', [
                 'order_id' => $order_id,
                 'order_number' => $order->get_order_number(),
                 'invoice_id' => $invoice_id,
                 'payment_id' => $payment_id,
+                'payment_number' => $payment_number,
                 'amount' => $amount,
             ]);
 
             return [
                 'success' => true,
                 'payment_id' => $payment_id,
+                'payment_number' => $payment_number,
                 'error' => null,
             ];
         } catch (\Exception $e) {

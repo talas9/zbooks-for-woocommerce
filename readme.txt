@@ -4,7 +4,7 @@ Tags: woocommerce, zoho, zoho-books, invoice, sync
 Requires at least: 6.9
 Tested up to: 6.9
 Requires PHP: 8.2
-Stable tag: 1.0.4
+Stable tag: 1.0.5
 License: GPL-2.0+
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -34,6 +34,13 @@ ZBooks for WooCommerce seamlessly integrates your WooCommerce store with Zoho Bo
 **Refunds & Credit Notes**
 * **Refund Sync** - Automatically create credit notes for WooCommerce refunds
 * **Partial Refunds** - Support for partial and full refund amounts
+
+**Reconciliation**
+* **Order Comparison** - Compare WooCommerce orders with Zoho Books invoices
+* **Discrepancy Detection** - Identify missing, unsynced, or mismatched records
+* **Amount Verification** - Detect total/subtotal differences between systems
+* **Bulk Reconciliation** - Run reconciliation reports for any date range
+* **Quick Fixes** - One-click sync for unsynced orders from reconciliation view
 
 **Customer & Product Management**
 * **Customer Sync** - Automatically create/match Zoho contacts
@@ -122,6 +129,15 @@ Yes, when you process a refund in WooCommerce, the plugin automatically creates 
 
 == Changelog ==
 
+= 1.0.5 =
+* **NEW: Reconciliation Tab** - Compare WooCommerce orders with Zoho Books invoices
+* Discrepancy detection for missing, unsynced, or mismatched records
+* Amount verification between WooCommerce and Zoho
+* One-click sync for unsynced orders from reconciliation view
+* Enhanced order notes with detailed sync status information
+* Improved order meta box with reconciliation status display
+* E2E tests for discount sync and reconciliation features
+
 = 1.0.4 =
 * Enhanced bulk sync with better progress tracking
 * Improved error handling for API requests
@@ -157,6 +173,9 @@ Yes, when you process a refund in WooCommerce, the plugin automatically creates 
 * Rate limiting support
 
 == Upgrade Notice ==
+
+= 1.0.5 =
+New reconciliation feature to compare and verify sync between WooCommerce and Zoho Books.
 
 = 1.0.4 =
 Enhanced bulk sync and improved error handling.

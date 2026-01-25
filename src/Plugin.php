@@ -21,9 +21,11 @@ use Zbooks\Admin\ProductMappingPage;
 use Zbooks\Admin\ProductMetaBox;
 use Zbooks\Admin\FieldMappingPage;
 use Zbooks\Admin\PaymentMappingPage;
+use Zbooks\Admin\ReconciliationPage;
 use Zbooks\Repository\ItemMappingRepository;
 use Zbooks\Repository\FieldMappingRepository;
 use Zbooks\Repository\PaymentMethodMappingRepository;
+use Zbooks\Repository\ReconciliationRepository;
 use Zbooks\Api\ZohoClient;
 use Zbooks\Api\TokenManager;
 use Zbooks\Api\RateLimiter;
@@ -33,9 +35,11 @@ use Zbooks\Service\PaymentService;
 use Zbooks\Service\RefundService;
 use Zbooks\Service\SyncOrchestrator;
 use Zbooks\Service\BulkSyncService;
+use Zbooks\Service\ReconciliationService;
 use Zbooks\Hooks\OrderStatusHooks;
 use Zbooks\Hooks\OrderBulkActions;
 use Zbooks\Hooks\AjaxHandlers;
+use Zbooks\Hooks\ReconciliationHooks;
 use Zbooks\Repository\OrderMetaRepository;
 use Zbooks\Logger\SyncLogger;
 use Zbooks\Cron\RetryFailedSyncs;
@@ -116,6 +120,7 @@ final class Plugin {
         $this->services['item_mapping_repository'] = new ItemMappingRepository();
         $this->services['field_mapping_repository'] = new FieldMappingRepository();
         $this->services['payment_method_mapping_repository'] = new PaymentMethodMappingRepository();
+        $this->services['reconciliation_repository'] = new ReconciliationRepository();
 
         // Business services.
         $this->services['customer_service'] = new CustomerService(
@@ -158,6 +163,12 @@ final class Plugin {
             $this->get_service('logger')
         );
 
+        $this->services['reconciliation_service'] = new ReconciliationService(
+            $this->get_service('zoho_client'),
+            $this->get_service('logger'),
+            $this->get_service('reconciliation_repository')
+        );
+
         // Admin - create tab pages first (they register AJAX handlers).
         $this->services['product_mapping_page'] = new ProductMappingPage(
             $this->get_service('zoho_client'),
@@ -177,17 +188,24 @@ final class Plugin {
             $this->get_service('logger')
         );
 
-        // Settings page includes Products, Payments, and Custom Fields tabs.
+        $this->services['reconciliation_page'] = new ReconciliationPage(
+            $this->get_service('reconciliation_service'),
+            $this->get_service('reconciliation_repository')
+        );
+
+        // Settings page includes Products, Payments, Custom Fields, and Reconciliation tabs.
         $this->services['settings_page'] = new SettingsPage(
             $this->get_service('zoho_client'),
             $this->get_service('token_manager'),
             $this->get_service('product_mapping_page'),
             $this->get_service('payment_mapping_page'),
-            $this->get_service('field_mapping_page')
+            $this->get_service('field_mapping_page'),
+            $this->get_service('reconciliation_page')
         );
 
         $this->services['order_meta_box'] = new OrderMetaBox(
-            $this->get_service('order_meta_repository')
+            $this->get_service('order_meta_repository'),
+            $this->get_service('zoho_client')
         );
 
         $this->services['admin_notices'] = new AdminNotices();
@@ -222,6 +240,11 @@ final class Plugin {
 
         $this->services['ajax_handlers'] = new AjaxHandlers(
             $this->get_service('sync_orchestrator')
+        );
+
+        $this->services['reconciliation_hooks'] = new ReconciliationHooks(
+            $this->get_service('reconciliation_service'),
+            $this->get_service('reconciliation_repository')
         );
 
         // Cron.
@@ -267,6 +290,7 @@ final class Plugin {
             'zbooks_page_zbooks-mapping',
             'zbooks_page_zbooks-field-mapping',
             'zbooks_page_zbooks-payment-mapping',
+            'zbooks_page_zbooks-reconciliation',
         ];
 
         if (!$screen || !in_array($screen->id, $allowed_screens, true)) {

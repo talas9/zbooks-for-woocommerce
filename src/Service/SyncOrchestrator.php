@@ -146,16 +146,24 @@ class SyncOrchestrator {
             // Step 1: Find or create contact.
             $contact_id = $this->get_or_create_contact($order);
 
-            // Step 2: Create invoice.
+            // Step 2: Get contact display name.
+            $contact_name = $this->get_contact_display_name($order, $contact_id);
+
+            // Step 3: Create invoice.
             $result = $this->invoice_service->create_invoice($order, $contact_id, $as_draft);
 
-            // Step 3: Update order meta.
+            // Step 4: Extract invoice number from response.
+            $invoice_number = $this->extract_invoice_number($result);
+
+            // Step 5: Update order meta.
             $this->repository->update_sync_meta(
                 order: $order,
                 status: $result->status,
                 invoice_id: $result->invoice_id,
                 contact_id: $contact_id,
-                error: $result->error
+                error: $result->error,
+                invoice_number: $invoice_number,
+                contact_name: $contact_name
             );
 
             if ($result->success) {
@@ -163,12 +171,18 @@ class SyncOrchestrator {
                     'order_id' => $order_id,
                     'order_number' => $order_number,
                     'invoice_id' => $result->invoice_id,
+                    'invoice_number' => $invoice_number,
                     'total' => $order->get_total(),
                 ]);
 
                 // Add order note with invoice link.
                 if ($result->invoice_id) {
-                    $this->note_service->add_invoice_created_note($order, $result->invoice_id, $result->status);
+                    $this->note_service->add_invoice_created_note(
+                        $order,
+                        $result->invoice_id,
+                        $result->status,
+                        $invoice_number
+                    );
                 }
 
                 /**
@@ -243,6 +257,44 @@ class SyncOrchestrator {
         }
 
         return $this->customer_service->find_or_create_contact($order);
+    }
+
+    /**
+     * Get contact display name for an order.
+     *
+     * @param WC_Order $order      WooCommerce order.
+     * @param string   $contact_id Zoho contact ID.
+     * @return string|null Contact display name or null.
+     */
+    private function get_contact_display_name(WC_Order $order, string $contact_id): ?string {
+        // First try to get from existing meta.
+        $existing_name = $this->repository->get_contact_name($order);
+        if ($existing_name !== null) {
+            return $existing_name;
+        }
+
+        // Fetch from Zoho.
+        $contact = $this->customer_service->get_contact($contact_id);
+        if ($contact) {
+            return $contact['contact_name'] ?? $contact['company_name'] ?? null;
+        }
+
+        return null;
+    }
+
+    /**
+     * Extract invoice number from sync result.
+     *
+     * @param SyncResult $result Sync result.
+     * @return string|null Invoice number or null.
+     */
+    private function extract_invoice_number(SyncResult $result): ?string {
+        $data = $result->data;
+
+        // Handle nested 'invoice' response structure.
+        $invoice_data = $data['invoice'] ?? $data;
+
+        return $invoice_data['invoice_number'] ?? null;
     }
 
     /**
@@ -529,8 +581,23 @@ class SyncOrchestrator {
         if ($result['success'] && $result['payment_id']) {
             $this->repository->set_payment_id($order, $result['payment_id']);
 
+            // Save payment number if available.
+            $payment_number = $result['payment_number'] ?? null;
+            if ($payment_number) {
+                $this->repository->set_payment_number($order, $payment_number);
+            }
+
+            // Get invoice number for the note.
+            $invoice_number = $this->repository->get_invoice_number($order);
+
             // Add order note about payment.
-            $this->note_service->add_payment_applied_note($order, $result['payment_id'], $invoice_id);
+            $this->note_service->add_payment_applied_note(
+                $order,
+                $result['payment_id'],
+                $invoice_id,
+                $payment_number,
+                $invoice_number
+            );
 
             /**
              * Fires after a payment is successfully applied in Zoho Books.
@@ -613,7 +680,8 @@ class SyncOrchestrator {
                 $order,
                 $refund_id,
                 $result['refund_id'] ?? '',
-                $result['credit_note_id'] ?? ''
+                $result['credit_note_id'] ?? '',
+                $result['credit_note_number'] ?? ''
             );
 
             // Add order note about credit note.
@@ -623,7 +691,8 @@ class SyncOrchestrator {
                     $order,
                     $result['credit_note_id'],
                     $refund_amount,
-                    $result['refund_id'] ?? null
+                    $result['refund_id'] ?? null,
+                    $result['credit_note_number'] ?? null
                 );
             }
 

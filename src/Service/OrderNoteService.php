@@ -25,12 +25,20 @@ class OrderNoteService {
     /**
      * Add note when invoice is created.
      *
-     * @param WC_Order   $order      WooCommerce order.
-     * @param string     $invoice_id Zoho invoice ID.
-     * @param SyncStatus $status     Sync status (DRAFT or SYNCED).
+     * @param WC_Order    $order          WooCommerce order.
+     * @param string      $invoice_id     Zoho invoice ID.
+     * @param SyncStatus  $status         Sync status (DRAFT or SYNCED).
+     * @param string|null $invoice_number Zoho invoice number (human-readable).
      */
-    public function add_invoice_created_note(WC_Order $order, string $invoice_id, SyncStatus $status): void {
-        $link = ZohoUrlHelper::link('invoice', $invoice_id, $invoice_id);
+    public function add_invoice_created_note(
+        WC_Order $order,
+        string $invoice_id,
+        SyncStatus $status,
+        ?string $invoice_number = null
+    ): void {
+        // Use invoice number as link text if available, otherwise fall back to ID.
+        $link_text = $invoice_number ?? $invoice_id;
+        $link = ZohoUrlHelper::link('invoice', $invoice_id, $link_text);
 
         if ($status === SyncStatus::DRAFT) {
             $note = sprintf(
@@ -52,13 +60,25 @@ class OrderNoteService {
     /**
      * Add note when payment is applied.
      *
-     * @param WC_Order $order      WooCommerce order.
-     * @param string   $payment_id Zoho payment ID.
-     * @param string   $invoice_id Zoho invoice ID.
+     * @param WC_Order    $order          WooCommerce order.
+     * @param string      $payment_id     Zoho payment ID.
+     * @param string      $invoice_id     Zoho invoice ID.
+     * @param string|null $payment_number Zoho payment number (human-readable).
+     * @param string|null $invoice_number Zoho invoice number (human-readable).
      */
-    public function add_payment_applied_note(WC_Order $order, string $payment_id, string $invoice_id): void {
-        $invoice_link = ZohoUrlHelper::link('invoice', $invoice_id, $invoice_id);
-        $payment_link = ZohoUrlHelper::link('payment', $payment_id, $payment_id);
+    public function add_payment_applied_note(
+        WC_Order $order,
+        string $payment_id,
+        string $invoice_id,
+        ?string $payment_number = null,
+        ?string $invoice_number = null
+    ): void {
+        // Use numbers as link text if available, otherwise fall back to IDs.
+        $invoice_link_text = $invoice_number ?? $invoice_id;
+        $payment_link_text = $payment_number ?? $payment_id;
+
+        $invoice_link = ZohoUrlHelper::link('invoice', $invoice_id, $invoice_link_text);
+        $payment_link = ZohoUrlHelper::link('payment', $payment_id, $payment_link_text);
 
         $note = sprintf(
             /* translators: 1: Payment link, 2: Invoice link */
@@ -73,18 +93,22 @@ class OrderNoteService {
     /**
      * Add note when credit note is created.
      *
-     * @param WC_Order    $order          WooCommerce order.
-     * @param string      $credit_note_id Zoho credit note ID.
-     * @param float       $amount         Refund amount.
-     * @param string|null $refund_id      Zoho refund ID (if created).
+     * @param WC_Order    $order              WooCommerce order.
+     * @param string      $credit_note_id     Zoho credit note ID.
+     * @param float       $amount             Refund amount.
+     * @param string|null $refund_id          Zoho refund ID (if created).
+     * @param string|null $credit_note_number Zoho credit note number (human-readable).
      */
     public function add_credit_note_created_note(
         WC_Order $order,
         string $credit_note_id,
         float $amount,
-        ?string $refund_id = null
+        ?string $refund_id = null,
+        ?string $credit_note_number = null
     ): void {
-        $credit_note_link = ZohoUrlHelper::link('creditnote', $credit_note_id, $credit_note_id);
+        // Use credit note number as link text if available, otherwise fall back to ID.
+        $link_text = $credit_note_number ?? $credit_note_id;
+        $credit_note_link = ZohoUrlHelper::link('creditnote', $credit_note_id, $link_text);
         $formatted_amount = wc_price($amount);
 
         if (!empty($refund_id)) {
@@ -125,11 +149,18 @@ class OrderNoteService {
     /**
      * Add note when existing invoice is linked.
      *
-     * @param WC_Order $order      WooCommerce order.
-     * @param string   $invoice_id Zoho invoice ID.
+     * @param WC_Order    $order          WooCommerce order.
+     * @param string      $invoice_id     Zoho invoice ID.
+     * @param string|null $invoice_number Zoho invoice number (human-readable).
      */
-    public function add_invoice_linked_note(WC_Order $order, string $invoice_id): void {
-        $link = ZohoUrlHelper::link('invoice', $invoice_id, $invoice_id);
+    public function add_invoice_linked_note(
+        WC_Order $order,
+        string $invoice_id,
+        ?string $invoice_number = null
+    ): void {
+        // Use invoice number as link text if available, otherwise fall back to ID.
+        $link_text = $invoice_number ?? $invoice_id;
+        $link = ZohoUrlHelper::link('invoice', $invoice_id, $link_text);
 
         $note = sprintf(
             /* translators: %s: Invoice link */

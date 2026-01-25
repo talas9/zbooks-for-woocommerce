@@ -67,6 +67,21 @@ class OrderMetaRepository {
     public const META_CREDIT_NOTE_IDS = '_zbooks_zoho_credit_note_ids';
 
     /**
+     * Meta key for Zoho invoice number (human-readable).
+     */
+    public const META_INVOICE_NUMBER = '_zbooks_zoho_invoice_number';
+
+    /**
+     * Meta key for Zoho payment number (human-readable).
+     */
+    public const META_PAYMENT_NUMBER = '_zbooks_zoho_payment_number';
+
+    /**
+     * Meta key for Zoho contact display name.
+     */
+    public const META_CONTACT_NAME = '_zbooks_zoho_contact_name';
+
+    /**
      * Get Zoho invoice ID for an order.
      *
      * @param WC_Order $order WooCommerce order.
@@ -317,18 +332,22 @@ class OrderMetaRepository {
     /**
      * Update all sync meta at once.
      *
-     * @param WC_Order    $order      WooCommerce order.
-     * @param SyncStatus  $status     Sync status.
-     * @param string|null $invoice_id Zoho invoice ID.
-     * @param string|null $contact_id Zoho contact ID.
-     * @param string|null $error      Error message.
+     * @param WC_Order    $order          WooCommerce order.
+     * @param SyncStatus  $status         Sync status.
+     * @param string|null $invoice_id     Zoho invoice ID.
+     * @param string|null $contact_id     Zoho contact ID.
+     * @param string|null $error          Error message.
+     * @param string|null $invoice_number Zoho invoice number (human-readable).
+     * @param string|null $contact_name   Zoho contact display name.
      */
     public function update_sync_meta(
         WC_Order $order,
         SyncStatus $status,
         ?string $invoice_id = null,
         ?string $contact_id = null,
-        ?string $error = null
+        ?string $error = null,
+        ?string $invoice_number = null,
+        ?string $contact_name = null
     ): void {
         $order->update_meta_data(self::META_SYNC_STATUS, $status->value);
         $order->update_meta_data(self::META_LAST_SYNC_ATTEMPT, gmdate('Y-m-d H:i:s'));
@@ -339,6 +358,14 @@ class OrderMetaRepository {
 
         if ($contact_id !== null) {
             $order->update_meta_data(self::META_CONTACT_ID, $contact_id);
+        }
+
+        if ($invoice_number !== null) {
+            $order->update_meta_data(self::META_INVOICE_NUMBER, $invoice_number);
+        }
+
+        if ($contact_name !== null) {
+            $order->update_meta_data(self::META_CONTACT_NAME, $contact_name);
         }
 
         if ($error !== null) {
@@ -377,6 +404,72 @@ class OrderMetaRepository {
     }
 
     /**
+     * Get Zoho invoice number for an order.
+     *
+     * @param WC_Order $order WooCommerce order.
+     * @return string|null
+     */
+    public function get_invoice_number(WC_Order $order): ?string {
+        $value = $order->get_meta(self::META_INVOICE_NUMBER);
+        return $value !== '' ? $value : null;
+    }
+
+    /**
+     * Set Zoho invoice number for an order.
+     *
+     * @param WC_Order $order          WooCommerce order.
+     * @param string   $invoice_number Zoho invoice number.
+     */
+    public function set_invoice_number(WC_Order $order, string $invoice_number): void {
+        $order->update_meta_data(self::META_INVOICE_NUMBER, $invoice_number);
+        $order->save();
+    }
+
+    /**
+     * Get Zoho payment number for an order.
+     *
+     * @param WC_Order $order WooCommerce order.
+     * @return string|null
+     */
+    public function get_payment_number(WC_Order $order): ?string {
+        $value = $order->get_meta(self::META_PAYMENT_NUMBER);
+        return $value !== '' ? $value : null;
+    }
+
+    /**
+     * Set Zoho payment number for an order.
+     *
+     * @param WC_Order $order          WooCommerce order.
+     * @param string   $payment_number Zoho payment number.
+     */
+    public function set_payment_number(WC_Order $order, string $payment_number): void {
+        $order->update_meta_data(self::META_PAYMENT_NUMBER, $payment_number);
+        $order->save();
+    }
+
+    /**
+     * Get Zoho contact display name for an order.
+     *
+     * @param WC_Order $order WooCommerce order.
+     * @return string|null
+     */
+    public function get_contact_name(WC_Order $order): ?string {
+        $value = $order->get_meta(self::META_CONTACT_NAME);
+        return $value !== '' ? $value : null;
+    }
+
+    /**
+     * Set Zoho contact display name for an order.
+     *
+     * @param WC_Order $order        WooCommerce order.
+     * @param string   $contact_name Zoho contact display name.
+     */
+    public function set_contact_name(WC_Order $order, string $contact_name): void {
+        $order->update_meta_data(self::META_CONTACT_NAME, $contact_name);
+        $order->save();
+    }
+
+    /**
      * Get Zoho refund IDs for an order.
      *
      * @param WC_Order $order WooCommerce order.
@@ -390,22 +483,25 @@ class OrderMetaRepository {
     /**
      * Add a refund ID mapping.
      *
-     * @param WC_Order $order              WooCommerce order.
-     * @param int      $wc_refund_id       WooCommerce refund ID.
-     * @param string   $zoho_refund_id     Zoho refund ID.
-     * @param string   $zoho_credit_note_id Zoho credit note ID.
+     * @param WC_Order $order                  WooCommerce order.
+     * @param int      $wc_refund_id           WooCommerce refund ID.
+     * @param string   $zoho_refund_id         Zoho refund ID.
+     * @param string   $zoho_credit_note_id    Zoho credit note ID.
+     * @param string   $zoho_credit_note_number Zoho credit note number (human-readable).
      */
     public function add_refund_id(
         WC_Order $order,
         int $wc_refund_id,
         string $zoho_refund_id,
-        string $zoho_credit_note_id = ''
+        string $zoho_credit_note_id = '',
+        string $zoho_credit_note_number = ''
     ): void {
         $refunds = $this->get_refund_ids($order);
         $refunds[] = [
             'refund_id' => $wc_refund_id,
             'zoho_refund_id' => $zoho_refund_id,
             'zoho_credit_note_id' => $zoho_credit_note_id,
+            'zoho_credit_note_number' => $zoho_credit_note_number,
             'created_at' => gmdate('Y-m-d H:i:s'),
         ];
         $order->update_meta_data(self::META_REFUND_IDS, $refunds);
@@ -450,8 +546,11 @@ class OrderMetaRepository {
     public function get_all_zoho_data(WC_Order $order): array {
         return [
             'invoice_id' => $this->get_invoice_id($order),
+            'invoice_number' => $this->get_invoice_number($order),
             'contact_id' => $this->get_contact_id($order),
+            'contact_name' => $this->get_contact_name($order),
             'payment_id' => $this->get_payment_id($order),
+            'payment_number' => $this->get_payment_number($order),
             'refunds' => $this->get_refund_ids($order),
             'sync_status' => $this->get_sync_status($order)?->value,
             'last_sync_attempt' => $this->get_last_sync_attempt($order)?->format('Y-m-d H:i:s'),

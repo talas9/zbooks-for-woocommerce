@@ -16,6 +16,7 @@ use Zbooks\Api\TokenManager;
 use Zbooks\Admin\ProductMappingPage;
 use Zbooks\Admin\PaymentMappingPage;
 use Zbooks\Admin\FieldMappingPage;
+use Zbooks\Admin\ReconciliationPage;
 
 defined('ABSPATH') || exit;
 
@@ -67,26 +68,36 @@ class SettingsPage {
     private ?FieldMappingPage $field_page = null;
 
     /**
+     * Reconciliation page instance.
+     *
+     * @var ReconciliationPage|null
+     */
+    private ?ReconciliationPage $reconciliation_page = null;
+
+    /**
      * Constructor.
      *
-     * @param ZohoClient          $client        Zoho client.
-     * @param TokenManager        $token_manager Token manager.
-     * @param ProductMappingPage  $product_page  Product mapping page (optional).
-     * @param PaymentMappingPage  $payment_page  Payment mapping page (optional).
-     * @param FieldMappingPage    $field_page    Field mapping page (optional).
+     * @param ZohoClient           $client              Zoho client.
+     * @param TokenManager         $token_manager       Token manager.
+     * @param ProductMappingPage   $product_page        Product mapping page (optional).
+     * @param PaymentMappingPage   $payment_page        Payment mapping page (optional).
+     * @param FieldMappingPage     $field_page          Field mapping page (optional).
+     * @param ReconciliationPage   $reconciliation_page Reconciliation page (optional).
      */
     public function __construct(
         ZohoClient $client,
         TokenManager $token_manager,
         ?ProductMappingPage $product_page = null,
         ?PaymentMappingPage $payment_page = null,
-        ?FieldMappingPage $field_page = null
+        ?FieldMappingPage $field_page = null,
+        ?ReconciliationPage $reconciliation_page = null
     ) {
         $this->client = $client;
         $this->token_manager = $token_manager;
         $this->product_page = $product_page;
         $this->payment_page = $payment_page;
         $this->field_page = $field_page;
+        $this->reconciliation_page = $reconciliation_page;
         $this->register_hooks();
     }
 
@@ -103,6 +114,7 @@ class SettingsPage {
                 'payments' => __('Payments', 'zbooks-for-woocommerce'),
                 'products' => __('Products', 'zbooks-for-woocommerce'),
                 'custom_fields' => __('Custom Fields', 'zbooks-for-woocommerce'),
+                'reconciliation' => __('Reconciliation', 'zbooks-for-woocommerce'),
                 'advanced' => __('Advanced', 'zbooks-for-woocommerce'),
             ];
         }
@@ -403,6 +415,8 @@ class SettingsPage {
                     $this->payment_page->render_content();
                 } elseif ('custom_fields' === $current_tab && $this->field_page) {
                     $this->field_page->render_content();
+                } elseif ('reconciliation' === $current_tab && $this->reconciliation_page) {
+                    $this->reconciliation_page->render_content();
                 } else {
                     // Standard settings tabs.
                     ?>
