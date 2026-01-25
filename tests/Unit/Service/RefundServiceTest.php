@@ -15,6 +15,7 @@ use Zbooks\Service\RefundService;
 use Zbooks\Api\ZohoClient;
 use Zbooks\Logger\SyncLogger;
 use Zbooks\Repository\FieldMappingRepository;
+use Zbooks\Repository\OrderMetaRepository;
 use WC_Order;
 use WC_Order_Refund;
 use Mockery;
@@ -46,6 +47,13 @@ class RefundServiceTest extends TestCase {
 	private $mock_field_mapping;
 
 	/**
+	 * Mock order meta repository.
+	 *
+	 * @var OrderMetaRepository|\Mockery\MockInterface
+	 */
+	private $mock_order_meta;
+
+	/**
 	 * Refund service instance.
 	 *
 	 * @var RefundService
@@ -62,6 +70,7 @@ class RefundServiceTest extends TestCase {
 		$this->mock_client        = Mockery::mock( ZohoClient::class );
 		$this->mock_logger        = Mockery::mock( SyncLogger::class );
 		$this->mock_field_mapping = Mockery::mock( FieldMappingRepository::class );
+		$this->mock_order_meta    = Mockery::mock( OrderMetaRepository::class );
 
 		// Allow all logging calls.
 		$this->mock_logger->shouldReceive( 'info' )->andReturnNull();
@@ -72,10 +81,17 @@ class RefundServiceTest extends TestCase {
 		// Default mock for field mapping.
 		$this->mock_field_mapping->shouldReceive( 'build_custom_fields' )->andReturn( [] );
 
+		// Default mock for order meta.
+		$this->mock_order_meta->shouldReceive( 'get_credit_note_id' )->andReturnNull();
+		$this->mock_order_meta->shouldReceive( 'set_credit_note_id' )->andReturnNull();
+		$this->mock_order_meta->shouldReceive( 'set_credit_note_number' )->andReturnNull();
+		$this->mock_order_meta->shouldReceive( 'set_refund_id' )->andReturnNull();
+
 		$this->service = new RefundService(
 			$this->mock_client,
 			$this->mock_logger,
-			$this->mock_field_mapping
+			$this->mock_field_mapping,
+			$this->mock_order_meta
 		);
 	}
 

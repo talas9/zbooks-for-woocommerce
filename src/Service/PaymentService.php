@@ -595,7 +595,7 @@ class PaymentService {
 
 			$list = is_array( $payments ) ? ( $payments['customerpayments'] ?? $payments ) : [];
 
-			if ( method_exists( $payments, 'toArray' ) ) {
+			if ( is_object( $payments ) && method_exists( $payments, 'toArray' ) ) {
 				$list = $payments->toArray();
 			}
 

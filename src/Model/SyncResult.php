@@ -78,6 +78,24 @@ final class SyncResult {
 	}
 
 	/**
+	 * Create a pending sync result.
+	 *
+	 * Used when sync cannot proceed (e.g., lock held, rate limited).
+	 *
+	 * @param string $reason Reason for pending status.
+	 * @param array  $data   Additional data.
+	 * @return self
+	 */
+	public static function pending( string $reason, array $data = [] ): self {
+		return new self(
+			success: false,
+			status: SyncStatus::PENDING,
+			error: $reason,
+			data: $data
+		);
+	}
+
+	/**
 	 * Convert to array for storage.
 	 *
 	 * @return array

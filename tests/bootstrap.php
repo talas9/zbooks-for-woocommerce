@@ -101,9 +101,7 @@ function zbooks_manually_load_plugins(): void {
 	if ( $wc_dir && file_exists( $wc_dir . '/woocommerce.php' ) ) {
 		define( 'WC_ABSPATH', $wc_dir . '/' );
 		require_once $wc_dir . '/woocommerce.php';
-
-		// Initialize WooCommerce.
-		WC()->init();
+		// WooCommerce initializes itself via its own hooks - don't call WC()->init() manually.
 	} else {
 		echo 'Warning: WooCommerce not found. Some tests may be skipped.' . PHP_EOL;
 	}
