@@ -820,33 +820,38 @@ test.describe('Sync Robustness E2E Tests', () => {
 		});
 
 		test('apply payment workflow and verify in Zoho', async ({ page }) => {
-			// Find a synced order without payment
-			await page.goto('/wp-admin/admin.php?page=wc-orders');
+			// Create and sync an order first
+			const orderId = await createOrder({
+				status: 'processing',
+			});
+			createdOrderIds.push(orderId);
 
-			const ordersTable = page.locator('.wp-list-table tbody tr');
-			const orderCount = await ordersTable.count();
+			// Navigate to the order and sync it
+			await page.goto(`/wp-admin/admin.php?page=wc-orders&action=edit&id=${orderId}`);
+			await page.waitForLoadState('networkidle');
 
-			for (let i = 0; i < Math.min(orderCount, 10); i++) {
-				await ordersTable.nth(i).locator('a.order-view').click();
+			// First, sync the order
+			const syncButton = page.locator('.zbooks-sync-btn[data-draft="false"]');
+			if (await syncButton.isVisible()) {
+				await syncButton.click();
+				await page.waitForTimeout(5000);
+				await page.reload();
+				await page.waitForLoadState('networkidle');
+			}
+
+			// Now look for the apply payment button
+			const applyPaymentBtn = page.locator('.zbooks-apply-payment-btn');
+
+			if (await applyPaymentBtn.isVisible()) {
+				// Click apply payment
+				await applyPaymentBtn.click();
+				await page.waitForTimeout(5000);
+
+				// Reload to see updated state
+				await page.reload();
 				await page.waitForLoadState('networkidle');
 
-				const applyPaymentBtn = page.locator('.zbooks-apply-payment-btn');
-
-				if (await applyPaymentBtn.isVisible()) {
-					// Get order ID from URL before clicking
-					const url = page.url();
-					const idMatch = url.match(/id=(\d+)/);
-					const orderId = idMatch ? parseInt(idMatch[1]) : null;
-
-					// Click apply payment
-					await applyPaymentBtn.click();
-					await page.waitForTimeout(5000);
-
-					// Reload to see updated state
-					await page.reload();
-					await page.waitForLoadState('networkidle');
-
-					if (orderId) {
+				{
 						// ========== VERIFY WORDPRESS SIDE ==========
 						const meta = await getZohoOrderMeta(orderId);
 						console.log('WP Order meta after payment:', meta);
@@ -889,10 +894,7 @@ test.describe('Sync Robustness E2E Tests', () => {
 							}
 						}
 					}
-					break;
 				}
-
-				await page.goto('/wp-admin/admin.php?page=wc-orders');
 			}
 		});
 	});
@@ -926,48 +928,47 @@ test.describe('Sync Robustness E2E Tests', () => {
 
 	test.describe('Meta Box UI Verification', () => {
 		test('meta box displays all relevant sync information', async ({ page }) => {
-			await page.goto('/wp-admin/admin.php?page=wc-orders');
+			// Create an order first to ensure we have one to test
+			const orderId = await createOrder({
+				status: 'processing',
+			});
+			createdOrderIds.push(orderId);
 
-			const ordersTable = page.locator('.wp-list-table tbody tr');
-			const orderCount = await ordersTable.count();
+			// Navigate directly to the order
+			await page.goto(`/wp-admin/admin.php?page=wc-orders&action=edit&id=${orderId}`);
+			await page.waitForLoadState('networkidle');
 
-			if (orderCount > 0) {
-				// Open first order
-				await ordersTable.first().locator('a.order-view').click();
-				await page.waitForLoadState('networkidle');
+			const metaBox = page.locator('#zbooks_sync_status');
+			if (await metaBox.isVisible()) {
+				// Check meta box structure
+				const metaBoxContent = await metaBox.textContent();
 
-				const metaBox = page.locator('#zbooks_sync_status');
-				if (await metaBox.isVisible()) {
-					// Check meta box structure
-					const metaBoxContent = await metaBox.textContent();
+				// Should have sync buttons
+				expect(await page.locator('.zbooks-sync-btn').first().isVisible()).toBeTruthy();
 
-					// Should have sync buttons
-					expect(await page.locator('.zbooks-sync-btn').first().isVisible()).toBeTruthy();
+				// If synced, should show:
+				// - Invoice link
+				// - Contact link (possibly)
+				// - Invoice status badge
+				// - Payment info (if paid)
+				// - Refresh status button
 
-					// If synced, should show:
-					// - Invoice link
-					// - Contact link (possibly)
-					// - Invoice status badge
-					// - Payment info (if paid)
-					// - Refresh status button
+				const hasInvoice = await page
+					.locator('.zbooks-meta-box p:has-text("Invoice:")')
+					.isVisible();
+				if (hasInvoice) {
+					// Verify invoice link is clickable
+					const invoiceLink = page.locator('.zbooks-meta-box a[href*="zoho"]').first();
+					if (await invoiceLink.isVisible()) {
+						const href = await invoiceLink.getAttribute('href');
+						expect(href).toContain('zoho');
+					}
 
-					const hasInvoice = await page
-						.locator('.zbooks-meta-box p:has-text("Invoice:")')
-						.isVisible();
-					if (hasInvoice) {
-						// Verify invoice link is clickable
-						const invoiceLink = page.locator('.zbooks-meta-box a[href*="zoho"]').first();
-						if (await invoiceLink.isVisible()) {
-							const href = await invoiceLink.getAttribute('href');
-							expect(href).toContain('zoho');
-						}
-
-						// Check for status badge
-						const statusBadge = page.locator('.zbooks-invoice-status-badge');
-						if (await statusBadge.isVisible()) {
-							const statusText = await statusBadge.textContent();
-							expect(statusText?.trim().length).toBeGreaterThan(0);
-						}
+					// Check for status badge
+					const statusBadge = page.locator('.zbooks-invoice-status-badge');
+					if (await statusBadge.isVisible()) {
+						const statusText = await statusBadge.textContent();
+						expect(statusText?.trim().length).toBeGreaterThan(0);
 					}
 				}
 			}
