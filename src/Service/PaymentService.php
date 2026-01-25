@@ -321,15 +321,74 @@ class PaymentService {
 	/**
 	 * Get payment reference number from order.
 	 *
-	 * Always uses the order number for consistency and to avoid issues
-	 * with long transaction IDs (e.g., Bitcoin hashes are 64 chars but
-	 * Zoho has a 50 character limit).
+	 * Uses transaction ID for most payment methods. For Bitcoin and other
+	 * methods with long transaction IDs (64+ chars), uses order number instead
+	 * since Zoho has a 50 character limit on reference_number.
 	 *
 	 * @param WC_Order $order WooCommerce order.
-	 * @return string Reference number (order number).
+	 * @return string Reference number.
 	 */
 	private function get_payment_reference( WC_Order $order ): string {
+		$payment_method = $order->get_payment_method();
+
+		// Bitcoin payment methods have long transaction hashes (64 chars).
+		// Use order number for these and add hash to notes instead.
+		$bitcoin_methods = [
+			'bitcoin',
+			'btc',
+			'btcpay',
+			'btcpay_greenfield',
+			'coinbase',
+			'coinbase_commerce',
+			'bitpay',
+			'opennode',
+		];
+
+		// Allow filtering the list of methods that use order number.
+		$bitcoin_methods = apply_filters( 'zbooks_long_transaction_id_methods', $bitcoin_methods );
+
+		if ( in_array( $payment_method, $bitcoin_methods, true ) ) {
+			// Add transaction hash to order notes for reference.
+			$transaction_id = $order->get_transaction_id();
+			if ( ! empty( $transaction_id ) ) {
+				$this->add_transaction_note( $order, $transaction_id );
+			}
+			return $order->get_order_number();
+		}
+
+		// Use transaction ID for all other payment methods.
+		$transaction_id = $order->get_transaction_id();
+		if ( ! empty( $transaction_id ) ) {
+			return $transaction_id;
+		}
+
+		// Fallback to order number if no transaction ID.
 		return $order->get_order_number();
+	}
+
+	/**
+	 * Add transaction ID to order notes (for payment methods with long IDs).
+	 *
+	 * @param WC_Order $order          WooCommerce order.
+	 * @param string   $transaction_id Transaction ID/hash.
+	 */
+	private function add_transaction_note( WC_Order $order, string $transaction_id ): void {
+		// Check if we've already added this note to avoid duplicates.
+		$note_added = $order->get_meta( '_zbooks_transaction_note_added' );
+		if ( $note_added === $transaction_id ) {
+			return;
+		}
+
+		$order->add_order_note(
+			sprintf(
+				/* translators: %s: Transaction ID/hash */
+				__( 'Payment transaction ID: %s', 'zbooks-for-woocommerce' ),
+				$transaction_id
+			)
+		);
+
+		$order->update_meta_data( '_zbooks_transaction_note_added', $transaction_id );
+		$order->save();
 	}
 
 	/**
