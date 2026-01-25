@@ -14,10 +14,11 @@ This directory contains assets for the WordPress.org plugin repository.
 
 ### Screenshots
 Screenshots referenced in readme.txt should be placed here:
-- `screenshot-1.png` - Plugin settings page
-- `screenshot-2.png` - Order sync status metabox
-- `screenshot-3.png` - Bulk sync interface
-- `screenshot-4.png` - Sync log viewer
+- `screenshot-1.png` - Plugin settings page with connection status
+- `screenshot-2.png` - Order sync status metabox on order edit page
+- `screenshot-3.png` - Bulk sync interface with date range selection
+- `screenshot-4.png` - Sync log viewer with filtering options
+- `screenshot-5.png` - Reconciliation report with discrepancy detection
 
 ## Asset Guidelines
 

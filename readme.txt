@@ -2,13 +2,13 @@
 Contributors: talas9
 Tags: woocommerce, zoho, zoho-books, invoice, sync
 Requires at least: 6.9
-Tested up to: 6.9
+Tested up to: 6.7
 Requires PHP: 8.2
 Stable tag: 1.0.5
 License: GPL-2.0+
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Sync WooCommerce orders to Zoho Books automatically or manually.
+Sync WooCommerce orders to Zoho Books automatically. Create invoices, apply payments, handle refunds, and reconcile records seamlessly.
 
 == Description ==
 
@@ -120,12 +120,25 @@ Yes, you can configure each WooCommerce payment method to deposit into a specifi
 
 Yes, when you process a refund in WooCommerce, the plugin automatically creates a credit note in Zoho Books for the refund amount.
 
+= How do I run a reconciliation report? =
+
+Go to WooCommerce > ZBooks > Reconciliation, select your date range, and click "Run Reconciliation". The report compares all orders and invoices in that period and identifies any discrepancies.
+
+= What Zoho regions are supported? =
+
+The plugin supports all Zoho data centers: US (.com), EU (.eu), IN (.in), AU (.com.au), and JP (.jp). Select your region during the setup wizard.
+
+= Can I export reconciliation reports? =
+
+Yes, each reconciliation report can be exported to CSV format for further analysis or record-keeping.
+
 == Screenshots ==
 
-1. Plugin settings page
-2. Order sync status metabox
-3. Bulk sync interface
-4. Sync log viewer
+1. Plugin settings page with connection status
+2. Order sync status metabox on order edit page
+3. Bulk sync interface with date range selection
+4. Sync log viewer with filtering options
+5. Reconciliation report with discrepancy detection
 
 == Changelog ==
 
