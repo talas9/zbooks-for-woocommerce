@@ -89,7 +89,11 @@ class ProductSyncService {
 
             $response = $this->client->request(function ($client) use ($item_data) {
                 return $client->items->create($item_data);
-            });
+            }, [
+                'endpoint' => 'items.create',
+                'product_id' => $product_id,
+                'product_name' => $item_data['name'],
+            ]);
 
             // SDK returns Item model object directly, not an array.
             $zoho_item_id = $this->extract_item_id($response);
@@ -152,7 +156,11 @@ class ProductSyncService {
 
             $this->client->request(function ($client) use ($zoho_item_id, $item_data) {
                 return $client->items->update($zoho_item_id, $item_data);
-            });
+            }, [
+                'endpoint' => 'items.update',
+                'product_id' => $product_id,
+                'zoho_item_id' => $zoho_item_id,
+            ]);
 
             // Clear cache.
             delete_transient('zbooks_zoho_item_' . $zoho_item_id);

@@ -118,7 +118,11 @@ class InvoiceService {
         try {
             $response = $this->client->request(function ($client) use ($invoice_data) {
                 return $client->invoices->create($invoice_data);
-            });
+            }, [
+                'endpoint' => 'invoices.create',
+                'order_id' => $order->get_id(),
+                'order_number' => $order_number,
+            ]);
 
             // Convert object to array if needed.
             if (is_object($response)) {
@@ -194,7 +198,11 @@ class InvoiceService {
                 return $client->invoices->getList([
                     'reference_number' => $reference,
                 ])->toArray();
-            });
+            }, [
+                'endpoint' => 'invoices.getList',
+                'filter' => 'reference_number',
+                'reference' => $reference,
+            ]);
 
             if (!empty($invoices)) {
                 return (string) $invoices[0]['invoice_id'];
@@ -221,7 +229,11 @@ class InvoiceService {
                 return $client->invoices->getList([
                     'invoice_number' => $invoice_number,
                 ])->toArray();
-            });
+            }, [
+                'endpoint' => 'invoices.getList',
+                'filter' => 'invoice_number',
+                'invoice_number' => $invoice_number,
+            ]);
 
             if (!empty($invoices)) {
                 return (string) $invoices[0]['invoice_id'];
@@ -280,7 +292,10 @@ class InvoiceService {
         try {
             $this->client->request(function ($client) use ($invoice_id) {
                 return $client->invoices->markAsSent($invoice_id);
-            });
+            }, [
+                'endpoint' => 'invoices.markAsSent',
+                'invoice_id' => $invoice_id,
+            ]);
 
             $this->logger->debug('Invoice marked as sent', [
                 'invoice_id' => $invoice_id,
@@ -439,7 +454,10 @@ class InvoiceService {
         try {
             return $this->client->request(function ($client) use ($invoice_id) {
                 return $client->invoices->get($invoice_id)->toArray();
-            });
+            }, [
+                'endpoint' => 'invoices.get',
+                'invoice_id' => $invoice_id,
+            ]);
         } catch (\Exception $e) {
             $this->logger->warning('Failed to get invoice', [
                 'invoice_id' => $invoice_id,

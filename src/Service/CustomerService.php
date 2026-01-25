@@ -187,7 +187,11 @@ class CustomerService {
                 return $client->contacts->getList([
                     'email' => $email,
                 ]);
-            });
+            }, [
+                'endpoint' => 'contacts.getList',
+                'filter' => 'email',
+                'email' => $email,
+            ]);
 
             // Handle different response formats.
             $contacts = [];
@@ -227,7 +231,10 @@ class CustomerService {
         try {
             $response = $this->client->request(function ($client) use ($contact_id) {
                 return $client->contacts->get($contact_id);
-            });
+            }, [
+                'endpoint' => 'contacts.get',
+                'contact_id' => $contact_id,
+            ]);
 
             if (is_object($response)) {
                 if (method_exists($response, 'toArray')) {
@@ -270,7 +277,11 @@ class CustomerService {
         try {
             $response = $this->client->request(function ($client) use ($contact_data) {
                 return $client->contacts->create($contact_data);
-            });
+            }, [
+                'endpoint' => 'contacts.create',
+                'order_id' => $order->get_id(),
+                'email' => $contact_data['email'],
+            ]);
 
             // Convert object to array if needed.
             if (is_object($response)) {
@@ -437,7 +448,11 @@ class CustomerService {
         try {
             $this->client->request(function ($client) use ($contact_id, $contact_data) {
                 return $client->contacts->update($contact_id, $contact_data);
-            });
+            }, [
+                'endpoint' => 'contacts.update',
+                'contact_id' => $contact_id,
+                'email' => $contact_data['email'],
+            ]);
 
             $this->logger->info('Contact updated successfully', [
                 'contact_id' => $contact_id,

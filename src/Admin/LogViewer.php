@@ -44,6 +44,7 @@ class LogViewer {
         add_action('admin_menu', [$this, 'add_menu_page']);
         add_action('wp_ajax_zbooks_get_logs', [$this, 'ajax_get_logs']);
         add_action('wp_ajax_zbooks_clear_logs', [$this, 'ajax_clear_logs']);
+        add_action('wp_ajax_zbooks_clear_all_logs', [$this, 'ajax_clear_all_logs']);
     }
 
     /**
@@ -128,7 +129,7 @@ class LogViewer {
 
                 <form method="post" action="" style="display: inline; margin-left: 20px;">
                     <?php wp_nonce_field('zbooks_clear_logs', 'zbooks_nonce'); ?>
-                    <button type="button" class="button" onclick="zbooksClearLogs()">
+                    <button type="button" class="button" onclick="zbooksClearOldLogs()">
                         <?php
                         $retention_days = absint( $this->logger->get_retention_days() );
                         printf(
@@ -137,6 +138,9 @@ class LogViewer {
                             $retention_days
                         );
                         ?>
+                    </button>
+                    <button type="button" class="button" onclick="zbooksClearAllLogs()" style="margin-left: 5px; color: #d63638;">
+                        <?php esc_html_e('Clear All Logs', 'zbooks-for-woocommerce'); ?>
                     </button>
                 </form>
             </div>
@@ -447,7 +451,7 @@ class LogViewer {
                 location.reload();
             }
 
-            function zbooksClearLogs() {
+            function zbooksClearOldLogs() {
                 <?php
                 $log_retention_days = absint( $this->logger->get_retention_days() );
                 $confirm_message    = sprintf(
@@ -463,6 +467,24 @@ class LogViewer {
                 jQuery.post(ajaxurl, {
                     action: 'zbooks_clear_logs',
                     nonce: '<?php echo esc_js(wp_create_nonce('zbooks_clear_logs')); ?>'
+                }, function(response) {
+                    if (response.success) {
+                        alert(response.data.message);
+                        location.reload();
+                    } else {
+                        alert(response.data.message || 'Error clearing logs');
+                    }
+                });
+            }
+
+            function zbooksClearAllLogs() {
+                if (!confirm('<?php echo esc_js(__('Delete ALL log files? This cannot be undone.', 'zbooks-for-woocommerce')); ?>')) {
+                    return;
+                }
+
+                jQuery.post(ajaxurl, {
+                    action: 'zbooks_clear_all_logs',
+                    nonce: '<?php echo esc_js(wp_create_nonce('zbooks_clear_all_logs')); ?>'
                 }, function(response) {
                     if (response.success) {
                         alert(response.data.message);
@@ -515,6 +537,28 @@ class LogViewer {
             'message' => sprintf(
                 /* translators: %d: number of files deleted */
                 __('Deleted %d old log file(s).', 'zbooks-for-woocommerce'),
+                $deleted
+            ),
+            'deleted' => $deleted,
+        ]);
+    }
+
+    /**
+     * AJAX handler for clearing all logs.
+     */
+    public function ajax_clear_all_logs(): void {
+        check_ajax_referer('zbooks_clear_all_logs', 'nonce');
+
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error(['message' => __('Permission denied.', 'zbooks-for-woocommerce')]);
+        }
+
+        $deleted = $this->logger->clear_all_logs();
+
+        wp_send_json_success([
+            'message' => sprintf(
+                /* translators: %d: number of files deleted */
+                __('Deleted %d log file(s).', 'zbooks-for-woocommerce'),
                 $deleted
             ),
             'deleted' => $deleted,

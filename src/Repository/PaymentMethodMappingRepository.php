@@ -52,9 +52,7 @@ class PaymentMethodMappingRepository {
      * @param string $zoho_mode         Zoho payment mode.
      * @param string $zoho_account_id   Zoho bank/cash account ID.
      * @param string $zoho_account_name Zoho account name (for display).
-     * @param float  $fee_percentage    Processing fee percentage (e.g., 2.9 for 2.9%).
-     * @param float  $fee_fixed         Fixed fee amount (e.g., 0.30).
-     * @param string $fee_account_id    Zoho expense account for fees.
+     * @param string $fee_account_id    Zoho expense account for bank charges.
      * @return bool True on success.
      */
     public function save(
@@ -62,8 +60,6 @@ class PaymentMethodMappingRepository {
         string $zoho_mode,
         string $zoho_account_id,
         string $zoho_account_name = '',
-        float $fee_percentage = 0.0,
-        float $fee_fixed = 0.0,
         string $fee_account_id = ''
     ): bool {
         $mappings = $this->get_all();
@@ -72,8 +68,6 @@ class PaymentMethodMappingRepository {
             'zoho_mode' => $zoho_mode,
             'zoho_account_id' => $zoho_account_id,
             'zoho_account_name' => $zoho_account_name,
-            'fee_percentage' => $fee_percentage,
-            'fee_fixed' => $fee_fixed,
             'fee_account_id' => $fee_account_id,
             'updated_at' => gmdate('Y-m-d H:i:s'),
         ];
@@ -99,8 +93,6 @@ class PaymentMethodMappingRepository {
                 'zoho_mode' => sanitize_text_field($data['zoho_mode'] ?? ''),
                 'zoho_account_id' => sanitize_text_field($data['zoho_account_id'] ?? ''),
                 'zoho_account_name' => sanitize_text_field($data['zoho_account_name'] ?? ''),
-                'fee_percentage' => (float) ($data['fee_percentage'] ?? 0.0),
-                'fee_fixed' => (float) ($data['fee_fixed'] ?? 0.0),
                 'fee_account_id' => sanitize_text_field($data['fee_account_id'] ?? ''),
                 'updated_at' => gmdate('Y-m-d H:i:s'),
             ];
@@ -161,29 +153,7 @@ class PaymentMethodMappingRepository {
     }
 
     /**
-     * Get fee percentage for a WC method.
-     *
-     * @param string $wc_method_id WooCommerce payment method ID.
-     * @return float Fee percentage (e.g., 2.9 for 2.9%).
-     */
-    public function get_fee_percentage(string $wc_method_id): float {
-        $mapping = $this->get($wc_method_id);
-        return (float) ($mapping['fee_percentage'] ?? 0.0);
-    }
-
-    /**
-     * Get fixed fee amount for a WC method.
-     *
-     * @param string $wc_method_id WooCommerce payment method ID.
-     * @return float Fixed fee amount.
-     */
-    public function get_fee_fixed(string $wc_method_id): float {
-        $mapping = $this->get($wc_method_id);
-        return (float) ($mapping['fee_fixed'] ?? 0.0);
-    }
-
-    /**
-     * Get fee account ID for a WC method.
+     * Get fee account ID (expense account for bank charges) for a WC method.
      *
      * @param string $wc_method_id WooCommerce payment method ID.
      * @return string|null Fee account ID or null.
@@ -191,26 +161,6 @@ class PaymentMethodMappingRepository {
     public function get_fee_account_id(string $wc_method_id): ?string {
         $mapping = $this->get($wc_method_id);
         return !empty($mapping['fee_account_id']) ? $mapping['fee_account_id'] : null;
-    }
-
-    /**
-     * Calculate bank fees for a payment amount.
-     *
-     * @param string $wc_method_id WooCommerce payment method ID.
-     * @param float  $amount       Payment amount.
-     * @return float Calculated fee amount.
-     */
-    public function calculate_fee(string $wc_method_id, float $amount): float {
-        $percentage = $this->get_fee_percentage($wc_method_id);
-        $fixed = $this->get_fee_fixed($wc_method_id);
-
-        $fee = 0.0;
-        if ($percentage > 0) {
-            $fee += ($amount * $percentage / 100);
-        }
-        $fee += $fixed;
-
-        return round($fee, 2);
     }
 
     /**

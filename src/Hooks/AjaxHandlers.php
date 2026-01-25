@@ -43,6 +43,8 @@ class AjaxHandlers {
     private function register_hooks(): void {
         add_action('wp_ajax_zbooks_manual_sync', [$this, 'handle_manual_sync']);
         add_action('wp_ajax_zbooks_bulk_sync', [$this, 'handle_bulk_sync']);
+        add_action('wp_ajax_zbooks_bulk_sync_date_range', [$this, 'handle_bulk_sync_date_range']);
+        add_action('wp_ajax_zbooks_get_orders_by_date', [$this, 'handle_get_orders_by_date']);
         add_action('wp_ajax_zbooks_test_connection', [$this, 'handle_test_connection']);
         add_action('wp_ajax_zbooks_apply_payment', [$this, 'handle_apply_payment']);
         add_action('wp_ajax_zbooks_refresh_bank_accounts', [$this, 'handle_refresh_bank_accounts']);
@@ -227,6 +229,88 @@ class AjaxHandlers {
 
         wp_send_json_success([
             'message' => __('Bank accounts refreshed.', 'zbooks-for-woocommerce'),
+        ]);
+    }
+
+    /**
+     * Handle bulk sync by date range AJAX request.
+     */
+    public function handle_bulk_sync_date_range(): void {
+        check_ajax_referer('zbooks_ajax_nonce', 'nonce');
+
+        if (!current_user_can('edit_shop_orders')) {
+            wp_send_json_error([
+                'message' => __('Permission denied.', 'zbooks-for-woocommerce'),
+            ]);
+        }
+
+        $date_from = isset($_POST['date_from']) ? sanitize_text_field($_POST['date_from']) : '';
+        $date_to = isset($_POST['date_to']) ? sanitize_text_field($_POST['date_to']) : '';
+        $as_draft = isset($_POST['as_draft']) && $_POST['as_draft'] === 'true';
+
+        if (empty($date_from) || empty($date_to)) {
+            wp_send_json_error([
+                'message' => __('Please select a date range.', 'zbooks-for-woocommerce'),
+            ]);
+        }
+
+        $plugin = \Zbooks\Plugin::get_instance();
+        $bulk_service = $plugin->get_service('bulk_sync_service');
+
+        $results = $bulk_service->sync_date_range($date_from, $date_to, $as_draft);
+
+        wp_send_json_success([
+            'message' => sprintf(
+                /* translators: 1: Success count, 2: Failed count */
+                __('Synced %1$d orders, %2$d failed.', 'zbooks-for-woocommerce'),
+                $results['success'],
+                $results['failed']
+            ),
+            'success_count' => $results['success'],
+            'failed_count' => $results['failed'],
+            'results' => $results['results'],
+        ]);
+    }
+
+    /**
+     * Handle get orders by date range AJAX request.
+     */
+    public function handle_get_orders_by_date(): void {
+        check_ajax_referer('zbooks_ajax_nonce', 'nonce');
+
+        if (!current_user_can('edit_shop_orders')) {
+            wp_send_json_error([
+                'message' => __('Permission denied.', 'zbooks-for-woocommerce'),
+            ]);
+        }
+
+        $date_from = isset($_POST['date_from']) ? sanitize_text_field($_POST['date_from']) : '';
+        $date_to = isset($_POST['date_to']) ? sanitize_text_field($_POST['date_to']) : '';
+
+        if (empty($date_from) || empty($date_to)) {
+            wp_send_json_error([
+                'message' => __('Please select a date range.', 'zbooks-for-woocommerce'),
+            ]);
+        }
+
+        $plugin = \Zbooks\Plugin::get_instance();
+        $bulk_service = $plugin->get_service('bulk_sync_service');
+
+        $orders = $bulk_service->get_syncable_orders($date_from, $date_to, 500);
+
+        $order_data = [];
+        foreach ($orders as $order) {
+            $order_data[] = [
+                'id' => $order->get_id(),
+                'number' => $order->get_order_number(),
+                'total' => $order->get_total(),
+                'customer' => $order->get_formatted_billing_full_name(),
+            ];
+        }
+
+        wp_send_json_success([
+            'orders' => $order_data,
+            'count' => count($order_data),
         ]);
     }
 }

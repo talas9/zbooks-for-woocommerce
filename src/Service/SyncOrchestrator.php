@@ -20,6 +20,7 @@ use Zbooks\Repository\OrderMetaRepository;
 
 defined('ABSPATH') || exit;
 
+
 /**
  * Orchestrates the full sync workflow.
  */
@@ -68,14 +69,22 @@ class SyncOrchestrator {
     private SyncLogger $logger;
 
     /**
+     * Order note service.
+     *
+     * @var OrderNoteService
+     */
+    private OrderNoteService $note_service;
+
+    /**
      * Constructor.
      *
-     * @param CustomerService     $customer_service Customer service.
-     * @param InvoiceService      $invoice_service  Invoice service.
-     * @param OrderMetaRepository $repository       Order meta repository.
-     * @param SyncLogger          $logger           Logger.
-     * @param PaymentService|null $payment_service  Payment service.
-     * @param RefundService|null  $refund_service   Refund service.
+     * @param CustomerService      $customer_service Customer service.
+     * @param InvoiceService       $invoice_service  Invoice service.
+     * @param OrderMetaRepository  $repository       Order meta repository.
+     * @param SyncLogger           $logger           Logger.
+     * @param PaymentService|null  $payment_service  Payment service.
+     * @param RefundService|null   $refund_service   Refund service.
+     * @param OrderNoteService|null $note_service    Order note service.
      */
     public function __construct(
         CustomerService $customer_service,
@@ -83,7 +92,8 @@ class SyncOrchestrator {
         OrderMetaRepository $repository,
         SyncLogger $logger,
         ?PaymentService $payment_service = null,
-        ?RefundService $refund_service = null
+        ?RefundService $refund_service = null,
+        ?OrderNoteService $note_service = null
     ) {
         $this->customer_service = $customer_service;
         $this->invoice_service = $invoice_service;
@@ -91,6 +101,7 @@ class SyncOrchestrator {
         $this->logger = $logger;
         $this->payment_service = $payment_service;
         $this->refund_service = $refund_service;
+        $this->note_service = $note_service ?? new OrderNoteService();
     }
 
     /**
@@ -155,6 +166,11 @@ class SyncOrchestrator {
                     'total' => $order->get_total(),
                 ]);
 
+                // Add order note with invoice link.
+                if ($result->invoice_id) {
+                    $this->note_service->add_invoice_created_note($order, $result->invoice_id, $result->status);
+                }
+
                 /**
                  * Fires after an order is successfully synced to Zoho Books.
                  *
@@ -169,6 +185,11 @@ class SyncOrchestrator {
                     'email' => $order->get_billing_email(),
                     'error' => $result->error,
                 ]);
+
+                // Add order note about failure.
+                if ($result->error) {
+                    $this->note_service->add_sync_failed_note($order, $result->error);
+                }
 
                 /**
                  * Fires when an order sync fails.
@@ -195,6 +216,9 @@ class SyncOrchestrator {
                 'email' => $order->get_billing_email(),
                 'error' => $error,
             ]);
+
+            // Add order note about failure.
+            $this->note_service->add_sync_failed_note($order, $error);
 
             $result = SyncResult::failure($error);
 
@@ -252,11 +276,21 @@ class SyncOrchestrator {
      * @return bool
      */
     private function should_create_as_draft(WC_Order $order): bool {
-        $triggers = get_option('zbooks_sync_triggers', []);
+        $triggers = get_option('zbooks_sync_triggers', [
+            'sync_draft' => 'processing',
+            'sync_submit' => 'completed',
+            'create_creditnote' => 'refunded',
+        ]);
         $status = $order->get_status();
 
-        if (isset($triggers[$status])) {
-            return $triggers[$status] === 'sync_draft';
+        // Check if sync_draft is configured for this status.
+        if (isset($triggers['sync_draft']) && $triggers['sync_draft'] === $status) {
+            return true;
+        }
+
+        // Check if sync_submit is configured for this status.
+        if (isset($triggers['sync_submit']) && $triggers['sync_submit'] === $status) {
+            return false;
         }
 
         return true; // Default to draft.
@@ -422,6 +456,9 @@ class SyncOrchestrator {
                 contact_id: $contact_id
             );
 
+            // Add order note about linking existing invoice.
+            $this->note_service->add_invoice_linked_note($order, $conflicts['invoice_id']);
+
             return SyncResult::success(
                 invoice_id: $conflicts['invoice_id'],
                 contact_id: $contact_id,
@@ -491,6 +528,9 @@ class SyncOrchestrator {
 
         if ($result['success'] && $result['payment_id']) {
             $this->repository->set_payment_id($order, $result['payment_id']);
+
+            // Add order note about payment.
+            $this->note_service->add_payment_applied_note($order, $result['payment_id'], $invoice_id);
 
             /**
              * Fires after a payment is successfully applied in Zoho Books.
@@ -575,6 +615,17 @@ class SyncOrchestrator {
                 $result['refund_id'] ?? '',
                 $result['credit_note_id'] ?? ''
             );
+
+            // Add order note about credit note.
+            if (!empty($result['credit_note_id'])) {
+                $refund_amount = abs((float) $refund->get_total());
+                $this->note_service->add_credit_note_created_note(
+                    $order,
+                    $result['credit_note_id'],
+                    $refund_amount,
+                    $result['refund_id'] ?? null
+                );
+            }
 
             /**
              * Fires after a refund is successfully processed in Zoho Books.

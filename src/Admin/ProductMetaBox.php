@@ -13,6 +13,7 @@ namespace Zbooks\Admin;
 
 use WC_Product;
 use Zbooks\Api\ZohoClient;
+use Zbooks\Helper\ZohoUrlHelper;
 use Zbooks\Repository\ItemMappingRepository;
 
 defined('ABSPATH') || exit;
@@ -105,7 +106,7 @@ class ProductMetaBox {
                     </p>
                     <p>
                         <strong><?php esc_html_e('Zoho Item ID:', 'zbooks-for-woocommerce'); ?></strong>
-                        <a href="<?php echo esc_url($this->get_zoho_url($zoho_item_id)); ?>" target="_blank">
+                        <a href="<?php echo esc_url(ZohoUrlHelper::item($zoho_item_id)); ?>" target="_blank">
                             <?php echo esc_html($zoho_item_id); ?>
                         </a>
                     </p>
@@ -497,7 +498,10 @@ class ProductMetaBox {
         try {
             $response = $this->client->request(function ($client) use ($item_id) {
                 return $client->items->get($item_id);
-            });
+            }, [
+                'endpoint' => 'items.get',
+                'item_id' => $item_id,
+            ]);
 
             $item = null;
 
@@ -549,28 +553,6 @@ class ProductMetaBox {
     }
 
     /**
-     * Get Zoho Books URL for an item.
-     *
-     * @param string $item_id Item ID.
-     * @return string URL.
-     */
-    private function get_zoho_url(string $item_id): string {
-        $datacenter = get_option('zbooks_datacenter', 'us');
-
-        $domains = [
-            'us' => 'books.zoho.com',
-            'eu' => 'books.zoho.eu',
-            'in' => 'books.zoho.in',
-            'au' => 'books.zoho.com.au',
-            'jp' => 'books.zoho.jp',
-        ];
-
-        $domain = $domains[$datacenter] ?? 'books.zoho.com';
-
-        return sprintf('https://%s/app#/inventory/items/%s', $domain, $item_id);
-    }
-
-    /**
      * AJAX handler for creating a Zoho item.
      */
     public function ajax_create_item(): void {
@@ -604,7 +586,11 @@ class ProductMetaBox {
 
             $response = $this->client->request(function ($client) use ($item_data) {
                 return $client->items->create($item_data);
-            });
+            }, [
+                'endpoint' => 'items.create',
+                'product_id' => $product_id,
+                'product_name' => $product->get_name(),
+            ]);
 
             // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
             error_log('[ZBooks for WooCommerce] Zoho create response type: ' . gettype($response) . (is_object($response) ? ' (' . get_class($response) . ')' : ''));
@@ -717,7 +703,11 @@ class ProductMetaBox {
 
             $this->client->request(function ($client) use ($zoho_item_id, $item_data) {
                 return $client->items->update($zoho_item_id, $item_data);
-            });
+            }, [
+                'endpoint' => 'items.update',
+                'product_id' => $product_id,
+                'zoho_item_id' => $zoho_item_id,
+            ]);
 
             // Clear cache.
             delete_transient('zbooks_zoho_item_' . $zoho_item_id);
@@ -994,7 +984,10 @@ class ProductMetaBox {
     private function search_zoho_items(string $search_term): array {
         $response = $this->client->request(function ($client) use ($search_term) {
             return $client->items->getList(['search_text' => $search_term]);
-        });
+        }, [
+            'endpoint' => 'items.getList',
+            'search' => $search_term,
+        ]);
 
         $items = [];
 

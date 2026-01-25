@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Zbooks\Admin;
 
 use WC_Order;
+use Zbooks\Helper\ZohoUrlHelper;
 use Zbooks\Repository\OrderMetaRepository;
 
 defined('ABSPATH') || exit;
@@ -113,7 +114,7 @@ class OrderMetaBox {
             <?php if ($invoice_id) : ?>
                 <p>
                     <strong><?php esc_html_e('Invoice ID:', 'zbooks-for-woocommerce'); ?></strong>
-                    <a href="<?php echo esc_url($this->get_zoho_url('invoice', $invoice_id)); ?>" target="_blank">
+                    <a href="<?php echo esc_url(ZohoUrlHelper::invoice($invoice_id)); ?>" target="_blank">
                         <?php echo esc_html($invoice_id); ?>
                     </a>
                 </p>
@@ -122,7 +123,7 @@ class OrderMetaBox {
             <?php if ($contact_id) : ?>
                 <p>
                     <strong><?php esc_html_e('Customer:', 'zbooks-for-woocommerce'); ?></strong>
-                    <a href="<?php echo esc_url($this->get_zoho_url('contact', $contact_id)); ?>" target="_blank" style="font-size: 12px;">
+                    <a href="<?php echo esc_url(ZohoUrlHelper::contact($contact_id)); ?>" target="_blank" style="font-size: 12px;">
                         <?php echo esc_html($contact_id); ?>
                     </a>
                 </p>
@@ -131,7 +132,7 @@ class OrderMetaBox {
             <?php if ($payment_id) : ?>
                 <p>
                     <strong><?php esc_html_e('Payment ID:', 'zbooks-for-woocommerce'); ?></strong>
-                    <a href="<?php echo esc_url($this->get_zoho_url('payment', $payment_id)); ?>" target="_blank">
+                    <a href="<?php echo esc_url(ZohoUrlHelper::payment($payment_id)); ?>" target="_blank">
                         <?php echo esc_html($payment_id); ?>
                     </a>
                     <span class="zbooks-status zbooks-status-synced" style="font-size: 11px; margin-left: 5px;">
@@ -172,7 +173,7 @@ class OrderMetaBox {
                             <?php if (!empty($refund_data['zoho_credit_note_id'])) : ?>
                                 <div style="margin-top: 4px; font-size: 12px;">
                                     <span style="color: #646970;"><?php esc_html_e('Credit Note:', 'zbooks-for-woocommerce'); ?></span>
-                                    <a href="<?php echo esc_url($this->get_zoho_url('creditnote', $refund_data['zoho_credit_note_id'])); ?>" target="_blank">
+                                    <a href="<?php echo esc_url(ZohoUrlHelper::credit_note($refund_data['zoho_credit_note_id'])); ?>" target="_blank">
                                         <?php echo esc_html($refund_data['zoho_credit_note_id']); ?>
                                     </a>
                                 </div>
@@ -239,41 +240,4 @@ class OrderMetaBox {
         <?php
     }
 
-    /**
-     * Get Zoho Books URL for an entity.
-     *
-     * @param string $type Entity type (invoice, payment, creditnote, contact).
-     * @param string $id   Entity ID.
-     * @return string
-     */
-    private function get_zoho_url(string $type, string $id): string {
-        $datacenter = get_option('zbooks_datacenter', 'us');
-
-        $domains = [
-            'us' => 'books.zoho.com',
-            'eu' => 'books.zoho.eu',
-            'in' => 'books.zoho.in',
-            'au' => 'books.zoho.com.au',
-            'jp' => 'books.zoho.jp',
-        ];
-
-        $domain = $domains[$datacenter] ?? 'books.zoho.com';
-
-        // Map type to Zoho URL path.
-        $paths = [
-            'invoice' => 'invoices',
-            'payment' => 'customerpayments',
-            'creditnote' => 'creditnotes',
-            'contact' => 'contacts',
-        ];
-
-        $path = $paths[$type] ?? $type;
-
-        return sprintf(
-            'https://%s/app#/%s/%s',
-            $domain,
-            $path,
-            $id
-        );
-    }
 }

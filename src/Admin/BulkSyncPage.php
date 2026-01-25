@@ -129,11 +129,11 @@ class BulkSyncPage {
                     </tr>
                 </table>
 
-                <p>
-                    <button type="submit" class="button button-primary" id="zbooks-start-bulk-sync">
+                <div class="zbooks-bulk-actions">
+                    <button type="button" class="button button-primary" id="zbooks-start-bulk-sync">
                         <?php esc_html_e('Start Bulk Sync', 'zbooks-for-woocommerce'); ?>
                     </button>
-                </p>
+                </div>
             </form>
 
             <div id="zbooks-bulk-sync-progress" style="display: none;">
@@ -170,20 +170,21 @@ class BulkSyncPage {
                 <thead>
                     <tr>
                         <td class="manage-column column-cb check-column">
-                            <input type="checkbox" id="zbooks-select-all">
+                            <input type="checkbox" id="zbooks-select-all" class="zbooks-select-all">
                         </td>
                         <th><?php esc_html_e('Order', 'zbooks-for-woocommerce'); ?></th>
                         <th><?php esc_html_e('Date', 'zbooks-for-woocommerce'); ?></th>
                         <th><?php esc_html_e('Customer', 'zbooks-for-woocommerce'); ?></th>
                         <th><?php esc_html_e('Total', 'zbooks-for-woocommerce'); ?></th>
-                        <th><?php esc_html_e('Status', 'zbooks-for-woocommerce'); ?></th>
+                        <th><?php esc_html_e('Order Status', 'zbooks-for-woocommerce'); ?></th>
+                        <th><?php esc_html_e('Sync Status', 'zbooks-for-woocommerce'); ?></th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($orders as $order) : ?>
                         <tr>
                             <th scope="row" class="check-column">
-                                <input type="checkbox" name="order_ids[]"
+                                <input type="checkbox" name="order_ids[]" class="zbooks-item-checkbox"
                                     value="<?php echo esc_attr($order->get_id()); ?>">
                             </th>
                             <td>
@@ -195,16 +196,18 @@ class BulkSyncPage {
                             <td><?php echo esc_html($order->get_formatted_billing_full_name()); ?></td>
                             <td><?php echo wp_kses_post($order->get_formatted_order_total()); ?></td>
                             <td><?php echo esc_html(wc_get_order_status_name($order->get_status())); ?></td>
+                            <td><span class="zbooks-status zbooks-status-pending"><?php esc_html_e('Pending', 'zbooks-for-woocommerce'); ?></span></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
             </table>
 
-            <p>
-                <button type="button" class="button" id="zbooks-sync-selected">
+            <div class="zbooks-bulk-actions">
+                <span class="zbooks-selected-count">0 item(s) selected</span>
+                <button type="button" class="button button-primary zbooks-bulk-sync-btn" id="zbooks-sync-selected" disabled>
                     <?php esc_html_e('Sync Selected Orders', 'zbooks-for-woocommerce'); ?>
                 </button>
-            </p>
+            </div>
         </form>
         <?php
     }

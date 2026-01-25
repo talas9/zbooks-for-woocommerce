@@ -381,16 +381,26 @@ class SetupWizard {
      * Save sync settings.
      */
     private function save_sync_settings(): void {
-        $triggers = [];
         // Array sanitized in loop below.
         $input_triggers = isset($_POST['sync_triggers']) && is_array($_POST['sync_triggers']) ? wp_unslash($_POST['sync_triggers']) : [];
 
-        foreach ($input_triggers as $status => $action) {
-            $status = sanitize_key($status);
-            $action = sanitize_key($action);
+        // Valid trigger types.
+        $valid_triggers = ['sync_draft', 'sync_submit', 'create_creditnote'];
 
-            if (in_array($action, ['none', 'sync_draft', 'sync_submit'], true)) {
-                $triggers[$status] = $action;
+        // Get valid order statuses.
+        $valid_statuses = array_keys(wc_get_order_statuses());
+        $valid_statuses = array_map(function ($status) {
+            return str_replace('wc-', '', $status);
+        }, $valid_statuses);
+        $valid_statuses[] = ''; // Allow empty (disabled).
+
+        $triggers = [];
+        foreach ($input_triggers as $trigger => $status) {
+            $trigger = sanitize_key($trigger);
+            $status = sanitize_key($status);
+
+            if (in_array($trigger, $valid_triggers, true) && in_array($status, $valid_statuses, true)) {
+                $triggers[$trigger] = $status;
             }
         }
 
@@ -783,20 +793,35 @@ class SetupWizard {
      * Render sync settings step.
      */
     private function render_sync(): void {
-        $statuses = wc_get_order_statuses();
-        $actions = [
-            'none' => __('No action', 'zbooks-for-woocommerce'),
-            'sync_draft' => __('Create draft invoice', 'zbooks-for-woocommerce'),
-            'sync_submit' => __('Create & send invoice', 'zbooks-for-woocommerce'),
-        ];
+        // Get all order statuses for the dropdowns.
+        $all_statuses = wc_get_order_statuses();
+        $status_options = ['' => __('— None —', 'zbooks-for-woocommerce')];
+        foreach ($all_statuses as $status_key => $status_label) {
+            $status = str_replace('wc-', '', $status_key);
+            $status_options[$status] = $status_label;
+        }
 
-        $defaults = [
-            'processing' => 'sync_draft',
-            'completed' => 'sync_submit',
+        // Define the fixed Zoho triggers with defaults.
+        $zoho_triggers = [
+            'sync_draft' => [
+                'label' => __('Create draft invoice', 'zbooks-for-woocommerce'),
+                'description' => __('Invoice is created but not sent to customer.', 'zbooks-for-woocommerce'),
+                'default' => 'processing',
+            ],
+            'sync_submit' => [
+                'label' => __('Create and submit invoice', 'zbooks-for-woocommerce'),
+                'description' => __('Invoice is created and marked as sent.', 'zbooks-for-woocommerce'),
+                'default' => 'completed',
+            ],
+            'create_creditnote' => [
+                'label' => __('Create credit note and refund', 'zbooks-for-woocommerce'),
+                'description' => __('Creates credit note for the original invoice and records refund.', 'zbooks-for-woocommerce'),
+                'default' => 'refunded',
+            ],
         ];
         ?>
         <h2><?php esc_html_e('Configure Sync Triggers', 'zbooks-for-woocommerce'); ?></h2>
-        <p><?php esc_html_e('Choose what happens when an order changes to each status.', 'zbooks-for-woocommerce'); ?></p>
+        <p><?php esc_html_e('Choose which order status triggers each Zoho Books action.', 'zbooks-for-woocommerce'); ?></p>
 
         <form method="post" action="">
             <?php wp_nonce_field('zbooks_wizard', 'zbooks_wizard_nonce'); ?>
@@ -805,22 +830,24 @@ class SetupWizard {
             <table class="widefat zbooks-wizard-triggers">
                 <thead>
                     <tr>
-                        <th><?php esc_html_e('Order Status', 'zbooks-for-woocommerce'); ?></th>
-                        <th><?php esc_html_e('Action', 'zbooks-for-woocommerce'); ?></th>
+                        <th><?php esc_html_e('Zoho Action', 'zbooks-for-woocommerce'); ?></th>
+                        <th><?php esc_html_e('Trigger on Status', 'zbooks-for-woocommerce'); ?></th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($statuses as $status_key => $status_label) :
-                        $status = str_replace('wc-', '', $status_key);
-                        $default = $defaults[$status] ?? 'none';
-                        ?>
+                    <?php foreach ($zoho_triggers as $trigger_key => $trigger_config) : ?>
                         <tr>
-                            <td><?php echo esc_html($status_label); ?></td>
                             <td>
-                                <select name="sync_triggers[<?php echo esc_attr($status); ?>]">
-                                    <?php foreach ($actions as $action_value => $action_label) : ?>
-                                        <option value="<?php echo esc_attr($action_value); ?>" <?php selected($default, $action_value); ?>>
-                                            <?php echo esc_html($action_label); ?>
+                                <strong><?php echo esc_html($trigger_config['label']); ?></strong>
+                                <p class="description" style="margin: 4px 0 0; font-size: 11px;">
+                                    <?php echo esc_html($trigger_config['description']); ?>
+                                </p>
+                            </td>
+                            <td>
+                                <select name="sync_triggers[<?php echo esc_attr($trigger_key); ?>]" style="min-width: 150px;">
+                                    <?php foreach ($status_options as $status_value => $status_label) : ?>
+                                        <option value="<?php echo esc_attr($status_value); ?>" <?php selected($trigger_config['default'], $status_value); ?>>
+                                            <?php echo esc_html($status_label); ?>
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
@@ -945,7 +972,7 @@ class SetupWizard {
 
                 <?php if (count($products) >= 50) : ?>
                     <p class="description">
-                        <?php esc_html_e('Showing first 50 products. You can map additional products from ZBooks > Product Mapping after setup.', 'zbooks-for-woocommerce'); ?>
+                        <?php esc_html_e('Showing first 50 products. You can map additional products from ZBooks > Settings > Products tab after setup.', 'zbooks-for-woocommerce'); ?>
                     </p>
                 <?php endif; ?>
             <?php elseif (empty($products)) : ?>
@@ -985,7 +1012,9 @@ class SetupWizard {
         try {
             $response = $this->client->request(function ($client) {
                 return $client->items->getList(['per_page' => 200]);
-            });
+            }, [
+                'endpoint' => 'items.getList',
+            ]);
 
             $items = [];
 

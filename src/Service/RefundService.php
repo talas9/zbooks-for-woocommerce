@@ -15,6 +15,7 @@ use WC_Order;
 use WC_Order_Refund;
 use Zbooks\Api\ZohoClient;
 use Zbooks\Logger\SyncLogger;
+use Zbooks\Repository\FieldMappingRepository;
 
 defined('ABSPATH') || exit;
 
@@ -38,14 +39,27 @@ class RefundService {
     private SyncLogger $logger;
 
     /**
+     * Field mapping repository.
+     *
+     * @var FieldMappingRepository
+     */
+    private FieldMappingRepository $field_mapping;
+
+    /**
      * Constructor.
      *
-     * @param ZohoClient $client Zoho client instance.
-     * @param SyncLogger $logger Logger instance.
+     * @param ZohoClient             $client        Zoho client instance.
+     * @param SyncLogger             $logger        Logger instance.
+     * @param FieldMappingRepository $field_mapping Field mapping repository.
      */
-    public function __construct(ZohoClient $client, SyncLogger $logger) {
+    public function __construct(
+        ZohoClient $client,
+        SyncLogger $logger,
+        FieldMappingRepository $field_mapping
+    ) {
         $this->client = $client;
         $this->logger = $logger;
+        $this->field_mapping = $field_mapping;
     }
 
     /**
@@ -194,10 +208,21 @@ class RefundService {
             $credit_note_data['line_items'] = $this->map_refund_items($refund);
         }
 
+        // Add custom fields from mappings.
+        $custom_fields = $this->field_mapping->build_custom_fields($order, 'creditnote', $refund);
+        if (!empty($custom_fields)) {
+            $credit_note_data['custom_fields'] = $custom_fields;
+        }
+
         try {
             $response = $this->client->request(function ($client) use ($credit_note_data) {
                 return $client->creditnotes->create($credit_note_data);
-            });
+            }, [
+                'endpoint' => 'creditnotes.create',
+                'order_id' => $order->get_id(),
+                'refund_id' => $refund->get_id(),
+                'refund_amount' => $refund_amount,
+            ]);
 
             // Convert object to array if needed.
             if (is_object($response)) {
@@ -218,6 +243,8 @@ class RefundService {
             return $credit_note_id ? (string) $credit_note_id : null;
         } catch (\Exception $e) {
             $this->logger->error('Failed to create credit note', [
+                'order_id' => $order->get_id(),
+                'refund_id' => $refund->get_id(),
                 'error' => $e->getMessage(),
             ]);
             throw $e;
@@ -477,7 +504,10 @@ class RefundService {
         try {
             $response = $this->client->request(function ($client) use ($invoice_id) {
                 return $client->invoices->get($invoice_id);
-            });
+            }, [
+                'endpoint' => 'invoices.get',
+                'invoice_id' => $invoice_id,
+            ]);
 
             if (is_object($response) && method_exists($response, 'toArray')) {
                 return $response->toArray();
@@ -552,7 +582,10 @@ class RefundService {
         try {
             $response = $this->client->request(function ($client) use ($credit_note_id) {
                 return $client->creditnotes->get($credit_note_id);
-            });
+            }, [
+                'endpoint' => 'creditnotes.get',
+                'credit_note_id' => $credit_note_id,
+            ]);
 
             if (is_array($response)) {
                 return $response['credit_note'] ?? $response;
@@ -582,7 +615,10 @@ class RefundService {
         try {
             $this->client->request(function ($client) use ($credit_note_id) {
                 return $client->creditnotes->void($credit_note_id);
-            });
+            }, [
+                'endpoint' => 'creditnotes.void',
+                'credit_note_id' => $credit_note_id,
+            ]);
 
             $this->logger->info('Credit note voided', [
                 'credit_note_id' => $credit_note_id,

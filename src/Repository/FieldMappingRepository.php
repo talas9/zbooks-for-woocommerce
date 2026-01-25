@@ -33,6 +33,13 @@ class FieldMappingRepository {
     private const INVOICE_MAPPINGS_KEY = 'zbooks_invoice_field_mappings';
 
     /**
+     * Option key for credit note field mappings.
+     *
+     * @var string
+     */
+    private const CREDITNOTE_MAPPINGS_KEY = 'zbooks_creditnote_field_mappings';
+
+    /**
      * Get all customer field mappings.
      *
      * @return array<int, array{wc_field: string, zoho_field: string, zoho_field_label: string}>
@@ -72,6 +79,27 @@ class FieldMappingRepository {
     public function save_invoice_mappings(array $mappings): bool {
         $sanitized = $this->sanitize_mappings($mappings);
         return update_option(self::INVOICE_MAPPINGS_KEY, $sanitized);
+    }
+
+    /**
+     * Get all credit note field mappings.
+     *
+     * @return array<int, array{wc_field: string, zoho_field: string, zoho_field_label: string}>
+     */
+    public function get_creditnote_mappings(): array {
+        $mappings = get_option(self::CREDITNOTE_MAPPINGS_KEY, []);
+        return is_array($mappings) ? $mappings : [];
+    }
+
+    /**
+     * Save credit note field mappings.
+     *
+     * @param array<int, array{wc_field: string, zoho_field: string, zoho_field_label: string}> $mappings Mappings to save.
+     * @return bool
+     */
+    public function save_creditnote_mappings(array $mappings): bool {
+        $sanitized = $this->sanitize_mappings($mappings);
+        return update_option(self::CREDITNOTE_MAPPINGS_KEY, $sanitized);
     }
 
     /**
@@ -162,6 +190,39 @@ class FieldMappingRepository {
             'coupon_codes' => __('Coupon Codes', 'zbooks-for-woocommerce'),
             // Custom meta placeholder.
             'meta:' => __('Custom Order Meta (prefix with meta:)', 'zbooks-for-woocommerce'),
+        ];
+    }
+
+    /**
+     * Get available WooCommerce refund/credit note fields.
+     *
+     * @return array<string, string> Field key => Field label.
+     */
+    public function get_available_creditnote_fields(): array {
+        return [
+            // Refund fields.
+            'refund_id' => __('Refund ID', 'zbooks-for-woocommerce'),
+            'refund_amount' => __('Refund Amount', 'zbooks-for-woocommerce'),
+            'refund_reason' => __('Refund Reason', 'zbooks-for-woocommerce'),
+            'refund_date' => __('Refund Date', 'zbooks-for-woocommerce'),
+            // Parent order fields.
+            'order_id' => __('Original Order ID', 'zbooks-for-woocommerce'),
+            'order_number' => __('Original Order Number', 'zbooks-for-woocommerce'),
+            'order_date' => __('Original Order Date', 'zbooks-for-woocommerce'),
+            'order_total' => __('Original Order Total', 'zbooks-for-woocommerce'),
+            'payment_method' => __('Payment Method', 'zbooks-for-woocommerce'),
+            'payment_method_title' => __('Payment Method Title', 'zbooks-for-woocommerce'),
+            'transaction_id' => __('Transaction ID', 'zbooks-for-woocommerce'),
+            // Customer fields from original order.
+            'billing_first_name' => __('Billing First Name', 'zbooks-for-woocommerce'),
+            'billing_last_name' => __('Billing Last Name', 'zbooks-for-woocommerce'),
+            'billing_full_name' => __('Billing Full Name', 'zbooks-for-woocommerce'),
+            'billing_company' => __('Billing Company', 'zbooks-for-woocommerce'),
+            'billing_email' => __('Billing Email', 'zbooks-for-woocommerce'),
+            'billing_phone' => __('Billing Phone', 'zbooks-for-woocommerce'),
+            // Custom meta placeholder.
+            'meta:' => __('Custom Refund Meta (prefix with meta:)', 'zbooks-for-woocommerce'),
+            'order_meta:' => __('Custom Order Meta (prefix with order_meta:)', 'zbooks-for-woocommerce'),
         ];
     }
 
@@ -264,6 +325,74 @@ class FieldMappingRepository {
     }
 
     /**
+     * Extract value from WooCommerce refund and parent order for credit note sync.
+     *
+     * @param \WC_Order        $order  Parent WooCommerce order.
+     * @param \WC_Order_Refund $refund WooCommerce refund.
+     * @param string           $field_key Field key to extract.
+     * @return string
+     */
+    public function extract_creditnote_field_value(\WC_Order $order, \WC_Order_Refund $refund, string $field_key): string {
+        // Handle custom refund meta fields.
+        if (str_starts_with($field_key, 'meta:')) {
+            $meta_key = substr($field_key, 5);
+            $value = $refund->get_meta($meta_key);
+            return is_string($value) ? $value : '';
+        }
+
+        // Handle custom order meta fields.
+        if (str_starts_with($field_key, 'order_meta:')) {
+            $meta_key = substr($field_key, 11);
+            $value = $order->get_meta($meta_key);
+            return is_string($value) ? $value : '';
+        }
+
+        switch ($field_key) {
+            // Refund fields.
+            case 'refund_id':
+                return (string) $refund->get_id();
+            case 'refund_amount':
+                return (string) abs((float) $refund->get_amount());
+            case 'refund_reason':
+                return $refund->get_reason() ?: '';
+            case 'refund_date':
+                $date = $refund->get_date_created();
+                return $date ? $date->format('Y-m-d H:i:s') : '';
+            // Parent order fields.
+            case 'order_id':
+                return (string) $order->get_id();
+            case 'order_number':
+                return $order->get_order_number();
+            case 'order_date':
+                $date = $order->get_date_created();
+                return $date ? $date->format('Y-m-d H:i:s') : '';
+            case 'order_total':
+                return $order->get_total();
+            case 'payment_method':
+                return $order->get_payment_method();
+            case 'payment_method_title':
+                return $order->get_payment_method_title();
+            case 'transaction_id':
+                return $order->get_transaction_id();
+            // Customer fields from order.
+            case 'billing_first_name':
+                return $order->get_billing_first_name();
+            case 'billing_last_name':
+                return $order->get_billing_last_name();
+            case 'billing_full_name':
+                return $order->get_formatted_billing_full_name();
+            case 'billing_company':
+                return $order->get_billing_company();
+            case 'billing_email':
+                return $order->get_billing_email();
+            case 'billing_phone':
+                return $order->get_billing_phone();
+            default:
+                return '';
+        }
+    }
+
+    /**
      * Extract value from WooCommerce customer/order for customer sync.
      *
      * @param \WC_Order $order WooCommerce order (used for customer data).
@@ -338,14 +467,24 @@ class FieldMappingRepository {
     /**
      * Build custom fields array for Zoho API from mappings.
      *
-     * @param \WC_Order $order WooCommerce order.
-     * @param string    $type 'customer' or 'invoice'.
-     * @return array<int, array{label: string, value: string}>
+     * @param \WC_Order             $order  WooCommerce order.
+     * @param string                $type   'customer', 'invoice', or 'creditnote'.
+     * @param \WC_Order_Refund|null $refund WooCommerce refund (required for creditnote type).
+     * @return array<int, array{customfield_id: string, value: string}>
      */
-    public function build_custom_fields(\WC_Order $order, string $type): array {
-        $mappings = $type === 'customer'
-            ? $this->get_customer_mappings()
-            : $this->get_invoice_mappings();
+    public function build_custom_fields(\WC_Order $order, string $type, ?\WC_Order_Refund $refund = null): array {
+        switch ($type) {
+            case 'customer':
+                $mappings = $this->get_customer_mappings();
+                break;
+            case 'creditnote':
+                $mappings = $this->get_creditnote_mappings();
+                break;
+            case 'invoice':
+            default:
+                $mappings = $this->get_invoice_mappings();
+                break;
+        }
 
         $custom_fields = [];
 
@@ -354,9 +493,14 @@ class FieldMappingRepository {
                 continue;
             }
 
-            $value = $type === 'customer'
-                ? $this->extract_customer_field_value($order, $mapping['wc_field'])
-                : $this->extract_order_field_value($order, $mapping['wc_field']);
+            // Extract value based on type.
+            if ($type === 'customer') {
+                $value = $this->extract_customer_field_value($order, $mapping['wc_field']);
+            } elseif ($type === 'creditnote' && $refund) {
+                $value = $this->extract_creditnote_field_value($order, $refund, $mapping['wc_field']);
+            } else {
+                $value = $this->extract_order_field_value($order, $mapping['wc_field']);
+            }
 
             if ($value !== '') {
                 $custom_fields[] = [
@@ -386,12 +530,14 @@ class FieldMappingRepository {
             $wc_field = isset($mapping['wc_field']) ? sanitize_text_field($mapping['wc_field']) : '';
             $zoho_field = isset($mapping['zoho_field']) ? sanitize_text_field($mapping['zoho_field']) : '';
             $zoho_field_label = isset($mapping['zoho_field_label']) ? sanitize_text_field($mapping['zoho_field_label']) : '';
+            $zoho_field_type = isset($mapping['zoho_field_type']) ? sanitize_text_field($mapping['zoho_field_type']) : '';
 
             if ($wc_field && $zoho_field) {
                 $sanitized[] = [
                     'wc_field' => $wc_field,
                     'zoho_field' => $zoho_field,
                     'zoho_field_label' => $zoho_field_label,
+                    'zoho_field_type' => $zoho_field_type,
                 ];
             }
         }
@@ -407,5 +553,6 @@ class FieldMappingRepository {
     public function delete_all(): void {
         delete_option(self::CUSTOMER_MAPPINGS_KEY);
         delete_option(self::INVOICE_MAPPINGS_KEY);
+        delete_option(self::CREDITNOTE_MAPPINGS_KEY);
     }
 }

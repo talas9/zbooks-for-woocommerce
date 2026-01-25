@@ -397,6 +397,24 @@ class SyncLogger {
     }
 
     /**
+     * Clear all log files.
+     *
+     * @return int Number of files deleted.
+     */
+    public function clear_all_logs(): int {
+        $files = $this->get_log_files();
+        $deleted = 0;
+
+        foreach ($files as $file) {
+            if (wp_delete_file($file['path'])) {
+                $deleted++;
+            }
+        }
+
+        return $deleted;
+    }
+
+    /**
      * Get log statistics.
      *
      * @param string $date Date in YYYY-MM-DD format.

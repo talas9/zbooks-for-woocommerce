@@ -13,6 +13,9 @@ namespace Zbooks\Admin;
 
 use Zbooks\Api\ZohoClient;
 use Zbooks\Api\TokenManager;
+use Zbooks\Admin\ProductMappingPage;
+use Zbooks\Admin\PaymentMappingPage;
+use Zbooks\Admin\FieldMappingPage;
 
 defined('ABSPATH') || exit;
 
@@ -43,14 +46,47 @@ class SettingsPage {
     private array $tabs = [];
 
     /**
+     * Product mapping page instance.
+     *
+     * @var ProductMappingPage|null
+     */
+    private ?ProductMappingPage $product_page = null;
+
+    /**
+     * Payment mapping page instance.
+     *
+     * @var PaymentMappingPage|null
+     */
+    private ?PaymentMappingPage $payment_page = null;
+
+    /**
+     * Field mapping page instance.
+     *
+     * @var FieldMappingPage|null
+     */
+    private ?FieldMappingPage $field_page = null;
+
+    /**
      * Constructor.
      *
-     * @param ZohoClient   $client        Zoho client.
-     * @param TokenManager $token_manager Token manager.
+     * @param ZohoClient          $client        Zoho client.
+     * @param TokenManager        $token_manager Token manager.
+     * @param ProductMappingPage  $product_page  Product mapping page (optional).
+     * @param PaymentMappingPage  $payment_page  Payment mapping page (optional).
+     * @param FieldMappingPage    $field_page    Field mapping page (optional).
      */
-    public function __construct(ZohoClient $client, TokenManager $token_manager) {
+    public function __construct(
+        ZohoClient $client,
+        TokenManager $token_manager,
+        ?ProductMappingPage $product_page = null,
+        ?PaymentMappingPage $payment_page = null,
+        ?FieldMappingPage $field_page = null
+    ) {
         $this->client = $client;
         $this->token_manager = $token_manager;
+        $this->product_page = $product_page;
+        $this->payment_page = $payment_page;
+        $this->field_page = $field_page;
         $this->register_hooks();
     }
 
@@ -63,7 +99,10 @@ class SettingsPage {
         if (empty($this->tabs)) {
             $this->tabs = [
                 'connection' => __('Connection', 'zbooks-for-woocommerce'),
-                'sync' => __('Sync', 'zbooks-for-woocommerce'),
+                'orders' => __('Orders', 'zbooks-for-woocommerce'),
+                'payments' => __('Payments', 'zbooks-for-woocommerce'),
+                'products' => __('Products', 'zbooks-for-woocommerce'),
+                'custom_fields' => __('Custom Fields', 'zbooks-for-woocommerce'),
                 'advanced' => __('Advanced', 'zbooks-for-woocommerce'),
             ];
         }
@@ -125,7 +164,7 @@ class SettingsPage {
 
         // Register sections and fields per tab.
         $this->register_connection_tab();
-        $this->register_sync_tab();
+        $this->register_orders_tab();
         $this->register_advanced_tab();
     }
 
@@ -146,23 +185,15 @@ class SettingsPage {
             'sanitize_callback' => 'sanitize_text_field',
         ]);
 
-        register_setting('zbooks_settings_sync', 'zbooks_sync_triggers', [
+        register_setting('zbooks_settings_orders', 'zbooks_sync_triggers', [
             'type' => 'array',
             'sanitize_callback' => [$this, 'sanitize_triggers'],
         ]);
-        register_setting('zbooks_settings_sync', 'zbooks_payment_settings', [
-            'type' => 'array',
-            'sanitize_callback' => [$this, 'sanitize_payment_settings'],
-        ]);
-        register_setting('zbooks_settings_sync', 'zbooks_refund_settings', [
-            'type' => 'array',
-            'sanitize_callback' => [$this, 'sanitize_refund_settings'],
-        ]);
-        register_setting('zbooks_settings_sync', 'zbooks_invoice_numbering', [
+        register_setting('zbooks_settings_orders', 'zbooks_invoice_numbering', [
             'type' => 'array',
             'sanitize_callback' => [$this, 'sanitize_invoice_numbering'],
         ]);
-        register_setting('zbooks_settings_sync', 'zbooks_shipping_settings', [
+        register_setting('zbooks_settings_orders', 'zbooks_shipping_settings', [
             'type' => 'array',
             'sanitize_callback' => [$this, 'sanitize_shipping_settings'],
         ]);
@@ -242,55 +273,23 @@ class SettingsPage {
     }
 
     /**
-     * Register Sync tab sections and fields.
+     * Register Orders tab sections and fields.
      */
-    private function register_sync_tab(): void {
-        // Sync triggers section.
+    private function register_orders_tab(): void {
+        // Order sync triggers section.
         add_settings_section(
-            'zbooks_sync_section',
+            'zbooks_orders_section',
             __('Order Status Triggers', 'zbooks-for-woocommerce'),
-            [$this, 'render_sync_section'],
-            'zbooks-settings-sync'
+            [$this, 'render_orders_section'],
+            'zbooks-settings-orders'
         );
 
         add_settings_field(
             'zbooks_sync_triggers',
             __('Status Actions', 'zbooks-for-woocommerce'),
             [$this, 'render_triggers_field'],
-            'zbooks-settings-sync',
-            'zbooks_sync_section'
-        );
-
-        // Payment settings section.
-        add_settings_section(
-            'zbooks_payment_section',
-            __('Payment Settings', 'zbooks-for-woocommerce'),
-            [$this, 'render_payment_section'],
-            'zbooks-settings-sync'
-        );
-
-        add_settings_field(
-            'zbooks_payment_settings',
-            __('Payment Sync', 'zbooks-for-woocommerce'),
-            [$this, 'render_payment_settings_field'],
-            'zbooks-settings-sync',
-            'zbooks_payment_section'
-        );
-
-        // Refund settings section.
-        add_settings_section(
-            'zbooks_refund_section',
-            __('Refund Settings', 'zbooks-for-woocommerce'),
-            [$this, 'render_refund_section'],
-            'zbooks-settings-sync'
-        );
-
-        add_settings_field(
-            'zbooks_refund_settings',
-            __('Refund Sync', 'zbooks-for-woocommerce'),
-            [$this, 'render_refund_settings_field'],
-            'zbooks-settings-sync',
-            'zbooks_refund_section'
+            'zbooks-settings-orders',
+            'zbooks_orders_section'
         );
 
         // Invoice numbering section.
@@ -298,14 +297,14 @@ class SettingsPage {
             'zbooks_invoice_numbering_section',
             __('Invoice Numbering', 'zbooks-for-woocommerce'),
             [$this, 'render_invoice_numbering_section'],
-            'zbooks-settings-sync'
+            'zbooks-settings-orders'
         );
 
         add_settings_field(
             'zbooks_invoice_numbering',
             __('Order Number Handling', 'zbooks-for-woocommerce'),
             [$this, 'render_invoice_numbering_field'],
-            'zbooks-settings-sync',
+            'zbooks-settings-orders',
             'zbooks_invoice_numbering_section'
         );
 
@@ -314,14 +313,14 @@ class SettingsPage {
             'zbooks_shipping_section',
             __('Shipping Settings', 'zbooks-for-woocommerce'),
             [$this, 'render_shipping_section'],
-            'zbooks-settings-sync'
+            'zbooks-settings-orders'
         );
 
         add_settings_field(
             'zbooks_shipping_settings',
             __('Shipping Account', 'zbooks-for-woocommerce'),
             [$this, 'render_shipping_settings_field'],
-            'zbooks-settings-sync',
+            'zbooks-settings-orders',
             'zbooks_shipping_section'
         );
 
@@ -330,7 +329,7 @@ class SettingsPage {
             'zbooks_currency_section',
             __('Currency Handling', 'zbooks-for-woocommerce'),
             [$this, 'render_currency_section'],
-            'zbooks-settings-sync'
+            'zbooks-settings-orders'
         );
     }
 
@@ -396,13 +395,27 @@ class SettingsPage {
             </nav>
 
             <div class="zbooks-tab-content">
-                <form method="post" action="options.php">
-                    <?php
-                    settings_fields('zbooks_settings_' . $current_tab);
-                    do_settings_sections('zbooks-settings-' . $current_tab);
-                    submit_button();
+                <?php
+                // Render delegated tabs or settings form.
+                if ('products' === $current_tab && $this->product_page) {
+                    $this->product_page->render_content();
+                } elseif ('payments' === $current_tab && $this->payment_page) {
+                    $this->payment_page->render_content();
+                } elseif ('custom_fields' === $current_tab && $this->field_page) {
+                    $this->field_page->render_content();
+                } else {
+                    // Standard settings tabs.
                     ?>
-                </form>
+                    <form method="post" action="options.php">
+                        <?php
+                        settings_fields('zbooks_settings_' . $current_tab);
+                        do_settings_sections('zbooks-settings-' . $current_tab);
+                        submit_button();
+                        ?>
+                    </form>
+                    <?php
+                }
+                ?>
 
                 <?php if ('connection' === $current_tab) : ?>
                     <hr>
@@ -449,7 +462,7 @@ class SettingsPage {
     /**
      * Render sync section description.
      */
-    public function render_sync_section(): void {
+    public function render_orders_section(): void {
         ?>
         <p><?php esc_html_e('Configure which order statuses trigger automatic sync.', 'zbooks-for-woocommerce'); ?></p>
         <?php
@@ -465,99 +478,11 @@ class SettingsPage {
     }
 
     /**
-     * Render payment section description.
-     */
-    public function render_payment_section(): void {
-        ?>
-        <p><?php esc_html_e('Configure how payments are synced to Zoho Books when orders are completed.', 'zbooks-for-woocommerce'); ?></p>
-        <?php
-    }
-
-    /**
-     * Render refund section description.
-     */
-    public function render_refund_section(): void {
-        ?>
-        <p><?php esc_html_e('Configure how refunds are synced to Zoho Books when WooCommerce refunds are processed.', 'zbooks-for-woocommerce'); ?></p>
-        <?php
-    }
-
-    /**
      * Render log section description.
      */
     public function render_log_section(): void {
         ?>
         <p><?php esc_html_e('Configure logging behavior and error notifications.', 'zbooks-for-woocommerce'); ?></p>
-        <?php
-    }
-
-    /**
-     * Render shipping section description.
-     */
-    public function render_shipping_section(): void {
-        ?>
-        <p><?php esc_html_e('Configure how shipping charges are recorded in Zoho Books invoices.', 'zbooks-for-woocommerce'); ?></p>
-        <?php
-    }
-
-    /**
-     * Render shipping settings field.
-     */
-    public function render_shipping_settings_field(): void {
-        $settings = get_option('zbooks_shipping_settings', [
-            'account_id' => '',
-        ]);
-        $accounts = [];
-
-        if ($this->client->is_configured()) {
-            try {
-                // Fetch income accounts from Zoho Books.
-                $response = $this->client->request(function ($client) {
-                    return $client->chartofaccounts->getList([
-                        'account_type' => 'income',
-                        'filter_by' => 'AccountType.Active',
-                    ]);
-                });
-
-                // Convert object to array if needed.
-                if (is_object($response)) {
-                    $response = json_decode(wp_json_encode($response), true);
-                }
-
-                $accounts = $response['chartofaccounts'] ?? $response ?? [];
-            } catch (\Exception $e) {
-                // Ignore - will show empty dropdown.
-            }
-        }
-        ?>
-        <fieldset>
-            <select name="zbooks_shipping_settings[account_id]" id="zbooks_shipping_account">
-                <option value=""><?php esc_html_e('Use default (Shipping Charge)', 'zbooks-for-woocommerce'); ?></option>
-                <?php foreach ($accounts as $account) :
-                    $account_id = $account['account_id'] ?? '';
-                    $account_name = $account['account_name'] ?? '';
-                    if (empty($account_id)) {
-                        continue;
-                    }
-                    ?>
-                    <option value="<?php echo esc_attr($account_id); ?>" <?php selected($settings['account_id'], $account_id); ?>>
-                        <?php echo esc_html($account_name); ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-            <p class="description">
-                <?php esc_html_e('Select the income account to record shipping charges. Leave empty to use Zoho\'s default "Shipping Charge" account.', 'zbooks-for-woocommerce'); ?>
-            </p>
-            <?php if (empty($accounts) && $this->client->is_configured()) : ?>
-                <p class="description" style="color: #d63638;">
-                    <?php esc_html_e('Could not load accounts from Zoho Books. Save settings and refresh the page.', 'zbooks-for-woocommerce'); ?>
-                </p>
-            <?php elseif (!$this->client->is_configured()) : ?>
-                <p class="description">
-                    <?php esc_html_e('Configure Zoho connection first to load accounts.', 'zbooks-for-woocommerce'); ?>
-                </p>
-            <?php endif; ?>
-        </fieldset>
         <?php
     }
 
@@ -581,6 +506,108 @@ class SettingsPage {
             </p>
         </div>
         <?php
+    }
+
+    /**
+     * Render shipping section description.
+     */
+    public function render_shipping_section(): void {
+        ?>
+        <p><?php esc_html_e('Configure how shipping charges are recorded in Zoho Books invoices.', 'zbooks-for-woocommerce'); ?></p>
+        <?php
+    }
+
+    /**
+     * Render shipping settings field.
+     */
+    public function render_shipping_settings_field(): void {
+        $settings = get_option('zbooks_shipping_settings', [
+            'account_id' => '',
+        ]);
+        $income_accounts = $this->get_income_accounts();
+        ?>
+        <select name="zbooks_shipping_settings[account_id]" style="min-width: 300px;">
+            <option value=""><?php esc_html_e('Use default (Shipping Charge)', 'zbooks-for-woocommerce'); ?></option>
+            <?php foreach ($income_accounts as $account) : ?>
+                <option value="<?php echo esc_attr($account['account_id']); ?>"
+                    <?php selected($settings['account_id'], $account['account_id']); ?>>
+                    <?php echo esc_html($account['account_name']); ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+        <p class="description">
+            <?php esc_html_e('Select the income account to record shipping charges. Leave empty to use Zoho\'s default "Shipping Charge" account.', 'zbooks-for-woocommerce'); ?>
+        </p>
+        <?php if (empty($income_accounts) && $this->client->is_configured()) : ?>
+            <p class="description" style="color: #d63638;">
+                <?php esc_html_e('Could not load accounts from Zoho Books. Save settings and refresh the page.', 'zbooks-for-woocommerce'); ?>
+            </p>
+        <?php elseif (!$this->client->is_configured()) : ?>
+            <p class="description">
+                <?php esc_html_e('Configure Zoho connection first to load accounts.', 'zbooks-for-woocommerce'); ?>
+            </p>
+        <?php endif; ?>
+        <?php
+    }
+
+    /**
+     * Get income accounts from Zoho Books.
+     *
+     * @return array List of income accounts.
+     */
+    private function get_income_accounts(): array {
+        // Check cache first.
+        $cached = get_transient('zbooks_zoho_income_accounts');
+        if ($cached !== false) {
+            return $cached;
+        }
+
+        if (!$this->client->is_configured()) {
+            return [];
+        }
+
+        $accounts = [];
+
+        try {
+            $response = $this->client->request(function ($client) {
+                return $client->chartofaccounts->getList([
+                    'account_type' => 'income',
+                    'filter_by' => 'AccountType.Active',
+                ]);
+            }, [
+                'endpoint' => 'chartofaccounts.getList',
+                'filter' => 'income accounts',
+            ]);
+
+            // Convert object to array if needed.
+            if (is_object($response)) {
+                $response = json_decode(wp_json_encode($response), true);
+            }
+
+            $coa_data = $response['chartofaccounts'] ?? $response ?? [];
+
+            foreach ($coa_data as $account) {
+                $account_id = $account['account_id'] ?? '';
+                if ($account_id) {
+                    $accounts[] = [
+                        'account_id' => $account_id,
+                        'account_name' => $account['account_name'] ?? '',
+                    ];
+                }
+            }
+
+            // Sort by name.
+            usort($accounts, function ($a, $b) {
+                return strcasecmp($a['account_name'], $b['account_name']);
+            });
+
+            // Cache for 1 hour.
+            set_transient('zbooks_zoho_income_accounts', $accounts, HOUR_IN_SECONDS);
+        } catch (\Exception $e) {
+            // Silently fail - will show empty dropdown.
+        }
+
+        return $accounts;
     }
 
     /**
@@ -660,33 +687,62 @@ class SettingsPage {
      * Render sync triggers field.
      */
     public function render_triggers_field(): void {
-        $triggers = get_option('zbooks_sync_triggers', []);
-        $statuses = wc_get_order_statuses();
-        $actions = [
-            'none' => __('No action', 'zbooks-for-woocommerce'),
-            'sync_draft' => __('Create draft invoice', 'zbooks-for-woocommerce'),
-            'sync_submit' => __('Create and submit invoice', 'zbooks-for-woocommerce'),
+        $triggers = get_option('zbooks_sync_triggers', [
+            'sync_draft' => 'processing',
+            'sync_submit' => 'completed',
+            'create_creditnote' => 'refunded',
+        ]);
+
+        // Get all order statuses for the dropdowns.
+        $all_statuses = wc_get_order_statuses();
+        $status_options = ['' => __('— None —', 'zbooks-for-woocommerce')];
+        foreach ($all_statuses as $status_key => $status_label) {
+            $status = str_replace('wc-', '', $status_key);
+            $status_options[$status] = $status_label;
+        }
+
+        // Define the fixed Zoho triggers.
+        $zoho_triggers = [
+            'sync_draft' => [
+                'label' => __('Create draft invoice', 'zbooks-for-woocommerce'),
+                'description' => __('Invoice is created but not sent to customer.', 'zbooks-for-woocommerce'),
+                'default' => 'processing',
+            ],
+            'sync_submit' => [
+                'label' => __('Create and submit invoice', 'zbooks-for-woocommerce'),
+                'description' => __('Invoice is created and marked as sent.', 'zbooks-for-woocommerce'),
+                'default' => 'completed',
+            ],
+            'create_creditnote' => [
+                'label' => __('Create credit note and refund', 'zbooks-for-woocommerce'),
+                'description' => __('Creates credit note for the original invoice and records refund.', 'zbooks-for-woocommerce'),
+                'default' => 'refunded',
+            ],
         ];
         ?>
         <table class="widefat" style="max-width: 600px;">
             <thead>
                 <tr>
-                    <th style="padding: 10px 15px;"><?php esc_html_e('Status', 'zbooks-for-woocommerce'); ?></th>
-                    <th style="padding: 10px 15px;"><?php esc_html_e('Sync Action', 'zbooks-for-woocommerce'); ?></th>
+                    <th style="padding: 10px 15px;"><?php esc_html_e('Zoho Action', 'zbooks-for-woocommerce'); ?></th>
+                    <th style="padding: 10px 15px;"><?php esc_html_e('Trigger on Status', 'zbooks-for-woocommerce'); ?></th>
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($statuses as $status_key => $status_label) :
-                    $status = str_replace('wc-', '', $status_key);
-                    $current_action = $triggers[$status] ?? 'none';
+                <?php foreach ($zoho_triggers as $trigger_key => $trigger_config) :
+                    $current_status = $triggers[$trigger_key] ?? $trigger_config['default'];
                     ?>
                     <tr>
-                        <td style="padding: 8px 15px;"><?php echo esc_html($status_label); ?></td>
                         <td style="padding: 8px 15px;">
-                            <select name="zbooks_sync_triggers[<?php echo esc_attr($status); ?>]">
-                                <?php foreach ($actions as $action_value => $action_label) : ?>
-                                    <option value="<?php echo esc_attr($action_value); ?>" <?php selected($current_action, $action_value); ?>>
-                                        <?php echo esc_html($action_label); ?>
+                            <strong><?php echo esc_html($trigger_config['label']); ?></strong>
+                            <p class="description" style="margin: 4px 0 0; font-size: 11px;">
+                                <?php echo esc_html($trigger_config['description']); ?>
+                            </p>
+                        </td>
+                        <td style="padding: 8px 15px;">
+                            <select name="zbooks_sync_triggers[<?php echo esc_attr($trigger_key); ?>]" style="min-width: 150px;">
+                                <?php foreach ($status_options as $status_value => $status_label) : ?>
+                                    <option value="<?php echo esc_attr($status_value); ?>" <?php selected($current_status, $status_value); ?>>
+                                        <?php echo esc_html($status_label); ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>
@@ -738,58 +794,6 @@ class SettingsPage {
                     min="5" max="60" style="width: 60px;">
                 <?php esc_html_e('minutes (doubles each retry)', 'zbooks-for-woocommerce'); ?>
             </label>
-        </fieldset>
-        <?php
-    }
-
-    /**
-     * Render payment settings field.
-     */
-    public function render_payment_settings_field(): void {
-        $settings = get_option('zbooks_payment_settings', [
-            'auto_apply_payment' => true,
-        ]);
-        ?>
-        <fieldset>
-            <label style="display: block; margin-bottom: 10px;">
-                <input type="checkbox" name="zbooks_payment_settings[auto_apply_payment]" value="1"
-                    <?php checked(!empty($settings['auto_apply_payment'])); ?>>
-                <?php esc_html_e('Automatically apply payment when order status changes to Completed', 'zbooks-for-woocommerce'); ?>
-            </label>
-            <p class="description">
-                <?php esc_html_e('When enabled, a payment will be recorded in Zoho Books when an order is marked as completed. The invoice must already be synced to Zoho Books.', 'zbooks-for-woocommerce'); ?>
-            </p>
-        </fieldset>
-        <?php
-    }
-
-    /**
-     * Render refund settings field.
-     */
-    public function render_refund_settings_field(): void {
-        $settings = get_option('zbooks_refund_settings', [
-            'auto_sync_refunds' => true,
-            'create_cash_refund' => true,
-        ]);
-        ?>
-        <fieldset>
-            <label style="display: block; margin-bottom: 10px;">
-                <input type="checkbox" name="zbooks_refund_settings[auto_sync_refunds]" value="1"
-                    <?php checked(!empty($settings['auto_sync_refunds'])); ?>>
-                <?php esc_html_e('Automatically sync refunds to Zoho Books', 'zbooks-for-woocommerce'); ?>
-            </label>
-            <p class="description">
-                <?php esc_html_e('When enabled, a credit note will be created in Zoho Books when a refund is processed in WooCommerce. The original invoice must already be synced.', 'zbooks-for-woocommerce'); ?>
-            </p>
-
-            <label style="display: block; margin: 15px 0 10px 24px;">
-                <input type="checkbox" name="zbooks_refund_settings[create_cash_refund]" value="1"
-                    <?php checked(!empty($settings['create_cash_refund'])); ?>>
-                <?php esc_html_e('Also record cash refund from credit note', 'zbooks-for-woocommerce'); ?>
-            </label>
-            <p class="description" style="margin-left: 24px;">
-                <?php esc_html_e('When enabled, a Credit Note Refund will be created to record the actual cash returned to the customer. If disabled, only the credit note and invoice adjustment will be recorded.', 'zbooks-for-woocommerce'); ?>
-            </p>
         </fieldset>
         <?php
     }
@@ -932,15 +936,25 @@ class SettingsPage {
      * @return array
      */
     public function sanitize_triggers(array $input): array {
-        $valid_actions = ['none', 'sync_draft', 'sync_submit'];
+        // Valid trigger types.
+        $valid_triggers = ['sync_draft', 'sync_submit', 'create_creditnote'];
+
+        // Get valid order statuses.
+        $valid_statuses = array_keys(wc_get_order_statuses());
+        $valid_statuses = array_map(function ($status) {
+            return str_replace('wc-', '', $status);
+        }, $valid_statuses);
+        $valid_statuses[] = ''; // Allow empty (disabled).
+
         $sanitized = [];
 
-        foreach ($input as $status => $action) {
+        foreach ($input as $trigger => $status) {
+            $trigger = sanitize_key($trigger);
             $status = sanitize_key($status);
-            $action = sanitize_key($action);
 
-            if (in_array($action, $valid_actions, true)) {
-                $sanitized[$status] = $action;
+            // Validate trigger type and status.
+            if (in_array($trigger, $valid_triggers, true) && in_array($status, $valid_statuses, true)) {
+                $sanitized[$trigger] = $status;
             }
         }
 
@@ -966,31 +980,6 @@ class SettingsPage {
     }
 
     /**
-     * Sanitize payment settings.
-     *
-     * @param array $input Input data.
-     * @return array
-     */
-    public function sanitize_payment_settings(array $input): array {
-        return [
-            'auto_apply_payment' => !empty($input['auto_apply_payment']),
-        ];
-    }
-
-    /**
-     * Sanitize refund settings.
-     *
-     * @param array $input Input data.
-     * @return array
-     */
-    public function sanitize_refund_settings(array $input): array {
-        return [
-            'auto_sync_refunds' => !empty($input['auto_sync_refunds']),
-            'create_cash_refund' => !empty($input['create_cash_refund']),
-        ];
-    }
-
-    /**
      * Sanitize invoice numbering settings.
      *
      * @param array $input Input data.
@@ -1011,7 +1000,9 @@ class SettingsPage {
      */
     public function sanitize_shipping_settings(array $input): array {
         return [
-            'account_id' => sanitize_text_field($input['account_id'] ?? ''),
+            'account_id' => isset($input['account_id'])
+                ? sanitize_text_field($input['account_id'])
+                : '',
         ];
     }
 

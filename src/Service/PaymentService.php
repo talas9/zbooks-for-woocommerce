@@ -101,9 +101,8 @@ class PaymentService {
 
         $payment_data = $this->map_order_to_payment($order, $invoice_id, $contact_id);
 
-        // Calculate bank fees if configured.
-        $wc_method = $order->get_payment_method();
-        $bank_charges = $this->mapping_repository->calculate_fee($wc_method, $amount);
+        // Get actual bank charges from order meta (set by payment gateways).
+        $bank_charges = $this->get_order_bank_charges($order);
 
         $this->logger->info('Applying payment to invoice', [
             'order_id' => $order_id,
@@ -117,7 +116,12 @@ class PaymentService {
         try {
             $response = $this->client->request(function ($client) use ($payment_data) {
                 return $client->customerpayments->create($payment_data);
-            });
+            }, [
+                'endpoint' => 'customerpayments.create',
+                'order_id' => $order_id,
+                'order_number' => $order->get_order_number(),
+                'invoice_id' => $invoice_id,
+            ]);
 
             // Convert object to array if needed.
             if (is_object($response)) {
@@ -166,7 +170,10 @@ class PaymentService {
         try {
             $response = $this->client->request(function ($client) use ($invoice_id) {
                 return $client->invoices->get($invoice_id);
-            });
+            }, [
+                'endpoint' => 'invoices.get',
+                'invoice_id' => $invoice_id,
+            ]);
 
             if (is_array($response)) {
                 return $response['invoice'] ?? $response;
@@ -215,18 +222,6 @@ class PaymentService {
             ],
         ];
 
-        // Add bank charges (processing fees) if configured.
-        $bank_charges = $this->mapping_repository->calculate_fee($wc_method, $amount);
-        if ($bank_charges > 0) {
-            $payment['bank_charges'] = $bank_charges;
-
-            // Add bank charges account if configured.
-            $fee_account_id = $this->mapping_repository->get_fee_account_id($wc_method);
-            if (!empty($fee_account_id)) {
-                $payment['bank_charges_account_id'] = $fee_account_id;
-            }
-        }
-
         // Add payment method info.
         $payment_method = $order->get_payment_method_title();
 
@@ -244,6 +239,19 @@ class PaymentService {
             $account_id = $this->mapping_repository->get_zoho_account_id($wc_method);
             if (!empty($account_id)) {
                 $payment['account_id'] = $account_id;
+
+                // Only add bank charges when account_id is configured.
+                // Zoho requires account_id when bank_charges is specified.
+                $bank_charges = $this->get_order_bank_charges($order);
+                if ($bank_charges > 0) {
+                    $payment['bank_charges'] = $bank_charges;
+
+                    // Add bank charges expense account if configured.
+                    $fee_account_id = $this->mapping_repository->get_fee_account_id($wc_method);
+                    if (!empty($fee_account_id)) {
+                        $payment['bank_charges_account_id'] = $fee_account_id;
+                    }
+                }
             }
         }
 
@@ -300,6 +308,47 @@ class PaymentService {
     }
 
     /**
+     * Get actual bank charges/fees from WooCommerce order meta.
+     *
+     * Payment gateways store their fees in order meta. This method checks
+     * common meta keys used by popular gateways.
+     *
+     * @param WC_Order $order WooCommerce order.
+     * @return float Bank charges amount, or 0 if not found.
+     */
+    private function get_order_bank_charges(WC_Order $order): float {
+        // Common meta keys used by payment gateways for fees.
+        $fee_meta_keys = [
+            '_stripe_fee',              // Stripe for WooCommerce.
+            '_stripe_net',              // Alternative - net amount (total - fee).
+            '_paypal_fee',              // PayPal.
+            '_paypal_transaction_fee',  // PayPal alternative.
+            '_wcpay_transaction_fee',   // WooCommerce Payments.
+            '_square_fee',              // Square.
+            '_payment_gateway_fee',     // Generic.
+            '_transaction_fee',         // Generic.
+        ];
+
+        // Allow plugins to add custom meta keys.
+        $fee_meta_keys = apply_filters('zbooks_payment_fee_meta_keys', $fee_meta_keys, $order);
+
+        foreach ($fee_meta_keys as $meta_key) {
+            $fee = $order->get_meta($meta_key);
+            if (!empty($fee) && is_numeric($fee)) {
+                // Handle _stripe_net specially - it's total - fee, not the fee itself.
+                if ($meta_key === '_stripe_net') {
+                    $total = (float) $order->get_total();
+                    $net = (float) $fee;
+                    return round($total - $net, 2);
+                }
+                return round((float) $fee, 2);
+            }
+        }
+
+        return 0.0;
+    }
+
+    /**
      * Get payment details from Zoho.
      *
      * @param string $payment_id Zoho payment ID.
@@ -309,7 +358,10 @@ class PaymentService {
         try {
             $response = $this->client->request(function ($client) use ($payment_id) {
                 return $client->customerpayments->get($payment_id);
-            });
+            }, [
+                'endpoint' => 'customerpayments.get',
+                'payment_id' => $payment_id,
+            ]);
 
             if (is_array($response)) {
                 return $response['payment'] ?? $response;
@@ -341,7 +393,11 @@ class PaymentService {
                 return $client->customerpayments->getList([
                     'reference_number' => $reference,
                 ]);
-            });
+            }, [
+                'endpoint' => 'customerpayments.getList',
+                'filter' => 'reference_number',
+                'reference' => $reference,
+            ]);
 
             $list = is_array($payments) ? ($payments['customerpayments'] ?? $payments) : [];
 
@@ -372,7 +428,10 @@ class PaymentService {
         try {
             $this->client->request(function ($client) use ($payment_id) {
                 return $client->customerpayments->delete($payment_id);
-            });
+            }, [
+                'endpoint' => 'customerpayments.delete',
+                'payment_id' => $payment_id,
+            ]);
 
             $this->logger->info('Payment deleted', [
                 'payment_id' => $payment_id,

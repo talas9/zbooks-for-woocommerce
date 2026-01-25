@@ -139,7 +139,8 @@ final class Plugin {
 
         $this->services['refund_service'] = new RefundService(
             $this->get_service('zoho_client'),
-            $this->get_service('logger')
+            $this->get_service('logger'),
+            $this->get_service('field_mapping_repository')
         );
 
         $this->services['sync_orchestrator'] = new SyncOrchestrator(
@@ -157,10 +158,32 @@ final class Plugin {
             $this->get_service('logger')
         );
 
-        // Admin.
+        // Admin - create tab pages first (they register AJAX handlers).
+        $this->services['product_mapping_page'] = new ProductMappingPage(
+            $this->get_service('zoho_client'),
+            $this->get_service('item_mapping_repository'),
+            $this->get_service('logger')
+        );
+
+        $this->services['payment_mapping_page'] = new PaymentMappingPage(
+            $this->get_service('zoho_client'),
+            $this->get_service('payment_method_mapping_repository'),
+            $this->get_service('logger')
+        );
+
+        $this->services['field_mapping_page'] = new FieldMappingPage(
+            $this->get_service('zoho_client'),
+            $this->get_service('field_mapping_repository'),
+            $this->get_service('logger')
+        );
+
+        // Settings page includes Products, Payments, and Custom Fields tabs.
         $this->services['settings_page'] = new SettingsPage(
             $this->get_service('zoho_client'),
-            $this->get_service('token_manager')
+            $this->get_service('token_manager'),
+            $this->get_service('product_mapping_page'),
+            $this->get_service('payment_mapping_page'),
+            $this->get_service('field_mapping_page')
         );
 
         $this->services['order_meta_box'] = new OrderMetaBox(
@@ -183,27 +206,9 @@ final class Plugin {
             $this->get_service('logger')
         );
 
-        $this->services['product_mapping_page'] = new ProductMappingPage(
-            $this->get_service('zoho_client'),
-            $this->get_service('item_mapping_repository'),
-            $this->get_service('logger')
-        );
-
         $this->services['product_meta_box'] = new ProductMetaBox(
             $this->get_service('zoho_client'),
             $this->get_service('item_mapping_repository')
-        );
-
-        $this->services['field_mapping_page'] = new FieldMappingPage(
-            $this->get_service('zoho_client'),
-            $this->get_service('field_mapping_repository'),
-            $this->get_service('logger')
-        );
-
-        $this->services['payment_mapping_page'] = new PaymentMappingPage(
-            $this->get_service('zoho_client'),
-            $this->get_service('payment_method_mapping_repository'),
-            $this->get_service('logger')
         );
 
         // Hooks.

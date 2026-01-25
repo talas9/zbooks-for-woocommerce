@@ -66,8 +66,11 @@
             // Test connection button
             $(document).on('click', '.zbooks-test-connection-btn', this.handleTestConnection.bind(this));
 
-            // Bulk sync button
-            $(document).on('click', '.zbooks-bulk-sync-btn', this.handleBulkSync.bind(this));
+            // Bulk sync button (for selected orders)
+            $(document).on('click', '#zbooks-sync-selected', this.handleBulkSync.bind(this));
+
+            // Bulk sync date range button
+            $(document).on('click', '#zbooks-start-bulk-sync', this.handleBulkSyncDateRange.bind(this));
 
             // Cancel bulk sync
             $(document).on('click', '.zbooks-cancel-bulk-btn', this.handleCancelBulkSync.bind(this));
@@ -427,7 +430,7 @@
         },
 
         /**
-         * Handle bulk sync button click
+         * Handle bulk sync button click (for selected orders)
          *
          * @param {Event} e Click event
          * @return {void}
@@ -462,6 +465,149 @@
 
             // Start processing
             this.processNextBulkItem();
+        },
+
+        /**
+         * Handle bulk sync date range form submission
+         *
+         * @param {Event} e Submit event
+         * @return {void}
+         */
+        handleBulkSyncDateRange: function(e) {
+            e.preventDefault();
+
+            if (this.bulkState.isProcessing) {
+                return;
+            }
+
+            var self = this;
+            var $button = $(e.currentTarget);
+            var $form = $('#zbooks-bulk-sync-form');
+            var $progress = $('#zbooks-bulk-sync-progress');
+
+            var dateFrom = $form.find('#zbooks_date_from').val();
+            var dateTo = $form.find('#zbooks_date_to').val();
+            var asDraft = $form.find('input[name="as_draft"]:checked').val() === 'true';
+
+            if (!dateFrom || !dateTo) {
+                alert('Please select a date range.');
+                return;
+            }
+
+            // Disable button and show progress
+            $button.prop('disabled', true).text('Fetching orders...');
+            $progress.show();
+            $progress.find('.zbooks-progress-text').text('Fetching orders in date range...');
+
+            // First, get orders in the date range
+            $.ajax({
+                url: self.config.ajaxUrl,
+                type: 'POST',
+                data: {
+                    action: 'zbooks_get_orders_by_date',
+                    date_from: dateFrom,
+                    date_to: dateTo,
+                    nonce: self.config.nonce
+                },
+                success: function(response) {
+                    if (response.success && response.data.orders.length > 0) {
+                        var orderIds = response.data.orders.map(function(order) {
+                            return order.id;
+                        });
+
+                        // Initialize bulk state
+                        self.bulkState = {
+                            isProcessing: true,
+                            queue: orderIds,
+                            processed: 0,
+                            succeeded: 0,
+                            failed: 0,
+                            total: orderIds.length,
+                            asDraft: asDraft
+                        };
+
+                        // Update progress UI
+                        $progress.find('.zbooks-progress-text').text('Syncing 0 / ' + orderIds.length + ' orders...');
+
+                        // Add cancel button if not present
+                        if (!$progress.find('.zbooks-cancel-bulk-btn').length) {
+                            $progress.append('<button type="button" class="button zbooks-cancel-bulk-btn">Cancel</button>');
+                        }
+
+                        // Start processing
+                        self.processNextBulkItemDateRange($progress, $button);
+                    } else if (response.success && response.data.orders.length === 0) {
+                        $progress.find('.zbooks-progress-text').text('No orders found in the selected date range.');
+                        $button.prop('disabled', false).text('Start Bulk Sync');
+                    } else {
+                        $progress.find('.zbooks-progress-text').text('Error: ' + (response.data.message || 'Failed to fetch orders'));
+                        $button.prop('disabled', false).text('Start Bulk Sync');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    $progress.find('.zbooks-progress-text').text('Network error: ' + error);
+                    $button.prop('disabled', false).text('Start Bulk Sync');
+                }
+            });
+        },
+
+        /**
+         * Process next item in date range bulk sync
+         *
+         * @param {jQuery} $progress Progress container
+         * @param {jQuery} $button Submit button
+         * @return {void}
+         */
+        processNextBulkItemDateRange: function($progress, $button) {
+            var self = this;
+            var state = this.bulkState;
+
+            if (!state.isProcessing || state.queue.length === 0) {
+                // Complete
+                var statusText = 'Completed: ' + state.succeeded + ' succeeded, ' + state.failed + ' failed.';
+                $progress.find('.zbooks-progress-text').text(statusText);
+                $progress.find('.zbooks-cancel-bulk-btn').remove();
+                $button.prop('disabled', false).text('Start Bulk Sync');
+                state.isProcessing = false;
+
+                // Reload page to update stats
+                setTimeout(function() {
+                    location.reload();
+                }, 2000);
+                return;
+            }
+
+            var orderId = state.queue.shift();
+
+            $.ajax({
+                url: self.config.ajaxUrl,
+                type: 'POST',
+                data: {
+                    action: 'zbooks_manual_sync',
+                    order_id: orderId,
+                    as_draft: state.asDraft ? 'true' : 'false',
+                    nonce: self.config.nonce
+                },
+                success: function(response) {
+                    if (response.success) {
+                        state.succeeded++;
+                    } else {
+                        state.failed++;
+                    }
+                },
+                error: function() {
+                    state.failed++;
+                },
+                complete: function() {
+                    state.processed++;
+                    var percent = Math.round((state.processed / state.total) * 100);
+                    $progress.find('.zbooks-progress-text').text(
+                        'Syncing ' + state.processed + ' / ' + state.total + ' orders (' + percent + '%)...'
+                    );
+                    $progress.find('.zbooks-progress-fill').css('width', percent + '%');
+                    self.processNextBulkItemDateRange($progress, $button);
+                }
+            });
         },
 
         /**

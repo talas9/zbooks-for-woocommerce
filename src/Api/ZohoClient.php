@@ -212,10 +212,11 @@ class ZohoClient {
      * Make an API request with rate limiting.
      *
      * @param callable $request The request callback.
+     * @param array    $context Optional context for logging (e.g., endpoint, entity_type, entity_id).
      * @return mixed The response.
      * @throws \RuntimeException If rate limited or request fails.
      */
-    public function request(callable $request): mixed {
+    public function request(callable $request, array $context = []): mixed {
         // Check rate limit.
         if (!$this->rate_limiter->can_make_request()) {
             $wait_time = $this->rate_limiter->get_seconds_until_reset();
@@ -234,9 +235,9 @@ class ZohoClient {
         try {
             return $request($this->get_client());
         } catch (\Exception $e) {
-            $this->logger->error('API request failed', [
+            $this->logger->error('API request failed', array_merge([
                 'error' => $e->getMessage(),
-            ]);
+            ], $context));
             throw $e;
         }
     }
@@ -428,22 +429,31 @@ class ZohoClient {
 
         $this->logger->debug('Raw API request', [
             'method' => $method,
-            'path' => $path,
+            'endpoint' => $path,
         ]);
 
         $response = wp_remote_request($url, $args);
 
         if (is_wp_error($response)) {
             $this->logger->error('Raw API request failed', [
+                'method' => $method,
+                'endpoint' => $path,
                 'error' => $response->get_error_message(),
             ]);
             throw new \RuntimeException($response->get_error_message());
         }
 
+        $status_code = wp_remote_retrieve_response_code($response);
         $body = wp_remote_retrieve_body($response);
         $result = json_decode($body, true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
+            $this->logger->error('Invalid JSON response from Zoho API', [
+                'method' => $method,
+                'endpoint' => $path,
+                'status_code' => $status_code,
+                'raw_body' => substr($body, 0, 500),
+            ]);
             throw new \RuntimeException('Invalid JSON response from Zoho API');
         }
 
@@ -452,8 +462,11 @@ class ZohoClient {
         if ($code !== 0) {
             $message = $result['message'] ?? 'Unknown API error';
             $this->logger->error('Zoho API error', [
-                'code' => $code,
-                'message' => $message,
+                'method' => $method,
+                'endpoint' => $path,
+                'status_code' => $status_code,
+                'zoho_code' => $code,
+                'zoho_message' => $message,
             ]);
             throw new \RuntimeException($message);
         }

@@ -65,40 +65,30 @@ class FieldMappingPage {
      * Register hooks.
      */
     private function register_hooks(): void {
-        add_action('admin_menu', [$this, 'add_menu_page']);
+        // AJAX handlers only - menu registration moved to SettingsPage.
         add_action('wp_ajax_zbooks_save_field_mappings', [$this, 'ajax_save_mappings']);
         add_action('wp_ajax_zbooks_fetch_zoho_custom_fields', [$this, 'ajax_fetch_zoho_fields']);
     }
 
     /**
-     * Add submenu page under ZBooks menu.
+     * Render the custom fields content.
+     * Called by SettingsPage for the Custom Fields tab.
      */
-    public function add_menu_page(): void {
-        add_submenu_page(
-            'zbooks',
-            __('Field Mapping', 'zbooks-for-woocommerce'),
-            __('Field Mapping', 'zbooks-for-woocommerce'),
-            'manage_woocommerce',
-            'zbooks-field-mapping',
-            [$this, 'render_page']
-        );
-    }
-
-    /**
-     * Render the page.
-     */
-    public function render_page(): void {
+    public function render_content(): void {
         $customer_mappings = $this->field_mapping_repository->get_customer_mappings();
         $invoice_mappings = $this->field_mapping_repository->get_invoice_mappings();
+        $creditnote_mappings = $this->field_mapping_repository->get_creditnote_mappings();
         $wc_customer_fields = $this->field_mapping_repository->get_available_customer_fields();
         $wc_invoice_fields = $this->field_mapping_repository->get_available_invoice_fields();
+        $wc_creditnote_fields = $this->field_mapping_repository->get_available_creditnote_fields();
 
         // Try to fetch Zoho custom fields.
         $zoho_contact_fields = $this->get_cached_zoho_fields('contacts');
         $zoho_invoice_fields = $this->get_cached_zoho_fields('invoices');
+        $zoho_creditnote_fields = $this->get_cached_zoho_fields('creditnotes');
         ?>
-        <div class="wrap">
-            <h1><?php esc_html_e('Custom Field Mapping', 'zbooks-for-woocommerce'); ?></h1>
+        <div class="zbooks-custom-fields-tab">
+            <h2><?php esc_html_e('Custom Field Mapping', 'zbooks-for-woocommerce'); ?></h2>
             <p class="description">
                 <?php esc_html_e('Map WooCommerce order and customer fields to Zoho Books custom fields. These mappings will be applied when syncing orders.', 'zbooks-for-woocommerce'); ?>
             </p>
@@ -142,12 +132,13 @@ class FieldMappingPage {
                                         <select name="customer_mappings[<?php echo esc_attr($index); ?>][zoho_field]" class="zbooks-zoho-field regular-text" data-type="contacts">
                                             <option value=""><?php esc_html_e('Select Zoho field...', 'zbooks-for-woocommerce'); ?></option>
                                             <?php foreach ($zoho_contact_fields as $field) : ?>
-                                                <option value="<?php echo esc_attr($field['customfield_id']); ?>" <?php selected($mapping['zoho_field'], $field['customfield_id']); ?>>
-                                                    <?php echo esc_html($field['label']); ?>
+                                                <option value="<?php echo esc_attr($field['customfield_id']); ?>" data-type="<?php echo esc_attr($field['data_type'] ?? 'string'); ?>" <?php selected($mapping['zoho_field'], $field['customfield_id']); ?>>
+                                                    <?php echo esc_html($field['label'] . ' [' . ($field['data_type'] ?? 'string') . ']'); ?>
                                                 </option>
                                             <?php endforeach; ?>
                                         </select>
                                         <input type="hidden" name="customer_mappings[<?php echo esc_attr($index); ?>][zoho_field_label]" value="<?php echo esc_attr($mapping['zoho_field_label'] ?? ''); ?>">
+                                        <input type="hidden" name="customer_mappings[<?php echo esc_attr($index); ?>][zoho_field_type]" value="<?php echo esc_attr($mapping['zoho_field_type'] ?? ''); ?>">
                                     </td>
                                     <td>
                                         <button type="button" class="button zbooks-remove-mapping"><?php esc_html_e('Remove', 'zbooks-for-woocommerce'); ?></button>
@@ -207,12 +198,13 @@ class FieldMappingPage {
                                         <select name="invoice_mappings[<?php echo esc_attr($index); ?>][zoho_field]" class="zbooks-zoho-field regular-text" data-type="invoices">
                                             <option value=""><?php esc_html_e('Select Zoho field...', 'zbooks-for-woocommerce'); ?></option>
                                             <?php foreach ($zoho_invoice_fields as $field) : ?>
-                                                <option value="<?php echo esc_attr($field['customfield_id']); ?>" <?php selected($mapping['zoho_field'], $field['customfield_id']); ?>>
-                                                    <?php echo esc_html($field['label']); ?>
+                                                <option value="<?php echo esc_attr($field['customfield_id']); ?>" data-type="<?php echo esc_attr($field['data_type'] ?? 'string'); ?>" <?php selected($mapping['zoho_field'], $field['customfield_id']); ?>>
+                                                    <?php echo esc_html($field['label'] . ' [' . ($field['data_type'] ?? 'string') . ']'); ?>
                                                 </option>
                                             <?php endforeach; ?>
                                         </select>
                                         <input type="hidden" name="invoice_mappings[<?php echo esc_attr($index); ?>][zoho_field_label]" value="<?php echo esc_attr($mapping['zoho_field_label'] ?? ''); ?>">
+                                        <input type="hidden" name="invoice_mappings[<?php echo esc_attr($index); ?>][zoho_field_type]" value="<?php echo esc_attr($mapping['zoho_field_type'] ?? ''); ?>">
                                     </td>
                                     <td>
                                         <button type="button" class="button zbooks-remove-mapping"><?php esc_html_e('Remove', 'zbooks-for-woocommerce'); ?></button>
@@ -226,6 +218,72 @@ class FieldMappingPage {
                             <td colspan="3">
                                 <button type="button" class="button zbooks-add-mapping" data-type="invoice">
                                     <?php esc_html_e('Add Invoice Mapping', 'zbooks-for-woocommerce'); ?>
+                                </button>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <hr>
+
+            <!-- Credit Note Field Mappings -->
+            <div class="zbooks-mapping-section">
+                <h2><?php esc_html_e('Credit Note Field Mappings', 'zbooks-for-woocommerce'); ?></h2>
+                <p class="description">
+                    <?php esc_html_e('Map WooCommerce refund data to Zoho Books credit note custom fields.', 'zbooks-for-woocommerce'); ?>
+                </p>
+
+                <table class="wp-list-table widefat fixed striped" id="zbooks-creditnote-mappings">
+                    <thead>
+                        <tr>
+                            <th style="width: 40%;"><?php esc_html_e('WooCommerce Field', 'zbooks-for-woocommerce'); ?></th>
+                            <th style="width: 40%;"><?php esc_html_e('Zoho Custom Field', 'zbooks-for-woocommerce'); ?></th>
+                            <th style="width: 20%;"><?php esc_html_e('Actions', 'zbooks-for-woocommerce'); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($creditnote_mappings)) : ?>
+                            <tr class="zbooks-no-mappings">
+                                <td colspan="3"><?php esc_html_e('No credit note field mappings configured.', 'zbooks-for-woocommerce'); ?></td>
+                            </tr>
+                        <?php else : ?>
+                            <?php foreach ($creditnote_mappings as $index => $mapping) : ?>
+                                <tr class="zbooks-mapping-row" data-index="<?php echo esc_attr($index); ?>">
+                                    <td>
+                                        <select name="creditnote_mappings[<?php echo esc_attr($index); ?>][wc_field]" class="zbooks-wc-field regular-text">
+                                            <option value=""><?php esc_html_e('Select field...', 'zbooks-for-woocommerce'); ?></option>
+                                            <?php foreach ($wc_creditnote_fields as $key => $label) : ?>
+                                                <option value="<?php echo esc_attr($key); ?>" <?php selected($mapping['wc_field'], $key); ?>>
+                                                    <?php echo esc_html($label); ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select name="creditnote_mappings[<?php echo esc_attr($index); ?>][zoho_field]" class="zbooks-zoho-field regular-text" data-type="creditnotes">
+                                            <option value=""><?php esc_html_e('Select Zoho field...', 'zbooks-for-woocommerce'); ?></option>
+                                            <?php foreach ($zoho_creditnote_fields as $field) : ?>
+                                                <option value="<?php echo esc_attr($field['customfield_id']); ?>" data-type="<?php echo esc_attr($field['data_type'] ?? 'string'); ?>" <?php selected($mapping['zoho_field'], $field['customfield_id']); ?>>
+                                                    <?php echo esc_html($field['label'] . ' [' . ($field['data_type'] ?? 'string') . ']'); ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                        <input type="hidden" name="creditnote_mappings[<?php echo esc_attr($index); ?>][zoho_field_label]" value="<?php echo esc_attr($mapping['zoho_field_label'] ?? ''); ?>">
+                                        <input type="hidden" name="creditnote_mappings[<?php echo esc_attr($index); ?>][zoho_field_type]" value="<?php echo esc_attr($mapping['zoho_field_type'] ?? ''); ?>">
+                                    </td>
+                                    <td>
+                                        <button type="button" class="button zbooks-remove-mapping"><?php esc_html_e('Remove', 'zbooks-for-woocommerce'); ?></button>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3">
+                                <button type="button" class="button zbooks-add-mapping" data-type="creditnote">
+                                    <?php esc_html_e('Add Credit Note Mapping', 'zbooks-for-woocommerce'); ?>
                                 </button>
                             </td>
                         </tr>
@@ -260,10 +318,11 @@ class FieldMappingPage {
                         <select name="customer_mappings[{{index}}][zoho_field]" class="zbooks-zoho-field regular-text" data-type="contacts">
                             <option value=""><?php esc_html_e('Select Zoho field...', 'zbooks-for-woocommerce'); ?></option>
                             <?php foreach ($zoho_contact_fields as $field) : ?>
-                                <option value="<?php echo esc_attr($field['customfield_id']); ?>"><?php echo esc_html($field['label']); ?></option>
+                                <option value="<?php echo esc_attr($field['customfield_id']); ?>" data-type="<?php echo esc_attr($field['data_type'] ?? 'string'); ?>"><?php echo esc_html($field['label'] . ' [' . ($field['data_type'] ?? 'string') . ']'); ?></option>
                             <?php endforeach; ?>
                         </select>
                         <input type="hidden" name="customer_mappings[{{index}}][zoho_field_label]" value="">
+                        <input type="hidden" name="customer_mappings[{{index}}][zoho_field_type]" value="">
                     </td>
                     <td>
                         <button type="button" class="button zbooks-remove-mapping"><?php esc_html_e('Remove', 'zbooks-for-woocommerce'); ?></button>
@@ -286,17 +345,45 @@ class FieldMappingPage {
                         <select name="invoice_mappings[{{index}}][zoho_field]" class="zbooks-zoho-field regular-text" data-type="invoices">
                             <option value=""><?php esc_html_e('Select Zoho field...', 'zbooks-for-woocommerce'); ?></option>
                             <?php foreach ($zoho_invoice_fields as $field) : ?>
-                                <option value="<?php echo esc_attr($field['customfield_id']); ?>"><?php echo esc_html($field['label']); ?></option>
+                                <option value="<?php echo esc_attr($field['customfield_id']); ?>" data-type="<?php echo esc_attr($field['data_type'] ?? 'string'); ?>"><?php echo esc_html($field['label'] . ' [' . ($field['data_type'] ?? 'string') . ']'); ?></option>
                             <?php endforeach; ?>
                         </select>
                         <input type="hidden" name="invoice_mappings[{{index}}][zoho_field_label]" value="">
+                        <input type="hidden" name="invoice_mappings[{{index}}][zoho_field_type]" value="">
                     </td>
                     <td>
                         <button type="button" class="button zbooks-remove-mapping"><?php esc_html_e('Remove', 'zbooks-for-woocommerce'); ?></button>
                     </td>
                 </tr>
             </script>
-        </div>
+
+            <!-- Template for new credit note mapping row -->
+            <script type="text/template" id="zbooks-creditnote-mapping-template">
+                <tr class="zbooks-mapping-row" data-index="{{index}}">
+                    <td>
+                        <select name="creditnote_mappings[{{index}}][wc_field]" class="zbooks-wc-field regular-text">
+                            <option value=""><?php esc_html_e('Select field...', 'zbooks-for-woocommerce'); ?></option>
+                            <?php foreach ($wc_creditnote_fields as $key => $label) : ?>
+                                <option value="<?php echo esc_attr($key); ?>"><?php echo esc_html($label); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </td>
+                    <td>
+                        <select name="creditnote_mappings[{{index}}][zoho_field]" class="zbooks-zoho-field regular-text" data-type="creditnotes">
+                            <option value=""><?php esc_html_e('Select Zoho field...', 'zbooks-for-woocommerce'); ?></option>
+                            <?php foreach ($zoho_creditnote_fields as $field) : ?>
+                                <option value="<?php echo esc_attr($field['customfield_id']); ?>" data-type="<?php echo esc_attr($field['data_type'] ?? 'string'); ?>"><?php echo esc_html($field['label'] . ' [' . ($field['data_type'] ?? 'string') . ']'); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <input type="hidden" name="creditnote_mappings[{{index}}][zoho_field_label]" value="">
+                        <input type="hidden" name="creditnote_mappings[{{index}}][zoho_field_type]" value="">
+                    </td>
+                    <td>
+                        <button type="button" class="button zbooks-remove-mapping"><?php esc_html_e('Remove', 'zbooks-for-woocommerce'); ?></button>
+                    </td>
+                </tr>
+            </script>
+        </div><!-- .zbooks-custom-fields-tab -->
 
         <style>
             .zbooks-mapping-section {
@@ -322,13 +409,21 @@ class FieldMappingPage {
         jQuery(document).ready(function($) {
             var customerIndex = <?php echo count($customer_mappings); ?>;
             var invoiceIndex = <?php echo count($invoice_mappings); ?>;
+            var creditnoteIndex = <?php echo count($creditnote_mappings); ?>;
 
             // Add new mapping row.
             $('.zbooks-add-mapping').on('click', function() {
                 var type = $(this).data('type');
                 var templateId = '#zbooks-' + type + '-mapping-template';
                 var tableId = '#zbooks-' + type + '-mappings tbody';
-                var index = type === 'customer' ? customerIndex++ : invoiceIndex++;
+                var index;
+                if (type === 'customer') {
+                    index = customerIndex++;
+                } else if (type === 'invoice') {
+                    index = invoiceIndex++;
+                } else {
+                    index = creditnoteIndex++;
+                }
 
                 var template = $(templateId).html().replace(/\{\{index\}\}/g, index);
                 $(tableId).find('.zbooks-no-mappings').remove();
@@ -340,10 +435,13 @@ class FieldMappingPage {
                 $(this).closest('tr').remove();
             });
 
-            // Update hidden label field when Zoho field changes.
+            // Update hidden label and type fields when Zoho field changes.
             $(document).on('change', '.zbooks-zoho-field', function() {
-                var label = $(this).find('option:selected').text();
-                $(this).siblings('input[type="hidden"]').val(label);
+                var $selected = $(this).find('option:selected');
+                var label = $selected.text();
+                var fieldType = $selected.data('type') || 'string';
+                $(this).siblings('input[name$="[zoho_field_label]"]').val(label);
+                $(this).siblings('input[name$="[zoho_field_type]"]').val(fieldType);
             });
 
             // Save mappings.
@@ -356,19 +454,24 @@ class FieldMappingPage {
 
                 var customerMappings = [];
                 var invoiceMappings = [];
+                var creditnoteMappings = [];
 
                 // Collect customer mappings.
                 $('#zbooks-customer-mappings .zbooks-mapping-row').each(function() {
                     var $row = $(this);
                     var wcField = $row.find('.zbooks-wc-field').val();
-                    var zohoField = $row.find('.zbooks-zoho-field').val();
-                    var zohoLabel = $row.find('.zbooks-zoho-field option:selected').text();
+                    var $zohoSelect = $row.find('.zbooks-zoho-field');
+                    var zohoField = $zohoSelect.val();
+                    var $selected = $zohoSelect.find('option:selected');
+                    var zohoLabel = $selected.text();
+                    var zohoType = $selected.data('type') || 'string';
 
                     if (wcField && zohoField) {
                         customerMappings.push({
                             wc_field: wcField,
                             zoho_field: zohoField,
-                            zoho_field_label: zohoLabel
+                            zoho_field_label: zohoLabel,
+                            zoho_field_type: zohoType
                         });
                     }
                 });
@@ -377,14 +480,38 @@ class FieldMappingPage {
                 $('#zbooks-invoice-mappings .zbooks-mapping-row').each(function() {
                     var $row = $(this);
                     var wcField = $row.find('.zbooks-wc-field').val();
-                    var zohoField = $row.find('.zbooks-zoho-field').val();
-                    var zohoLabel = $row.find('.zbooks-zoho-field option:selected').text();
+                    var $zohoSelect = $row.find('.zbooks-zoho-field');
+                    var zohoField = $zohoSelect.val();
+                    var $selected = $zohoSelect.find('option:selected');
+                    var zohoLabel = $selected.text();
+                    var zohoType = $selected.data('type') || 'string';
 
                     if (wcField && zohoField) {
                         invoiceMappings.push({
                             wc_field: wcField,
                             zoho_field: zohoField,
-                            zoho_field_label: zohoLabel
+                            zoho_field_label: zohoLabel,
+                            zoho_field_type: zohoType
+                        });
+                    }
+                });
+
+                // Collect credit note mappings.
+                $('#zbooks-creditnote-mappings .zbooks-mapping-row').each(function() {
+                    var $row = $(this);
+                    var wcField = $row.find('.zbooks-wc-field').val();
+                    var $zohoSelect = $row.find('.zbooks-zoho-field');
+                    var zohoField = $zohoSelect.val();
+                    var $selected = $zohoSelect.find('option:selected');
+                    var zohoLabel = $selected.text();
+                    var zohoType = $selected.data('type') || 'string';
+
+                    if (wcField && zohoField) {
+                        creditnoteMappings.push({
+                            wc_field: wcField,
+                            zoho_field: zohoField,
+                            zoho_field_label: zohoLabel,
+                            zoho_field_type: zohoType
                         });
                     }
                 });
@@ -396,7 +523,8 @@ class FieldMappingPage {
                         action: 'zbooks_save_field_mappings',
                         nonce: zbooks.nonce,
                         customer_mappings: customerMappings,
-                        invoice_mappings: invoiceMappings
+                        invoice_mappings: invoiceMappings,
+                        creditnote_mappings: creditnoteMappings
                     },
                     success: function(response) {
                         $btn.prop('disabled', false);
@@ -489,35 +617,42 @@ class FieldMappingPage {
      */
     private function fetch_zoho_custom_fields(string $type): array {
         try {
-            // Get custom fields by fetching settings or an entity that includes them.
-            // The webleit SDK accesses custom fields through settings API.
-            $response = $this->zoho_client->request(function ($client) use ($type) {
-                // Access the settings module for custom fields.
-                if ($type === 'contacts') {
-                    // Get contact settings/preferences which include custom fields.
-                    return $client->settings->getList(['module' => 'contacts']);
-                } else {
-                    // Get invoice settings which include custom fields.
-                    return $client->settings->getList(['module' => 'invoices']);
-                }
-            });
+            // Use raw API request to fetch custom fields.
+            // Zoho Books API endpoint: /settings/customfields?entity=<entity_type>
+            $entity_map = [
+                'contacts' => 'contact',
+                'invoices' => 'invoice',
+                'creditnotes' => 'creditnote',
+                'customer' => 'contact',
+                'invoice' => 'invoice',
+                'creditnote' => 'creditnote',
+            ];
 
-            // Parse the response - structure depends on SDK version.
+            $entity = $entity_map[$type] ?? $type;
+            $response = $this->zoho_client->raw_request('GET', '/settings/customfields', [
+                'entity' => $entity,
+            ]);
+
+            // Parse the response.
+            // Zoho returns ALL custom fields organized by entity type:
+            // { "customfields": { "contact": [...], "invoice": [...], ... } }
             $custom_fields = [];
 
             if (is_array($response)) {
-                // Check various possible response structures.
-                $fields_data = $response['custom_fields']
-                    ?? $response['settings']['custom_fields']
-                    ?? $response['preferences']['custom_fields']
-                    ?? [];
+                // Get the customfields container.
+                $all_fields = $response['customfields'] ?? $response['custom_fields'] ?? [];
+
+                // Extract fields for the specific entity type.
+                $fields_data = $all_fields[$entity] ?? [];
 
                 foreach ($fields_data as $field) {
-                    if (isset($field['customfield_id'])) {
+                    $field_id = $field['customfield_id'] ?? $field['field_id'] ?? null;
+                    if ($field_id) {
                         $custom_fields[] = [
-                            'customfield_id' => (string) $field['customfield_id'],
-                            'label' => $field['label'] ?? $field['field_name'] ?? '',
+                            'customfield_id' => (string) $field_id,
+                            'label' => $field['label'] ?? $field['field_name'] ?? $field['placeholder'] ?? '',
                             'data_type' => $field['data_type'] ?? 'string',
+                            'api_name' => $field['api_name'] ?? '',
                         ];
                     }
                 }
@@ -547,17 +682,21 @@ class FieldMappingPage {
 
         $customer_mappings_raw = isset( $_POST['customer_mappings'] ) ? wp_unslash( $_POST['customer_mappings'] ) : [];
         $invoice_mappings_raw = isset( $_POST['invoice_mappings'] ) ? wp_unslash( $_POST['invoice_mappings'] ) : [];
+        $creditnote_mappings_raw = isset( $_POST['creditnote_mappings'] ) ? wp_unslash( $_POST['creditnote_mappings'] ) : [];
 
         // Sanitize each mapping value with sanitize_text_field() via sanitize_mappings().
         $customer_mappings = is_array( $customer_mappings_raw ) ? $this->sanitize_mappings( $customer_mappings_raw ) : [];
         $invoice_mappings = is_array( $invoice_mappings_raw ) ? $this->sanitize_mappings( $invoice_mappings_raw ) : [];
+        $creditnote_mappings = is_array( $creditnote_mappings_raw ) ? $this->sanitize_mappings( $creditnote_mappings_raw ) : [];
 
         $this->field_mapping_repository->save_customer_mappings($customer_mappings);
         $this->field_mapping_repository->save_invoice_mappings($invoice_mappings);
+        $this->field_mapping_repository->save_creditnote_mappings($creditnote_mappings);
 
         $this->logger->info('Field mappings saved', [
             'customer_count' => count($customer_mappings),
             'invoice_count' => count($invoice_mappings),
+            'creditnote_count' => count($creditnote_mappings),
         ]);
 
         wp_send_json_success(['message' => __('Field mappings saved successfully.', 'zbooks-for-woocommerce')]);
@@ -584,6 +723,7 @@ class FieldMappingPage {
                 'wc_field'         => isset($mapping['wc_field']) ? sanitize_text_field($mapping['wc_field']) : '',
                 'zoho_field'       => isset($mapping['zoho_field']) ? sanitize_text_field($mapping['zoho_field']) : '',
                 'zoho_field_label' => isset($mapping['zoho_field_label']) ? sanitize_text_field($mapping['zoho_field_label']) : '',
+                'zoho_field_type'  => isset($mapping['zoho_field_type']) ? sanitize_text_field($mapping['zoho_field_type']) : '',
             ];
         }
 
@@ -603,19 +743,23 @@ class FieldMappingPage {
         // Clear cache.
         delete_transient('zbooks_zoho_custom_fields_contacts');
         delete_transient('zbooks_zoho_custom_fields_invoices');
+        delete_transient('zbooks_zoho_custom_fields_creditnotes');
 
         try {
             $contact_fields = $this->fetch_zoho_custom_fields('contacts');
             $invoice_fields = $this->fetch_zoho_custom_fields('invoices');
+            $creditnote_fields = $this->fetch_zoho_custom_fields('creditnotes');
 
             // Re-cache.
             set_transient('zbooks_zoho_custom_fields_contacts', $contact_fields, HOUR_IN_SECONDS);
             set_transient('zbooks_zoho_custom_fields_invoices', $invoice_fields, HOUR_IN_SECONDS);
+            set_transient('zbooks_zoho_custom_fields_creditnotes', $creditnote_fields, HOUR_IN_SECONDS);
 
             wp_send_json_success([
                 'message' => __('Zoho custom fields refreshed successfully.', 'zbooks-for-woocommerce'),
                 'contact_fields' => $contact_fields,
                 'invoice_fields' => $invoice_fields,
+                'creditnote_fields' => $creditnote_fields,
             ]);
         } catch (\Exception $e) {
             wp_send_json_error(['message' => $e->getMessage()]);

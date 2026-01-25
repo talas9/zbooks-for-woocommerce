@@ -72,7 +72,7 @@ class ProductMappingPage {
      * Register hooks.
      */
     private function register_hooks(): void {
-        add_action('admin_menu', [$this, 'add_menu_page']);
+        // AJAX handlers only - menu registration moved to SettingsPage.
         add_action('wp_ajax_zbooks_save_mapping', [$this, 'ajax_save_mapping']);
         add_action('wp_ajax_zbooks_remove_mapping', [$this, 'ajax_remove_mapping']);
         add_action('wp_ajax_zbooks_auto_map_products', [$this, 'ajax_auto_map']);
@@ -81,23 +81,10 @@ class ProductMappingPage {
     }
 
     /**
-     * Add submenu page under ZBooks menu.
+     * Render the mapping page content.
+     * Called by SettingsPage for the Products tab.
      */
-    public function add_menu_page(): void {
-        add_submenu_page(
-            'zbooks',
-            __('Product Mapping', 'zbooks-for-woocommerce'),
-            __('Product Mapping', 'zbooks-for-woocommerce'),
-            'manage_woocommerce',
-            'zbooks-mapping',
-            [$this, 'render_page']
-        );
-    }
-
-    /**
-     * Render the mapping page.
-     */
-    public function render_page(): void {
+    public function render_content(): void {
         // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only pagination parameters for display only.
         $paged = isset($_GET['paged']) ? max(1, absint(wp_unslash($_GET['paged']))) : 1;
         $per_page = 20;
@@ -115,8 +102,8 @@ class ProductMappingPage {
         wp_enqueue_style('zbooks-admin');
         wp_enqueue_script('zbooks-admin');
         ?>
-        <div class="wrap">
-            <h1><?php esc_html_e('ZBooks Product Mapping', 'zbooks-for-woocommerce'); ?></h1>
+        <div class="zbooks-products-tab">
+            <h2><?php esc_html_e('Product Mapping', 'zbooks-for-woocommerce'); ?></h2>
 
             <p class="description">
                 <?php esc_html_e('Map WooCommerce products to Zoho Books items. Mapped products will use the Zoho item ID when creating invoices.', 'zbooks-for-woocommerce'); ?>
@@ -273,7 +260,7 @@ class ProductMappingPage {
                     </div>
                 </div>
             <?php endif; ?>
-        </div>
+        </div><!-- .zbooks-products-tab -->
 
         <script>
         jQuery(document).ready(function($) {
@@ -573,7 +560,9 @@ class ProductMappingPage {
         try {
             $response = $this->client->request(function ($client) {
                 return $client->items->getList(['per_page' => 200]);
-            });
+            }, [
+                'endpoint' => 'items.getList',
+            ]);
 
             $items = [];
 
@@ -771,7 +760,11 @@ class ProductMappingPage {
 
                 $response = $this->client->request(function ($client) use ($item_data) {
                     return $client->items->create($item_data);
-                });
+                }, [
+                    'endpoint' => 'items.create',
+                    'product_id' => $product_id,
+                    'product_name' => $product->get_name(),
+                ]);
 
                 // SDK returns Item model object directly, not an array.
                 $zoho_item_id = $this->extract_item_id($response);

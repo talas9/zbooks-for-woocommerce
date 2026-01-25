@@ -281,6 +281,7 @@ class OrderMetaRepository {
     ): array {
         $args = [
             'limit' => $limit,
+            'type' => 'shop_order', // Only regular orders, not refunds.
             'orderby' => 'date',
             'order' => 'ASC',
             'meta_query' => [

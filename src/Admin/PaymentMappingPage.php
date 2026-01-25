@@ -66,22 +66,8 @@ class PaymentMappingPage {
         $this->repository = $repository;
         $this->logger = $logger;
 
-        add_action('admin_menu', [$this, 'add_submenu_page']);
+        // Form handling only - menu registration moved to SettingsPage.
         add_action('admin_init', [$this, 'handle_form_submission']);
-    }
-
-    /**
-     * Add submenu page.
-     */
-    public function add_submenu_page(): void {
-        add_submenu_page(
-            'zbooks',
-            __('Payment Mapping', 'zbooks-for-woocommerce'),
-            __('Payment Mapping', 'zbooks-for-woocommerce'),
-            'manage_woocommerce',
-            'zbooks-payment-mapping',
-            [$this, 'render_page']
-        );
     }
 
     /**
@@ -103,6 +89,18 @@ class PaymentMappingPage {
         $mappings = isset($_POST['zbooks_payment_mapping']) ? map_deep(wp_unslash($_POST['zbooks_payment_mapping']), 'sanitize_text_field') : [];
         $this->repository->save_all($mappings);
 
+        // Save payment sync settings.
+        $payment_settings = [
+            'auto_apply_payment' => !empty($_POST['zbooks_payment_settings']['auto_apply_payment']),
+        ];
+        update_option('zbooks_payment_settings', $payment_settings);
+
+        // Save refund sync settings.
+        $refund_settings = [
+            'create_cash_refund' => !empty($_POST['zbooks_refund_settings']['create_cash_refund']),
+        ];
+        update_option('zbooks_refund_settings', $refund_settings);
+
         add_action('admin_notices', function () {
             ?>
             <div class="notice notice-success is-dismissible">
@@ -113,19 +111,20 @@ class PaymentMappingPage {
     }
 
     /**
-     * Render the admin page.
+     * Render the payment settings content.
+     * Called by SettingsPage for the Payments tab.
      */
-    public function render_page(): void {
+    public function render_content(): void {
         $wc_gateways = $this->get_wc_payment_gateways();
         $mappings = $this->repository->get_all();
         $zoho_accounts = $this->get_zoho_bank_accounts();
         $zoho_modes = $this->get_zoho_payment_modes();
         ?>
-        <div class="wrap">
-            <h1><?php esc_html_e('Payment Method Mapping', 'zbooks-for-woocommerce'); ?></h1>
+        <div class="zbooks-payments-tab">
+            <h2><?php esc_html_e('Payment Method Mapping', 'zbooks-for-woocommerce'); ?></h2>
 
             <p class="description">
-                <?php esc_html_e('Map your WooCommerce payment methods to Zoho Books payment modes and specify which bank/cash account payments should be deposited to.', 'zbooks-for-woocommerce'); ?>
+                <?php esc_html_e('Configure how WooCommerce payment methods map to Zoho Books payment modes and specify which bank/cash account payments should be deposited to.', 'zbooks-for-woocommerce'); ?>
             </p>
 
             <?php if (empty($zoho_accounts)) : ?>
@@ -145,7 +144,7 @@ class PaymentMappingPage {
                             <th style="padding: 10px 15px;"><?php esc_html_e('WooCommerce Payment Method', 'zbooks-for-woocommerce'); ?></th>
                             <th style="padding: 10px 15px;"><?php esc_html_e('Zoho Payment Mode', 'zbooks-for-woocommerce'); ?></th>
                             <th style="padding: 10px 15px;"><?php esc_html_e('Deposit To (Bank/Cash Account)', 'zbooks-for-woocommerce'); ?></th>
-                            <th style="padding: 10px 15px;"><?php esc_html_e('Processing Fees', 'zbooks-for-woocommerce'); ?></th>
+                            <th style="padding: 10px 15px;"><?php esc_html_e('Fee Expense Account', 'zbooks-for-woocommerce'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -200,52 +199,106 @@ class PaymentMappingPage {
                                            value="<?php echo esc_attr($mapping['zoho_account_name'] ?? ''); ?>">
                                 </td>
                                 <td style="padding: 8px 15px;">
-                                    <div style="display: flex; gap: 5px; align-items: center; flex-wrap: wrap;">
-                                        <input type="number"
-                                               name="zbooks_payment_mapping[<?php echo esc_attr($gateway_id); ?>][fee_percentage]"
-                                               value="<?php echo esc_attr($mapping['fee_percentage'] ?? ''); ?>"
-                                               step="0.01" min="0" max="100"
-                                               style="width: 70px;"
-                                               placeholder="0">
-                                        <span>%</span>
-                                        <span>+</span>
-                                        <input type="number"
-                                               name="zbooks_payment_mapping[<?php echo esc_attr($gateway_id); ?>][fee_fixed]"
-                                               value="<?php echo esc_attr($mapping['fee_fixed'] ?? ''); ?>"
-                                               step="0.01" min="0"
-                                               style="width: 70px;"
-                                               placeholder="0.00">
-                                    </div>
+                                    <?php
+                                    $expense_accounts = $this->get_expense_accounts();
+                                    $default_fee_account = $this->get_default_fee_account_id();
+                                    $selected_fee_account = $mapping['fee_account_id'] ?? $default_fee_account;
+                                    ?>
                                     <select name="zbooks_payment_mapping[<?php echo esc_attr($gateway_id); ?>][fee_account_id]"
-                                            style="width: 100%; max-width: 200px; margin-top: 5px;">
-                                        <option value=""><?php esc_html_e('-- Fee Account --', 'zbooks-for-woocommerce'); ?></option>
-                                        <?php
-                                        $expense_accounts = $this->get_expense_accounts();
-                                        foreach ($expense_accounts as $account) :
-                                        ?>
+                                            style="width: 100%; max-width: 220px;">
+                                        <option value=""><?php esc_html_e('-- Select Account --', 'zbooks-for-woocommerce'); ?></option>
+                                        <?php foreach ($expense_accounts as $account) : ?>
                                             <option value="<?php echo esc_attr($account['account_id']); ?>"
-                                                <?php selected($mapping['fee_account_id'] ?? '', $account['account_id']); ?>>
+                                                <?php selected($selected_fee_account, $account['account_id']); ?>>
                                                 <?php echo esc_html($account['account_name']); ?>
+                                                <?php if (!empty($account['is_default'])) : ?>
+                                                    <?php esc_html_e('(Recommended)', 'zbooks-for-woocommerce'); ?>
+                                                <?php endif; ?>
                                             </option>
                                         <?php endforeach; ?>
                                     </select>
+                                    <p class="description" style="margin-top: 4px; font-size: 11px;">
+                                        <?php esc_html_e('For recording gateway fees', 'zbooks-for-woocommerce'); ?>
+                                    </p>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
 
-                <p style="margin-top: 20px;">
-                    <?php submit_button(__('Save Mappings', 'zbooks-for-woocommerce'), 'primary', 'submit', false); ?>
-                    <button type="button" class="button zbooks-refresh-accounts" style="margin-left: 10px;">
-                        <?php esc_html_e('Refresh Zoho Accounts', 'zbooks-for-woocommerce'); ?>
-                    </button>
-                </p>
+                <hr style="margin: 30px 0;">
+
+            <?php
+            // Payment sync settings.
+            $payment_settings = get_option('zbooks_payment_settings', [
+                'auto_apply_payment' => true,
+            ]);
+            ?>
+            <h3><?php esc_html_e('Payment Sync Settings', 'zbooks-for-woocommerce'); ?></h3>
+            <p class="description">
+                <?php esc_html_e('Configure how payments are synced to Zoho Books when orders are completed.', 'zbooks-for-woocommerce'); ?>
+            </p>
+
+            <table class="form-table" style="max-width: 800px;">
+                <tr>
+                    <th scope="row"><?php esc_html_e('Payment Sync', 'zbooks-for-woocommerce'); ?></th>
+                    <td>
+                        <fieldset>
+                            <label>
+                                <input type="checkbox" name="zbooks_payment_settings[auto_apply_payment]" value="1"
+                                    <?php checked(!empty($payment_settings['auto_apply_payment'])); ?>>
+                                <?php esc_html_e('Automatically apply payment when order status changes to Completed', 'zbooks-for-woocommerce'); ?>
+                            </label>
+                            <p class="description">
+                                <?php esc_html_e('When enabled, a payment will be recorded in Zoho Books when an order is marked as completed. The invoice must already be synced to Zoho Books.', 'zbooks-for-woocommerce'); ?>
+                            </p>
+                        </fieldset>
+                    </td>
+                </tr>
+            </table>
+
+            <hr style="margin: 30px 0;">
+
+            <?php
+            // Refund sync settings.
+            $refund_settings = get_option('zbooks_refund_settings', [
+                'create_cash_refund' => true,
+            ]);
+            ?>
+            <h3><?php esc_html_e('Refund Settings', 'zbooks-for-woocommerce'); ?></h3>
+            <p class="description">
+                <?php esc_html_e('Configure how refunds are processed in Zoho Books. The credit note trigger is set in the Orders tab.', 'zbooks-for-woocommerce'); ?>
+            </p>
+
+            <table class="form-table" style="max-width: 800px;">
+                <tr>
+                    <th scope="row"><?php esc_html_e('Cash Refund', 'zbooks-for-woocommerce'); ?></th>
+                    <td>
+                        <fieldset>
+                            <label style="display: block; margin-bottom: 10px;">
+                                <input type="checkbox" name="zbooks_refund_settings[create_cash_refund]" value="1"
+                                    <?php checked(!empty($refund_settings['create_cash_refund'])); ?>>
+                                <?php esc_html_e('Record cash refund from credit note', 'zbooks-for-woocommerce'); ?>
+                            </label>
+                            <p class="description">
+                                <?php esc_html_e('When enabled, a Credit Note Refund will be created to record the actual cash returned to the customer. If disabled, only the credit note and invoice adjustment will be recorded.', 'zbooks-for-woocommerce'); ?>
+                            </p>
+                        </fieldset>
+                    </td>
+                </tr>
+            </table>
+
+            <p style="margin-top: 20px;">
+                <?php submit_button(__('Save Settings', 'zbooks-for-woocommerce'), 'primary', 'submit', false); ?>
+                <button type="button" class="button zbooks-refresh-accounts" style="margin-left: 10px;">
+                    <?php esc_html_e('Refresh Zoho Accounts', 'zbooks-for-woocommerce'); ?>
+                </button>
+            </p>
             </form>
 
             <hr style="margin: 30px 0;">
 
-            <h2><?php esc_html_e('Default Mappings', 'zbooks-for-woocommerce'); ?></h2>
+            <h3><?php esc_html_e('Default Mappings', 'zbooks-for-woocommerce'); ?></h3>
             <p class="description">
                 <?php esc_html_e('If a payment method is not mapped above, the following default mappings will be used:', 'zbooks-for-woocommerce'); ?>
             </p>
@@ -271,7 +324,7 @@ class PaymentMappingPage {
                 <strong><?php esc_html_e('Note:', 'zbooks-for-woocommerce'); ?></strong>
                 <?php esc_html_e('If no "Deposit To" account is selected, Zoho Books will use your default bank account.', 'zbooks-for-woocommerce'); ?>
             </p>
-        </div>
+        </div><!-- .zbooks-payments-tab -->
 
         <script>
         jQuery(document).ready(function($) {
@@ -378,7 +431,9 @@ class PaymentMappingPage {
         try {
             $bank_response = $this->zoho_client->request(function ($client) {
                 return $client->bankaccounts->getList();
-            });
+            }, [
+                'endpoint' => 'bankaccounts.getList',
+            ]);
 
             $bank_data = [];
             if (is_array($bank_response)) {
@@ -415,7 +470,10 @@ class PaymentMappingPage {
                 return $client->chartofaccounts->getList([
                     'filter_by' => 'AccountType.Active',
                 ]);
-            });
+            }, [
+                'endpoint' => 'chartofaccounts.getList',
+                'filter' => 'AccountType.Active',
+            ]);
 
             $coa_data = [];
             if (is_array($coa_response)) {
@@ -469,7 +527,7 @@ class PaymentMappingPage {
     /**
      * Get Zoho Books expense accounts for fee recording.
      *
-     * @return array Array of expense accounts.
+     * @return array Array of expense accounts with 'is_default' flag for bank charges account.
      */
     private function get_expense_accounts(): array {
         // Check cache first.
@@ -490,7 +548,10 @@ class PaymentMappingPage {
                     'account_type' => 'expense',
                     'filter_by' => 'AccountType.Active',
                 ]);
-            });
+            }, [
+                'endpoint' => 'chartofaccounts.getList',
+                'filter' => 'expense accounts',
+            ]);
 
             $coa_data = [];
             if (is_array($response)) {
@@ -501,17 +562,32 @@ class PaymentMappingPage {
 
             foreach ($coa_data as $account) {
                 $account_id = $account['account_id'] ?? '';
+                $account_name = $account['account_name'] ?? '';
                 if ($account_id) {
+                    // Check if this is the default bank charges account.
+                    $name_lower = strtolower($account_name);
+                    $is_default = (
+                        strpos($name_lower, 'bank') !== false &&
+                        (strpos($name_lower, 'fee') !== false || strpos($name_lower, 'charge') !== false)
+                    );
+
                     $accounts[] = [
                         'account_id' => $account_id,
-                        'account_name' => $account['account_name'] ?? '',
+                        'account_name' => $account_name,
                         'account_code' => $account['account_code'] ?? '',
+                        'is_default' => $is_default,
                     ];
                 }
             }
 
-            // Sort by name.
+            // Sort: default account first, then alphabetically.
             usort($accounts, function ($a, $b) {
+                if ($a['is_default'] && !$b['is_default']) {
+                    return -1;
+                }
+                if (!$a['is_default'] && $b['is_default']) {
+                    return 1;
+                }
                 return strcasecmp($a['account_name'], $b['account_name']);
             });
 
@@ -524,6 +600,21 @@ class PaymentMappingPage {
         }
 
         return $accounts;
+    }
+
+    /**
+     * Get the default bank charges account ID.
+     *
+     * @return string|null Default account ID or null.
+     */
+    private function get_default_fee_account_id(): ?string {
+        $accounts = $this->get_expense_accounts();
+        foreach ($accounts as $account) {
+            if (!empty($account['is_default'])) {
+                return $account['account_id'];
+            }
+        }
+        return null;
     }
 
     /**

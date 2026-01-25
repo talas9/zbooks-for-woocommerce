@@ -90,16 +90,22 @@ class OrderStatusHooks {
         string $new_status,
         WC_Order $order
     ): void {
-        // Check if sync is configured for this status.
-        $triggers = get_option('zbooks_sync_triggers', []);
+        // Get trigger configuration (action => status).
+        $triggers = get_option('zbooks_sync_triggers', [
+            'sync_draft' => 'processing',
+            'sync_submit' => 'completed',
+            'create_creditnote' => 'refunded',
+        ]);
 
-        if (!isset($triggers[$new_status])) {
+        // Find which action is configured for this status.
+        $action = array_search($new_status, $triggers, true);
+
+        if ($action === false) {
             return;
         }
 
-        $action = $triggers[$new_status];
-
-        if ($action === 'none') {
+        // Credit note processing is handled by on_order_refunded hook.
+        if ($action === 'create_creditnote') {
             return;
         }
 
@@ -216,12 +222,15 @@ class OrderStatusHooks {
      * @param int $refund_id Refund ID.
      */
     public function on_order_refunded(int $order_id, int $refund_id): void {
-        // Check if auto-refund sync is enabled.
-        $settings = get_option('zbooks_refund_settings', [
-            'auto_sync_refunds' => true,
+        // Check if credit note creation is enabled via sync triggers.
+        $triggers = get_option('zbooks_sync_triggers', [
+            'sync_draft' => 'processing',
+            'sync_submit' => 'completed',
+            'create_creditnote' => 'refunded',
         ]);
 
-        if (empty($settings['auto_sync_refunds'])) {
+        // Skip if create_creditnote is disabled (empty status).
+        if (empty($triggers['create_creditnote'])) {
             return;
         }
 
