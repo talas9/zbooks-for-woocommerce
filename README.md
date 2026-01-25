@@ -34,7 +34,15 @@ Sync WooCommerce orders to Zoho Books automatically or manually.
 - **Invoice Field Mapping**: Map WooCommerce order fields to Zoho invoice fields
 - **Payment Mapping**: Map WooCommerce payment methods to Zoho payment modes and bank accounts
 - **Payment Application**: Apply payments to invoices when orders are completed
+- **Bank Fees Tracking**: Capture gateway fees (Stripe, PayPal, etc.) and record in Zoho
 - **Refund Sync**: Sync WooCommerce refunds to Zoho Books credit notes
+
+### Reconciliation
+- **Order Comparison**: Compare WooCommerce orders with Zoho Books invoices
+- **Discrepancy Detection**: Identify missing, unsynced, or mismatched records
+- **Amount Verification**: Detect total/subtotal differences between systems
+- **Bulk Reconciliation**: Run reconciliation reports for any date range
+- **Quick Fixes**: One-click sync for unsynced orders from reconciliation view
 
 ### Reliability & Monitoring
 - **Retry Failed Syncs**: Configurable retry logic with exponential backoff
@@ -92,7 +100,7 @@ Sync WooCommerce orders to Zoho Books automatically or manually.
 1. Download the latest release
 2. Upload to `/wp-content/plugins/zbooks-for-woocommerce/`
 3. Activate the plugin
-4. Go to **WooCommerce > Settings > ZBooks** to configure
+4. Go to **ZBooks > Settings** to configure
 
 ## Configuration
 
@@ -120,7 +128,7 @@ Map WooCommerce data to Zoho Books fields:
 - **Customer Fields**: Map billing/shipping fields to Zoho contact fields
 - **Invoice Fields**: Map order data (notes, custom fields) to invoice fields
 
-Access via **WooCommerce > ZBooks > Field Mapping**
+Access via **ZBooks > Settings > Custom Fields**
 
 ### Product Mapping
 
@@ -130,7 +138,7 @@ Link WooCommerce products to Zoho Books items:
 - **Manual Link**: Search and link existing Zoho items
 - **Bulk Detection**: Find unmapped products that need linking
 
-Access via **WooCommerce > ZBooks > Product Mapping**
+Access via **ZBooks > Settings > Products**
 
 ### Payment Mapping
 
@@ -139,7 +147,7 @@ Map WooCommerce payment methods to Zoho payment modes:
 - **Payment Mode**: Select Zoho payment mode per WooCommerce gateway
 - **Bank Account**: Assign bank account for each payment method
 
-Access via **WooCommerce > ZBooks > Payment Mapping**
+Access via **ZBooks > Settings > Payments**
 
 ### Retry Settings
 
@@ -156,7 +164,7 @@ Monitor sync activity and troubleshoot issues:
 - **Statistics**: View success/failure counts
 - **Clear Logs**: Remove old log entries
 
-Access via **WooCommerce > ZBooks > Logs**
+Access via **ZBooks > Logs**
 
 ## Development
 
