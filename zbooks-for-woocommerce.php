@@ -88,7 +88,47 @@ function zbooks_init(): void {
 		return;
 	}
 
+	// Check for plugin upgrade.
+	zbooks_maybe_upgrade();
+
 	Plugin::get_instance();
+}
+
+/**
+ * Check if plugin was upgraded and run upgrade routines.
+ */
+function zbooks_maybe_upgrade(): void {
+	$installed_version = get_option( 'zbooks_version', '0' );
+
+	if ( version_compare( $installed_version, ZBOOKS_VERSION, '<' ) ) {
+		// Run upgrade routines.
+		zbooks_upgrade( $installed_version );
+
+		// Update stored version.
+		update_option( 'zbooks_version', ZBOOKS_VERSION );
+	}
+}
+
+/**
+ * Run upgrade routines based on version.
+ *
+ * @param string $from_version Version upgrading from.
+ */
+function zbooks_upgrade( string $from_version ): void {
+	// Ensure cron job is scheduled.
+	if ( ! wp_next_scheduled( 'zbooks_retry_failed_syncs' ) ) {
+		wp_schedule_event( time(), 'fifteen_minutes', 'zbooks_retry_failed_syncs' );
+	}
+
+	// Ensure database tables exist.
+	$reconciliation_repo = new Repository\ReconciliationRepository();
+	$reconciliation_repo->create_table();
+
+	// Clear any cached admin menu.
+	delete_transient( 'zbooks_admin_menu_cache' );
+
+	// Flush rewrite rules on upgrade.
+	flush_rewrite_rules();
 }
 
 add_action( 'plugins_loaded', 'Zbooks\zbooks_init' );
