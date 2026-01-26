@@ -572,11 +572,14 @@ class OrderMetaRepository {
 	 * @param string   $reason         Reason for failure.
 	 */
 	public function set_unapplied_credit( WC_Order $order, string $credit_note_id, string $reason ): void {
-		$order->update_meta_data( self::META_UNAPPLIED_CREDIT, [
-			'credit_note_id' => $credit_note_id,
-			'reason'         => $reason,
-			'timestamp'      => current_time( 'mysql' ),
-		]);
+		$order->update_meta_data(
+			self::META_UNAPPLIED_CREDIT,
+			[
+				'credit_note_id' => $credit_note_id,
+				'reason'         => $reason,
+				'timestamp'      => current_time( 'mysql' ),
+			]
+		);
 		$order->save();
 	}
 

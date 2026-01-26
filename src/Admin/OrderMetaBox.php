@@ -152,7 +152,7 @@ class OrderMetaBox {
 				<p>
 					<strong><?php esc_html_e( 'Invoice Status:', 'zbooks-for-woocommerce' ); ?></strong>
 					<?php
-					$status_class = 'zbooks-invoice-status-' . sanitize_html_class( strtolower( $invoice_status ) );
+					$status_class  = 'zbooks-invoice-status-' . sanitize_html_class( strtolower( $invoice_status ) );
 					$status_colors = [
 						'draft'          => '#dba617',
 						'sent'           => '#2271b1',
@@ -162,7 +162,7 @@ class OrderMetaBox {
 						'overdue'        => '#d63638',
 						'void'           => '#787c82',
 					];
-					$status_color = $status_colors[ strtolower( $invoice_status ) ] ?? '#787c82';
+					$status_color  = $status_colors[ strtolower( $invoice_status ) ] ?? '#787c82';
 					?>
 					<span class="<?php echo esc_attr( $status_class ); ?>" style="color: <?php echo esc_attr( $status_color ); ?>; font-weight: 600;">
 						<?php echo esc_html( ucwords( str_replace( '_', ' ', $invoice_status ) ) ); ?>

@@ -4,7 +4,7 @@ Tags: woocommerce, zoho, zoho-books, invoice, sync
 Requires at least: 6.9
 Tested up to: 6.9
 Requires PHP: 8.2
-Stable tag: 1.0.12
+Stable tag: 1.0.13
 License: GPL-2.0+
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -141,6 +141,12 @@ Yes, each reconciliation report can be exported to CSV format for further analys
 5. Reconciliation report with discrepancy detection
 
 == Changelog ==
+
+= 1.0.13 =
+* **Fix: Contact email/phone sync** - Customer email and phone are now properly sent to Zoho using contact_persons array (Zoho API requirement)
+* **Fix: Bank fee currency conversion** - Automatically converts bank fees to order currency when payment gateway processes in a different currency (e.g., Stripe processing in AED for USD orders)
+* **Dev: Unit test improvements** - Fixed mock configuration for invoice creation tests
+* **Dev: PHPCS configuration** - Excluded temp and scripts directories from linting, auto-fixed 30 coding style issues
 
 = 1.0.12 =
 * **NEW: Test runner script** - `run_all_tests.sh` for running all tests locally

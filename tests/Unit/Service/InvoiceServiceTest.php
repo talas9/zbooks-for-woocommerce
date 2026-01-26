@@ -245,7 +245,8 @@ class InvoiceServiceTest extends TestCase {
 										$captured_data = $data;
 										return true;
 									}
-								)
+								),
+								Mockery::type( 'array' ) // Second param: send options.
 							)
 							->andReturn( (object) [ 'invoice_id' => 'zoho_invoice_456' ] );
 
@@ -329,7 +330,8 @@ class InvoiceServiceTest extends TestCase {
 										$captured_data = $data;
 										return true;
 									}
-								)
+								),
+								Mockery::type( 'array' ) // Second param: send options.
 							)
 							->andReturn( (object) [ 'invoice_id' => 'zoho_invoice_456' ] );
 
@@ -462,7 +464,8 @@ class InvoiceServiceTest extends TestCase {
 										$captured_data = $data;
 										return true;
 									}
-								)
+								),
+								Mockery::type( 'array' ) // Second param: send options.
 							)
 							->andReturn( (object) [ 'invoice_id' => 'zoho_invoice_456' ] );
 
@@ -563,7 +566,8 @@ class InvoiceServiceTest extends TestCase {
 										$captured_data = $data;
 										return true;
 									}
-								)
+								),
+								Mockery::type( 'array' ) // Second param: send options.
 							)
 							->andReturn( (object) [ 'invoice_id' => 'zoho_invoice_456' ] );
 

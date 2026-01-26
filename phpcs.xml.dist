@@ -13,6 +13,8 @@
     <exclude-pattern>/dist/*</exclude-pattern>
     <exclude-pattern>/bin/*</exclude-pattern>
     <exclude-pattern>/languages/*</exclude-pattern>
+    <exclude-pattern>/temp/*</exclude-pattern>
+    <exclude-pattern>/scripts/*</exclude-pattern>
     <exclude-pattern>*.min.js</exclude-pattern>
     <exclude-pattern>*.min.css</exclude-pattern>
     <exclude-pattern>*.asset.php</exclude-pattern>

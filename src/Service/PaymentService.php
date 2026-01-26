@@ -119,19 +119,19 @@ class PaymentService {
 		}
 
 		// Use the lesser of order total and invoice balance.
-		$invoice = $validation['invoice'];
+		$invoice         = $validation['invoice'];
 		$invoice_balance = (float) ( $invoice['balance'] ?? $amount );
-		$payment_amount = min( $amount, $invoice_balance );
+		$payment_amount  = min( $amount, $invoice_balance );
 
 		// Warn if amounts don't match.
 		if ( abs( $amount - $invoice_balance ) > 0.01 ) {
 			$this->logger->warning(
 				'Payment amount mismatch - using invoice balance',
 				[
-					'order_id'       => $order_id,
-					'order_total'    => $amount,
+					'order_id'        => $order_id,
+					'order_total'     => $amount,
 					'invoice_balance' => $invoice_balance,
-					'applying'       => $payment_amount,
+					'applying'        => $payment_amount,
 				]
 			);
 		}
@@ -275,7 +275,7 @@ class PaymentService {
 			];
 		}
 
-		$status = strtolower( $invoice['status'] ?? '' );
+		$status           = strtolower( $invoice['status'] ?? '' );
 		$invalid_statuses = [ 'void', 'draft' ];
 
 		if ( in_array( $status, $invalid_statuses, true ) ) {
@@ -334,7 +334,7 @@ class PaymentService {
 			$payment_date = $order->get_date_completed() ?? $order->get_date_created();
 		}
 
-		$amount = $override_amount ?? (float) $order->get_total();
+		$amount    = $override_amount ?? (float) $order->get_total();
 		$wc_method = $order->get_payment_method();
 
 		$payment = [
@@ -539,10 +539,10 @@ class PaymentService {
 		$this->logger->info(
 			'Converted bank fee from gateway currency to order currency',
 			[
-				'order_id'       => $order->get_id(),
-				'original_fee'   => "{$raw_fee} {$fee_currency}",
-				'converted_fee'  => "{$converted_fee} {$order_currency}",
-				'exchange_rate'  => $exchange_rate,
+				'order_id'      => $order->get_id(),
+				'original_fee'  => "{$raw_fee} {$fee_currency}",
+				'converted_fee' => "{$converted_fee} {$order_currency}",
+				'exchange_rate' => $exchange_rate,
 			]
 		);
 
@@ -638,8 +638,8 @@ class PaymentService {
 		$stripe_fee = $order->get_meta( '_stripe_fee' );
 
 		if ( ! empty( $stripe_net ) && is_numeric( $stripe_net ) ) {
-			$net = (float) $stripe_net;
-			$fee = ! empty( $stripe_fee ) && is_numeric( $stripe_fee ) ? (float) $stripe_fee : 0.0;
+			$net                       = (float) $stripe_net;
+			$fee                       = ! empty( $stripe_fee ) && is_numeric( $stripe_fee ) ? (float) $stripe_fee : 0.0;
 			$total_in_gateway_currency = $net + $fee;
 
 			if ( $total_in_gateway_currency > 0 ) {

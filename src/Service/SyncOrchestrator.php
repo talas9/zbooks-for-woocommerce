@@ -330,7 +330,7 @@ class SyncOrchestrator {
 	 * @return SyncResult
 	 */
 	public function resync_order( WC_Order $order, bool $as_draft = false ): SyncResult {
-		$order_id = $order->get_id();
+		$order_id   = $order->get_id();
 		$invoice_id = $this->repository->get_invoice_id( $order );
 
 		if ( ! $invoice_id ) {
@@ -561,7 +561,7 @@ class SyncOrchestrator {
 
 		// Exponential backoff: 15min, 30min, 1hr, 2hr, 4hr, ... capped at 24 hours.
 		$max_delay = 24 * 60 * 60; // 24 hours in seconds.
-		$delay = $base_delay * pow( 2, min( $retry_count, 7 ) ); // Cap exponent at 2^7 = 128x.
+		$delay     = $base_delay * pow( 2, min( $retry_count, 7 ) ); // Cap exponent at 2^7 = 128x.
 		return min( $delay, $max_delay );
 	}
 
@@ -1031,7 +1031,7 @@ class SyncOrchestrator {
 
 		// Apply payment if order is paid and not a draft.
 		if ( $with_payment && ! $as_draft && $order->is_paid() ) {
-			$payment_result      = $this->apply_payment( $order );
+			$payment_result    = $this->apply_payment( $order );
 			$result['payment'] = $payment_result;
 
 			// Mark overall as failed if payment failed (but not if already paid).

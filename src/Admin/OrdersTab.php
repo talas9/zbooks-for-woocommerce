@@ -234,7 +234,7 @@ class OrdersTab {
 	 * Render invoice numbering field.
 	 */
 	public function render_invoice_numbering_field(): void {
-		$settings      = get_option(
+		$settings           = get_option(
 			'zbooks_invoice_numbering',
 			[
 				'use_reference_number' => true,

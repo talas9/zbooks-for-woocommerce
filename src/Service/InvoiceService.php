@@ -94,7 +94,7 @@ class InvoiceService {
 		$existing_id = $this->find_invoice_by_order_number( $order_number );
 		if ( ! empty( $existing_id ) ) {
 			// Verify the existing invoice belongs to the same customer to avoid collision.
-			$existing_invoice = $this->get_invoice( $existing_id );
+			$existing_invoice     = $this->get_invoice( $existing_id );
 			$existing_customer_id = $existing_invoice['customer_id'] ?? null;
 
 			if ( $existing_customer_id === $contact_id ) {
@@ -166,9 +166,9 @@ class InvoiceService {
 			$invoice_id       = (string) ( $invoice_response['invoice_id'] ?? '' );
 
 			// Mark as sent if not draft and setting is enabled.
-			$marked_as_sent = false;
+			$marked_as_sent     = false;
 			$mark_as_sent_error = null;
-			$should_mark_sent = ! $as_draft && $this->should_mark_as_sent();
+			$should_mark_sent   = ! $as_draft && $this->should_mark_as_sent();
 			if ( $should_mark_sent ) {
 				$marked_as_sent = $this->mark_as_sent( $invoice_id );
 				if ( ! $marked_as_sent ) {
@@ -198,7 +198,7 @@ class InvoiceService {
 			);
 
 			// Merge response data with mark_as_sent status.
-			$result_data = is_array( $response ) ? $response : [];
+			$result_data                   = is_array( $response ) ? $response : [];
 			$result_data['marked_as_sent'] = $marked_as_sent;
 			$result_data['email_sent']     = $send_email;
 			if ( $mark_as_sent_error ) {
@@ -265,8 +265,8 @@ class InvoiceService {
 			$this->logger->info(
 				'Invoice updated successfully',
 				[
-					'order_id'     => $order->get_id(),
-					'invoice_id'   => $invoice_id,
+					'order_id'   => $order->get_id(),
+					'invoice_id' => $invoice_id,
 				]
 			);
 

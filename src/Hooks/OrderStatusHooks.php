@@ -336,7 +336,7 @@ class OrderStatusHooks {
 	 * @param WC_Order $order WooCommerce order.
 	 */
 	private function void_invoice_for_order( WC_Order $order ): void {
-		$plugin = \Zbooks\Plugin::get_instance();
+		$plugin          = \Zbooks\Plugin::get_instance();
 		$invoice_service = $plugin->get_service( 'invoice_service' );
 
 		if ( ! $invoice_service ) {
@@ -410,7 +410,7 @@ add_action(
 			return;
 		}
 
-		$plugin = \Zbooks\Plugin::get_instance();
+		$plugin          = \Zbooks\Plugin::get_instance();
 		$invoice_service = $plugin->get_service( 'invoice_service' );
 
 		if ( ! $invoice_service ) {
