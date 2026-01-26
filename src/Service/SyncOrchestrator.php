@@ -748,21 +748,57 @@ class SyncOrchestrator {
 			];
 		}
 
-		// Check if order has been synced.
+		// Check if order has been synced - if not, sync it first.
 		$invoice_id = $this->repository->get_invoice_id( $order );
 		if ( ! $invoice_id ) {
-			$this->logger->warning(
-				'Cannot apply payment - order not synced',
+			$this->logger->info(
+				'Order not synced - syncing before payment',
 				[
 					'order_id' => $order_id,
 				]
 			);
+
+			// Release payment lock before syncing (sync has its own lock).
 			$this->release_payment_lock( $order_id );
-			return [
-				'success'    => false,
-				'payment_id' => null,
-				'error'      => __( 'Order has not been synced to Zoho Books', 'zbooks-for-woocommerce' ),
-			];
+
+			// Sync the order first (not as draft since we're about to apply payment).
+			$sync_result = $this->sync_order( $order, false );
+
+			if ( ! $sync_result->success ) {
+				$this->logger->error(
+					'Failed to sync order before payment',
+					[
+						'order_id' => $order_id,
+						'error'    => $sync_result->error,
+					]
+				);
+				return [
+					'success'    => false,
+					'payment_id' => null,
+					'error'      => sprintf(
+						/* translators: %s: sync error message */
+						__( 'Failed to sync order: %s', 'zbooks-for-woocommerce' ),
+						$sync_result->error
+					),
+				];
+			}
+
+			$invoice_id = $sync_result->invoice_id;
+
+			// Re-acquire payment lock after sync.
+			if ( ! $this->acquire_payment_lock( $order_id ) ) {
+				$this->logger->info(
+					'Payment already being processed after sync',
+					[
+						'order_id' => $order_id,
+					]
+				);
+				return [
+					'success'    => false,
+					'payment_id' => null,
+					'error'      => __( 'Payment already being processed', 'zbooks-for-woocommerce' ),
+				];
+			}
 		}
 
 		// Check if payment already recorded.
