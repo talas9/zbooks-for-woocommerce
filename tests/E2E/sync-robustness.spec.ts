@@ -274,7 +274,9 @@ interface ZohoContactResult {
 	contact_id?: string;
 	contact_name?: string;
 	email?: string;
+	phone?: string;
 	status?: string;
+	contact_persons?: number;
 	error?: string;
 }
 
@@ -284,6 +286,7 @@ interface ZohoPaymentResult {
 	payment_id?: string;
 	payment_number?: string;
 	amount?: number;
+	bank_charges?: number;
 	date?: string;
 	payment_mode?: string;
 	customer_id?: string;
@@ -967,6 +970,263 @@ test.describe('Sync Robustness E2E Tests', () => {
 						const statusText = await statusBadge.textContent();
 						expect(statusText?.trim().length).toBeGreaterThan(0);
 					}
+				}
+			}
+		});
+	});
+
+	test.describe('Contact Email & Phone Sync', () => {
+		test('syncs customer email and phone to Zoho contact', async ({ page }) => {
+			// Skip if Zoho not connected
+			const zohoConnection = await verifyZohoConnection();
+			if (!zohoConnection.connected) {
+				test.skip();
+				return;
+			}
+
+			// Generate unique test data with specific email and phone
+			const testId = uniqueId();
+			const testEmail = `e2e-contact-test-${testId}@example.com`;
+			const testPhone = `555-${Math.floor(1000 + Math.random() * 9000)}`;
+
+			// Create order with specific email/phone via PHP (for full control)
+			const orderIdStr = await wpCli(`eval '
+				$order = wc_create_order(array("status" => "processing"));
+				$order->set_billing_email("${testEmail}");
+				$order->set_billing_phone("${testPhone}");
+				$order->set_billing_first_name("Test");
+				$order->set_billing_last_name("Contact_${testId}");
+				$order->set_billing_address_1("123 Test St");
+				$order->set_billing_city("Test City");
+				$order->set_billing_state("CA");
+				$order->set_billing_postcode("90210");
+				$order->set_billing_country("US");
+				$order->set_payment_method("bacs");
+				$item = new WC_Order_Item_Product();
+				$item->set_name("Test Product ${testId}");
+				$item->set_quantity(1);
+				$item->set_total(49.99);
+				$item->set_subtotal(49.99);
+				$order->add_item($item);
+				$order->calculate_totals();
+				$order->save();
+				echo $order->get_id();
+			'`);
+
+			const orderId = parseInt(orderIdStr, 10);
+			expect(orderId).toBeGreaterThan(0);
+			createdOrderIds.push(orderId);
+
+			// Navigate to order and sync
+			await page.goto(`/wp-admin/admin.php?page=wc-orders&action=edit&id=${orderId}`);
+			await page.waitForLoadState('networkidle');
+
+			// Click sync button (draft or not)
+			const syncButton = page.locator('.zbooks-sync-btn').first();
+			if (await syncButton.isVisible()) {
+				await syncButton.click();
+				await page.waitForTimeout(5000);
+				await page.reload();
+				await page.waitForLoadState('networkidle');
+			}
+
+			// Get contact ID from order meta
+			const contactId = await getOrderMeta(orderId, '_zbooks_zoho_contact_id');
+			expect(contactId).toBeTruthy();
+
+			// Verify contact in Zoho
+			const contact = await verifyZohoContact(contactId!);
+			console.log('Zoho Contact:', JSON.stringify(contact, null, 2));
+
+			expect(contact.success).toBe(true);
+			expect(contact.exists).toBe(true);
+
+			// Verify email and phone are populated via contact_persons
+			expect(contact.email).toBe(testEmail);
+			expect(contact.phone).toBe(testPhone);
+			expect(contact.contact_persons).toBeGreaterThanOrEqual(1);
+		});
+	});
+
+	test.describe('Bank Fee Currency Handling', () => {
+		test('converts bank fees from different currency before syncing to Zoho', async ({ page }) => {
+			// Skip if Zoho not connected
+			const zohoConnection = await verifyZohoConnection();
+			if (!zohoConnection.connected) {
+				test.skip();
+				return;
+			}
+
+			const testId = uniqueId();
+			// Order total in USD
+			const orderTotal = 499.0;
+			// Stripe processed in AED (simulated)
+			const stripeFee = 71.76; // AED
+			const stripeNet = 1742.63; // AED
+			// Total in AED = 71.76 + 1742.63 = 1814.39
+			// Exchange rate = 1814.39 / 499 = 3.636 AED/USD
+			// Expected fee in USD = 71.76 / 3.636 ≈ $19.73
+
+			// Create completed order with Stripe payment
+			const orderIdStr = await wpCli(`eval '
+				$order = wc_create_order(array("status" => "completed"));
+				$order->set_billing_email("e2e-bankfee-${testId}@example.com");
+				$order->set_billing_first_name("BankFee");
+				$order->set_billing_last_name("Test_${testId}");
+				$order->set_billing_address_1("456 Fee St");
+				$order->set_billing_city("Fee City");
+				$order->set_billing_state("CA");
+				$order->set_billing_postcode("90210");
+				$order->set_billing_country("US");
+				$order->set_payment_method("stripe");
+				$order->set_payment_method_title("Stripe");
+				$item = new WC_Order_Item_Product();
+				$item->set_name("Premium Product ${testId}");
+				$item->set_quantity(1);
+				$item->set_total(${orderTotal});
+				$item->set_subtotal(${orderTotal});
+				$order->add_item($item);
+				$order->calculate_totals();
+				// Simulate Stripe processing in AED
+				$order->update_meta_data("_stripe_currency", "AED");
+				$order->update_meta_data("_stripe_fee", "${stripeFee}");
+				$order->update_meta_data("_stripe_net", "${stripeNet}");
+				$order->set_date_paid(time());
+				$order->save();
+				echo $order->get_id();
+			'`);
+
+			const orderId = parseInt(orderIdStr, 10);
+			expect(orderId).toBeGreaterThan(0);
+			createdOrderIds.push(orderId);
+
+			// Navigate to order and sync
+			await page.goto(`/wp-admin/admin.php?page=wc-orders&action=edit&id=${orderId}`);
+			await page.waitForLoadState('networkidle');
+
+			// Click sync button (not as draft to auto-apply payment)
+			const syncButton = page.locator('.zbooks-sync-btn[data-draft="false"]');
+			if (await syncButton.isVisible()) {
+				await syncButton.click();
+				await page.waitForTimeout(5000);
+				await page.reload();
+				await page.waitForLoadState('networkidle');
+			} else {
+				// Try the regular sync button
+				const anySyncButton = page.locator('.zbooks-sync-btn').first();
+				if (await anySyncButton.isVisible()) {
+					await anySyncButton.click();
+					await page.waitForTimeout(5000);
+					await page.reload();
+					await page.waitForLoadState('networkidle');
+				}
+			}
+
+			// Apply payment if button visible (in case sync didn't auto-apply)
+			const applyPaymentBtn = page.locator('.zbooks-apply-payment-btn');
+			if (await applyPaymentBtn.isVisible()) {
+				await applyPaymentBtn.click();
+				await page.waitForTimeout(5000);
+			}
+
+			// Get payment ID from order meta
+			const meta = await getZohoOrderMeta(orderId);
+			console.log('Order meta after sync:', JSON.stringify(meta, null, 2));
+
+			// If payment was applied, verify bank charges
+			if (meta['_zbooks_zoho_payment_id']) {
+				const zohoPayment = await verifyZohoPayment(meta['_zbooks_zoho_payment_id']);
+				console.log('Zoho Payment:', JSON.stringify(zohoPayment, null, 2));
+
+				if (zohoPayment.success && zohoPayment.exists) {
+					const bankCharges = zohoPayment.bank_charges || 0;
+					console.log(`Bank charges in Zoho: ${bankCharges}`);
+
+					// Bank charges should be converted to USD
+					// Expected: ~$19.73 USD (not $71.76)
+					// Should be around $19-20 USD, NOT $71.76
+					expect(bankCharges).toBeLessThan(30); // Sanity check - can't be $71
+					if (bankCharges > 0) {
+						expect(bankCharges).toBeGreaterThan(15); // Should be ~$19.73
+					}
+
+					// More precise check with tolerance
+					const expectedFee = stripeFee / (stripeNet + stripeFee) * orderTotal;
+					const tolerance = 2.0; // Allow $2 tolerance for rounding
+					if (bankCharges > 0) {
+						expect(Math.abs(bankCharges - expectedFee)).toBeLessThan(tolerance);
+					}
+				}
+			}
+		});
+
+		test('skips bank fees when currency cannot be determined', async ({ page }) => {
+			// Skip if Zoho not connected
+			const zohoConnection = await verifyZohoConnection();
+			if (!zohoConnection.connected) {
+				test.skip();
+				return;
+			}
+
+			const testId = uniqueId();
+
+			// Create order with fee but NO currency meta (edge case)
+			const orderIdStr = await wpCli(`eval '
+				$order = wc_create_order(array("status" => "completed"));
+				$order->set_billing_email("e2e-nofee-${testId}@example.com");
+				$order->set_billing_first_name("NoFee");
+				$order->set_billing_last_name("Test_${testId}");
+				$order->set_billing_address_1("789 NoFee St");
+				$order->set_billing_city("NoFee City");
+				$order->set_billing_state("CA");
+				$order->set_billing_postcode("90210");
+				$order->set_billing_country("US");
+				$order->set_payment_method("stripe");
+				$item = new WC_Order_Item_Product();
+				$item->set_name("Basic Product ${testId}");
+				$item->set_quantity(1);
+				$item->set_total(100);
+				$item->set_subtotal(100);
+				$order->add_item($item);
+				$order->calculate_totals();
+				// Set fee with currency but NO net (cannot calculate rate)
+				$order->update_meta_data("_stripe_currency", "AED");
+				$order->update_meta_data("_stripe_fee", "5.00");
+				// Missing _stripe_net - cannot calculate exchange rate
+				$order->set_date_paid(time());
+				$order->save();
+				echo $order->get_id();
+			'`);
+
+			const orderId = parseInt(orderIdStr, 10);
+			expect(orderId).toBeGreaterThan(0);
+			createdOrderIds.push(orderId);
+
+			// Navigate to order and sync
+			await page.goto(`/wp-admin/admin.php?page=wc-orders&action=edit&id=${orderId}`);
+			await page.waitForLoadState('networkidle');
+
+			const syncButton = page.locator('.zbooks-sync-btn').first();
+			if (await syncButton.isVisible()) {
+				await syncButton.click();
+				await page.waitForTimeout(5000);
+			}
+
+			// Should not fail - sync should complete
+			const meta = await getZohoOrderMeta(orderId);
+			console.log('Order meta (no-fee edge case):', JSON.stringify(meta, null, 2));
+
+			// Sync should succeed (invoice should exist)
+			expect(meta['_zbooks_sync_status']).toBe('synced');
+
+			// If payment was applied, bank charges should be 0 (skipped)
+			if (meta['_zbooks_zoho_payment_id']) {
+				const zohoPayment = await verifyZohoPayment(meta['_zbooks_zoho_payment_id']);
+				console.log('Zoho Payment (no-fee edge case):', JSON.stringify(zohoPayment, null, 2));
+
+				// Bank charges should be 0 or skipped when rate cannot be calculated
+				if (zohoPayment.success && zohoPayment.exists) {
+					expect(zohoPayment.bank_charges).toBe(0);
 				}
 			}
 		});

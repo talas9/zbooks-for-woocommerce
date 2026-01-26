@@ -150,13 +150,29 @@ function verify_contact( $zoho_client, string $contact_id ): array {
 
 		$data = is_array( $contact ) ? $contact : ( method_exists( $contact, 'toArray' ) ? $contact->toArray() : (array) $contact );
 
+		// Extract primary contact person email/phone if available.
+		$contact_persons = $data['contact_persons'] ?? [];
+		$primary_person  = null;
+		foreach ( $contact_persons as $person ) {
+			if ( ! empty( $person['is_primary_contact'] ) ) {
+				$primary_person = $person;
+				break;
+			}
+		}
+		// Fallback to first contact person.
+		if ( ! $primary_person && ! empty( $contact_persons ) ) {
+			$primary_person = $contact_persons[0];
+		}
+
 		return [
-			'success'      => true,
-			'exists'       => true,
-			'contact_id'   => $data['contact_id'] ?? $contact_id,
-			'contact_name' => $data['contact_name'] ?? null,
-			'email'        => $data['email'] ?? null,
-			'status'       => $data['status'] ?? null,
+			'success'        => true,
+			'exists'         => true,
+			'contact_id'     => $data['contact_id'] ?? $contact_id,
+			'contact_name'   => $data['contact_name'] ?? null,
+			'email'          => $primary_person['email'] ?? $data['email'] ?? null,
+			'phone'          => $primary_person['phone'] ?? $data['phone'] ?? null,
+			'status'         => $data['status'] ?? null,
+			'contact_persons' => count( $contact_persons ),
 		];
 
 	} catch ( Exception $e ) {
@@ -198,6 +214,7 @@ function verify_payment( $zoho_client, string $payment_id ): array {
 			'payment_id'    => $data['payment_id'] ?? $payment_id,
 			'payment_number'=> $data['payment_number'] ?? null,
 			'amount'        => (float) ( $data['amount'] ?? 0 ),
+			'bank_charges'  => (float) ( $data['bank_charges'] ?? 0 ),
 			'date'          => $data['date'] ?? null,
 			'payment_mode'  => $data['payment_mode'] ?? null,
 			'customer_id'   => $data['customer_id'] ?? null,
