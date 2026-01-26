@@ -496,14 +496,69 @@ class PaymentService {
 	 * Payment gateways store their fees in order meta. This method checks
 	 * common meta keys used by popular gateways.
 	 *
+	 * If the fee is in a different currency than the order (e.g., Stripe processing
+	 * in local currency like AED while order is in USD), the fee is converted.
+	 *
 	 * @param WC_Order $order WooCommerce order.
-	 * @return float Bank charges amount, or 0 if not found.
+	 * @return float Bank charges amount in order currency, or 0 if not found.
 	 */
 	private function get_order_bank_charges( WC_Order $order ): float {
+		// Get raw fee amount.
+		$raw_fee = $this->extract_raw_fee( $order );
+		if ( $raw_fee <= 0 ) {
+			return 0.0;
+		}
+
+		// Check if fee currency differs from order currency.
+		$fee_currency   = $this->get_fee_currency( $order );
+		$order_currency = $order->get_currency();
+
+		// If currencies match, no conversion needed.
+		if ( empty( $fee_currency ) || strtoupper( $fee_currency ) === strtoupper( $order_currency ) ) {
+			return $raw_fee;
+		}
+
+		// Currencies differ - need to convert.
+		$exchange_rate = $this->calculate_gateway_exchange_rate( $order );
+		if ( $exchange_rate === null || $exchange_rate <= 0 ) {
+			$this->logger->warning(
+				'Bank fee currency mismatch - skipping fee (cannot calculate exchange rate)',
+				[
+					'order_id'       => $order->get_id(),
+					'raw_fee'        => $raw_fee,
+					'fee_currency'   => $fee_currency,
+					'order_currency' => $order_currency,
+				]
+			);
+			return 0.0;
+		}
+
+		// Convert fee to order currency.
+		$converted_fee = round( $raw_fee / $exchange_rate, 2 );
+
+		$this->logger->info(
+			'Converted bank fee from gateway currency to order currency',
+			[
+				'order_id'       => $order->get_id(),
+				'original_fee'   => "{$raw_fee} {$fee_currency}",
+				'converted_fee'  => "{$converted_fee} {$order_currency}",
+				'exchange_rate'  => $exchange_rate,
+			]
+		);
+
+		return $converted_fee;
+	}
+
+	/**
+	 * Extract raw fee amount from order meta.
+	 *
+	 * @param WC_Order $order WooCommerce order.
+	 * @return float Raw fee amount (may be in different currency).
+	 */
+	private function extract_raw_fee( WC_Order $order ): float {
 		// Common meta keys used by payment gateways for fees.
 		$fee_meta_keys = [
 			'_stripe_fee',              // Stripe for WooCommerce.
-			'_stripe_net',              // Alternative - net amount (total - fee).
 			'_paypal_fee',              // PayPal.
 			'_paypal_transaction_fee',  // PayPal alternative.
 			'_wcpay_transaction_fee',   // WooCommerce Payments.
@@ -518,17 +573,83 @@ class PaymentService {
 		foreach ( $fee_meta_keys as $meta_key ) {
 			$fee = $order->get_meta( $meta_key );
 			if ( ! empty( $fee ) && is_numeric( $fee ) ) {
-				// Handle _stripe_net specially - it's total - fee, not the fee itself.
-				if ( $meta_key === '_stripe_net' ) {
-					$total = (float) $order->get_total();
-					$net   = (float) $fee;
-					return round( $total - $net, 2 );
-				}
 				return round( (float) $fee, 2 );
 			}
 		}
 
 		return 0.0;
+	}
+
+	/**
+	 * Get the currency of the payment gateway fee.
+	 *
+	 * Payment gateways may process in a different currency than the order.
+	 * For example, Stripe may process a USD order in local currency (AED).
+	 *
+	 * @param WC_Order $order WooCommerce order.
+	 * @return string|null Fee currency code, or null if same as order.
+	 */
+	private function get_fee_currency( WC_Order $order ): ?string {
+		// Stripe stores the processing currency.
+		$stripe_currency = $order->get_meta( '_stripe_currency' );
+		if ( ! empty( $stripe_currency ) ) {
+			return strtoupper( $stripe_currency );
+		}
+
+		// PayPal may store currency.
+		$paypal_currency = $order->get_meta( '_paypal_currency' );
+		if ( ! empty( $paypal_currency ) ) {
+			return strtoupper( $paypal_currency );
+		}
+
+		// WooCommerce Payments currency.
+		$wcpay_currency = $order->get_meta( '_wcpay_currency' );
+		if ( ! empty( $wcpay_currency ) ) {
+			return strtoupper( $wcpay_currency );
+		}
+
+		// Default: assume fee is in order currency.
+		return null;
+	}
+
+	/**
+	 * Calculate exchange rate from gateway data.
+	 *
+	 * Stripe provides net amount and fee in the processing currency.
+	 * Exchange rate = (net + fee) / order_total
+	 *
+	 * Example:
+	 *   Order: $499 USD
+	 *   Stripe net: 1742.63 AED, fee: 71.76 AED
+	 *   Total AED: 1814.39
+	 *   Rate: 1814.39 / 499 = 3.636 AED/USD
+	 *
+	 * @param WC_Order $order WooCommerce order.
+	 * @return float|null Exchange rate (gateway_currency per order_currency), or null if cannot calculate.
+	 */
+	private function calculate_gateway_exchange_rate( WC_Order $order ): ?float {
+		$order_total = (float) $order->get_total();
+		if ( $order_total <= 0 ) {
+			return null;
+		}
+
+		// Try Stripe data first.
+		$stripe_net = $order->get_meta( '_stripe_net' );
+		$stripe_fee = $order->get_meta( '_stripe_fee' );
+
+		if ( ! empty( $stripe_net ) && is_numeric( $stripe_net ) ) {
+			$net = (float) $stripe_net;
+			$fee = ! empty( $stripe_fee ) && is_numeric( $stripe_fee ) ? (float) $stripe_fee : 0.0;
+			$total_in_gateway_currency = $net + $fee;
+
+			if ( $total_in_gateway_currency > 0 ) {
+				return $total_in_gateway_currency / $order_total;
+			}
+		}
+
+		// Could add other gateway calculations here (PayPal, etc.)
+
+		return null;
 	}
 
 	/**

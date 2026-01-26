@@ -141,9 +141,14 @@ class InvoiceService {
 		);
 
 		try {
+			// Determine if invoice email should be sent to customer.
+			$send_email = $this->should_send_invoice_email();
+
 			$response = $this->client->request(
-				function ( $client ) use ( $invoice_data ) {
-					return $client->invoices->create( $invoice_data );
+				function ( $client ) use ( $invoice_data, $send_email ) {
+					// Pass send parameter to control whether Zoho emails the customer.
+					// Default is false to prevent unwanted emails.
+					return $client->invoices->create( $invoice_data, [ 'send' => $send_email ? 'true' : 'false' ] );
 				},
 				[
 					'endpoint'     => 'invoices.create',
@@ -188,12 +193,14 @@ class InvoiceService {
 					'order_number' => $order_number,
 					'invoice_id'   => $invoice_id,
 					'status'       => $status->value,
+					'email_sent'   => $send_email,
 				]
 			);
 
 			// Merge response data with mark_as_sent status.
 			$result_data = is_array( $response ) ? $response : [];
 			$result_data['marked_as_sent'] = $marked_as_sent;
+			$result_data['email_sent']     = $send_email;
 			if ( $mark_as_sent_error ) {
 				$result_data['mark_as_sent_error'] = $mark_as_sent_error;
 			}
@@ -424,6 +431,25 @@ class InvoiceService {
 		);
 
 		return $settings['mark_as_sent'] ?? true;
+	}
+
+	/**
+	 * Check if invoice email should be sent to customer via Zoho Books.
+	 *
+	 * This controls the 'send' parameter in the Zoho API which determines
+	 * whether Zoho Books emails the invoice to the customer on creation.
+	 *
+	 * @return bool Default is false to prevent unwanted customer emails.
+	 */
+	private function should_send_invoice_email(): bool {
+		$settings = get_option(
+			'zbooks_invoice_numbering',
+			[
+				'send_invoice_email' => false,
+			]
+		);
+
+		return ! empty( $settings['send_invoice_email'] );
 	}
 
 	/**

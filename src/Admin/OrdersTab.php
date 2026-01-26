@@ -239,10 +239,12 @@ class OrdersTab {
 			[
 				'use_reference_number' => true,
 				'mark_as_sent'         => true,
+				'send_invoice_email'   => false,
 			]
 		);
-		$use_reference = ! empty( $settings['use_reference_number'] );
-		$mark_as_sent  = $settings['mark_as_sent'] ?? true;
+		$use_reference      = ! empty( $settings['use_reference_number'] );
+		$mark_as_sent       = $settings['mark_as_sent'] ?? true;
+		$send_invoice_email = ! empty( $settings['send_invoice_email'] );
 		?>
 		<fieldset>
 			<label style="display: block; margin-bottom: 10px;">
@@ -281,9 +283,21 @@ class OrdersTab {
 			<p class="description">
 				<?php esc_html_e( 'When enabled, invoices are marked as "Sent" after creation. When disabled, invoices remain as "Draft".', 'zbooks-for-woocommerce' ); ?>
 			</p>
+
+			<hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
+
+			<label style="display: block; margin-bottom: 10px;">
+				<input type="checkbox" name="zbooks_invoice_numbering[send_invoice_email]" value="1"
+					id="zbooks_send_invoice_email"
+					<?php checked( $send_invoice_email ); ?>>
+				<?php esc_html_e( 'Send invoice email to customer via Zoho Books', 'zbooks-for-woocommerce' ); ?>
+			</label>
+			<p class="description">
+				<?php esc_html_e( 'When enabled, Zoho Books will automatically email the invoice to the customer when created.', 'zbooks-for-woocommerce' ); ?>
+			</p>
 			<p class="description" style="margin-top: 8px;">
-				<strong><?php esc_html_e( 'Note:', 'zbooks-for-woocommerce' ); ?></strong>
-				<?php esc_html_e( 'If Zoho Books is sending email notifications when invoices are created, disable this option to keep invoices as drafts. You can also disable auto-email in Zoho Books: Settings → Email Templates → Invoice Notification Settings.', 'zbooks-for-woocommerce' ); ?>
+				<strong><?php esc_html_e( 'Default: Disabled', 'zbooks-for-woocommerce' ); ?></strong> —
+				<?php esc_html_e( 'Most stores handle customer notifications through WooCommerce. Enable only if you want Zoho Books to send its own invoice emails.', 'zbooks-for-woocommerce' ); ?>
 			</p>
 		</fieldset>
 		<?php
@@ -470,6 +484,7 @@ class OrdersTab {
 		return [
 			'use_reference_number' => ! empty( $input['use_reference_number'] ),
 			'mark_as_sent'         => ! empty( $input['mark_as_sent'] ),
+			'send_invoice_email'   => ! empty( $input['send_invoice_email'] ),
 		];
 	}
 

@@ -414,6 +414,36 @@ class CustomerService {
 			);
 		}
 
+		// Add contact person with email and phone.
+		// Zoho Books API requires contact_persons array for email/phone to appear on contact.
+		$email = $order->get_billing_email();
+		$phone = $order->get_billing_phone();
+
+		if ( ! empty( $email ) || ! empty( $phone ) ) {
+			$contact_person = [
+				'is_primary_contact' => true,
+			];
+
+			$first_name = $order->get_billing_first_name();
+			$last_name  = $order->get_billing_last_name();
+			if ( ! empty( $first_name ) ) {
+				$contact_person['first_name'] = $first_name;
+			}
+			if ( ! empty( $last_name ) ) {
+				$contact_person['last_name'] = $last_name;
+			}
+
+			if ( ! empty( $email ) ) {
+				$contact_person['email'] = $email;
+			}
+
+			if ( ! empty( $phone ) ) {
+				$contact_person['phone'] = $phone;
+			}
+
+			$contact['contact_persons'] = [ $contact_person ];
+		}
+
 		return $contact;
 	}
 
