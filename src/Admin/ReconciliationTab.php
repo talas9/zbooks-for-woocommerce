@@ -146,22 +146,22 @@ class ReconciliationTab {
 							</td>
 						</tr>
 						<tr>
-							<th scope="row"><?php esc_html_e( 'Email Notifications', 'zbooks-for-woocommerce' ); ?></th>
+							<th scope="row"><?php esc_html_e( 'Email Options', 'zbooks-for-woocommerce' ); ?></th>
 							<td>
-								<label style="display: block; margin-bottom: 10px;">
-									<input type="checkbox" name="reconciliation[email_enabled]" value="1"
-										<?php checked( ! empty( $settings['email_enabled'] ) ); ?>>
-									<?php esc_html_e( 'Send email report after reconciliation', 'zbooks-for-woocommerce' ); ?>
-								</label>
 								<label style="display: block; margin-bottom: 10px;">
 									<input type="checkbox" name="reconciliation[email_on_discrepancy_only]" value="1"
 										<?php checked( $settings['email_on_discrepancy_only'] ?? true ); ?>>
 									<?php esc_html_e( 'Only send email when discrepancies are found', 'zbooks-for-woocommerce' ); ?>
 								</label>
-								<input type="email" name="reconciliation[email_address]"
-									value="<?php echo esc_attr( $settings['email_address'] ?? get_option( 'admin_email' ) ); ?>"
-									style="width: 300px;"
-									placeholder="<?php echo esc_attr( get_option( 'admin_email' ) ); ?>">
+								<p class="description">
+									<?php
+									printf(
+										/* translators: %s: Link to Notifications tab */
+										esc_html__( 'To enable reconciliation emails and set the recipient, go to the %s tab and enable "Reconciliation Reports".', 'zbooks-for-woocommerce' ),
+										'<a href="' . esc_url( admin_url( 'admin.php?page=zbooks&tab=notifications' ) ) . '">' . esc_html__( 'Notifications', 'zbooks-for-woocommerce' ) . '</a>'
+									);
+									?>
+								</p>
 							</td>
 						</tr>
 					</table>
@@ -214,11 +214,7 @@ class ReconciliationTab {
 			'day_of_week'               => min( 6, max( 0, absint( $input['day_of_week'] ?? 1 ) ) ),
 			'day_of_month'              => min( 28, max( 1, absint( $input['day_of_month'] ?? 1 ) ) ),
 			'amount_tolerance'          => min( 10, max( 0, (float) ( $input['amount_tolerance'] ?? 0.05 ) ) ),
-			'email_enabled'             => ! empty( $input['email_enabled'] ),
 			'email_on_discrepancy_only' => ! empty( $input['email_on_discrepancy_only'] ),
-			'email_address'             => ! empty( sanitize_email( $input['email_address'] ?? '' ) )
-				? sanitize_email( $input['email_address'] ?? '' )
-				: get_option( 'admin_email' ),
 		];
 
 		update_option( 'zbooks_reconciliation_settings', $settings );

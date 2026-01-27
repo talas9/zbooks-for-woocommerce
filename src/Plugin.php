@@ -25,6 +25,7 @@ use Zbooks\Admin\ReconciliationPage;
 use Zbooks\Admin\ReconciliationTab;
 use Zbooks\Admin\ConnectionTab;
 use Zbooks\Admin\OrdersTab;
+use Zbooks\Admin\NotificationsTab;
 use Zbooks\Admin\AdvancedTab;
 use Zbooks\Repository\ItemMappingRepository;
 use Zbooks\Repository\FieldMappingRepository;
@@ -211,6 +212,8 @@ final class Plugin {
 			$this->get_service( 'zoho_client' )
 		);
 
+		$this->services['notifications_tab'] = new NotificationsTab();
+
 		$this->services['advanced_tab'] = new AdvancedTab();
 
 		// Settings page includes all tabs.
@@ -221,6 +224,7 @@ final class Plugin {
 			$this->get_service( 'payments_tab' ),
 			$this->get_service( 'custom_fields_tab' ),
 			$this->get_service( 'reconciliation_tab' ),
+			$this->get_service( 'notifications_tab' ),
 			$this->get_service( 'advanced_tab' )
 		);
 
@@ -300,6 +304,7 @@ final class Plugin {
 		$screen = get_current_screen();
 
 		// Only load on WooCommerce order pages, product pages, and plugin settings.
+		// Check both screen ID (for compatibility) and hook_suffix (more reliable).
 		$allowed_screens = [
 			'woocommerce_page_wc-orders',
 			'shop_order',
@@ -314,7 +319,13 @@ final class Plugin {
 			'zbooks_page_zbooks-reconciliation',
 		];
 
-		if ( ! $screen || ! in_array( $screen->id, $allowed_screens, true ) ) {
+		$screen_match = $screen && in_array( $screen->id, $allowed_screens, true );
+		$hook_match   = in_array( $hook_suffix, $allowed_screens, true );
+
+		// Also check for zbooks prefix in hook_suffix (catches all ZBooks pages).
+		$zbooks_page = strpos( $hook_suffix, 'zbooks' ) !== false;
+
+		if ( ! $screen_match && ! $hook_match && ! $zbooks_page ) {
 			return;
 		}
 
@@ -347,13 +358,22 @@ final class Plugin {
 			'zbooks-admin',
 			'zbooks',
 			[
-				'ajax_url' => admin_url( 'admin-ajax.php' ),
-				'nonce'    => wp_create_nonce( 'zbooks_ajax_nonce' ),
-				'i18n'     => [
-					'syncing'           => __( 'Syncing...', 'zbooks-for-woocommerce' ),
-					'sync_success'      => __( 'Sync successful!', 'zbooks-for-woocommerce' ),
-					'sync_error'        => __( 'Sync failed. Please try again.', 'zbooks-for-woocommerce' ),
-					'confirm_bulk_sync' => __( 'Are you sure you want to sync the selected orders?', 'zbooks-for-woocommerce' ),
+				'ajax_url'             => admin_url( 'admin-ajax.php' ),
+				'nonce'                => wp_create_nonce( 'zbooks_ajax_nonce' ),
+				'reconciliation_nonce' => wp_create_nonce( 'zbooks_reconciliation' ),
+				'i18n'                 => [
+					'syncing'                 => __( 'Syncing...', 'zbooks-for-woocommerce' ),
+					'sync_success'            => __( 'Sync successful!', 'zbooks-for-woocommerce' ),
+					'sync_error'              => __( 'Sync failed. Please try again.', 'zbooks-for-woocommerce' ),
+					'confirm_bulk_sync'       => __( 'Are you sure you want to sync the selected orders?', 'zbooks-for-woocommerce' ),
+					'bulk_sync_leave_warning' => __( 'Bulk sync is in progress. Leaving this page will cancel the sync. Are you sure you want to leave?', 'zbooks-for-woocommerce' ),
+					'session_expired'         => __( 'Session expired. Please refresh the page and try again.', 'zbooks-for-woocommerce' ),
+					'permission_denied'       => __( 'Permission denied. You may not have access to this feature.', 'zbooks-for-woocommerce' ),
+					'server_error'            => __( 'Server error. Please check your server logs or try again later.', 'zbooks-for-woocommerce' ),
+					'network_error'           => __( 'Network error. Please check your internet connection.', 'zbooks-for-woocommerce' ),
+					'reconciliation_failed'   => __( 'Reconciliation failed.', 'zbooks-for-woocommerce' ),
+					'failed_to_delete_report' => __( 'Failed to delete report.', 'zbooks-for-woocommerce' ),
+					'failed_to_load_report'   => __( 'Failed to load report.', 'zbooks-for-woocommerce' ),
 				],
 			]
 		);

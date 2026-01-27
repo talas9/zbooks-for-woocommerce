@@ -11,6 +11,9 @@ declare(strict_types=1);
 
 namespace Zbooks\Logger;
 
+use Zbooks\Service\EmailTemplateService;
+use Zbooks\Service\NotificationQueue;
+
 defined( 'ABSPATH' ) || exit;
 
 /**
@@ -38,6 +41,20 @@ class SyncLogger {
 	 * @var array
 	 */
 	private array $settings;
+
+	/**
+	 * Email template service.
+	 *
+	 * @var EmailTemplateService|null
+	 */
+	private ?EmailTemplateService $email_service = null;
+
+	/**
+	 * Notification queue service.
+	 *
+	 * @var NotificationQueue|null
+	 */
+	private ?NotificationQueue $notification_queue = null;
 
 	/**
 	 * Constructor.
@@ -74,12 +91,36 @@ class SyncLogger {
 		$defaults = [
 			'retention_days'   => 30,
 			'max_file_size_mb' => 10,
-			'email_on_error'   => false,
-			'error_email'      => get_option( 'admin_email' ),
 		];
 
 		$saved = get_option( 'zbooks_log_settings', [] );
 		return array_merge( $defaults, $saved );
+	}
+
+	/**
+	 * Get notification settings with defaults.
+	 *
+	 * @return array
+	 */
+	private function get_notification_settings(): array {
+		$defaults = [
+			'email' => get_option( 'admin_email' ),
+			'types' => [
+				'sync_errors' => false,
+			],
+		];
+
+		// Check for old settings and migrate.
+		$old_settings = get_option( 'zbooks_log_settings', [] );
+		if ( ! empty( $old_settings['email_on_error'] ) ) {
+			$defaults['types']['sync_errors'] = true;
+		}
+		if ( ! empty( $old_settings['error_email'] ) ) {
+			$defaults['email'] = $old_settings['error_email'];
+		}
+
+		$saved = get_option( 'zbooks_notification_settings', [] );
+		return array_replace_recursive( $defaults, $saved );
 	}
 
 	/**
@@ -111,6 +152,7 @@ class SyncLogger {
 	 */
 	public function warning( string $message, array $context = [] ): void {
 		$this->log( 'WARNING', $message, $context );
+		$this->maybe_queue_warning( $message, $context );
 	}
 
 	/**
@@ -184,45 +226,77 @@ class SyncLogger {
 	}
 
 	/**
-	 * Send email notification for errors if enabled.
+	 * Queue error notification if enabled.
 	 *
 	 * @param string $message Error message.
 	 * @param array  $context Error context.
 	 */
 	private function maybe_send_error_email( string $message, array $context ): void {
-		if ( empty( $this->settings['email_on_error'] ) ) {
-			return;
+		// Build a descriptive title from context.
+		$title = __( 'Sync Error', 'zbooks-for-woocommerce' );
+		if ( ! empty( $context['order_id'] ) ) {
+			$title = sprintf(
+				/* translators: %d: Order ID */
+				__( 'Sync Error - Order #%d', 'zbooks-for-woocommerce' ),
+				$context['order_id']
+			);
 		}
 
-		$email = $this->settings['error_email'];
-		if ( empty( $email ) || ! is_email( $email ) ) {
-			return;
+		// Add to notification queue (queue handles enabled check and batching).
+		$context['notification_key'] = 'sync_errors';
+		$this->get_notification_queue()->queue( 'error', $title, $message, $context );
+	}
+
+	/**
+	 * Queue warning notification if enabled.
+	 *
+	 * @param string $message Warning message.
+	 * @param array  $context Warning context.
+	 */
+	private function maybe_queue_warning( string $message, array $context ): void {
+		// Build a descriptive title from context.
+		$title = __( 'Sync Warning', 'zbooks-for-woocommerce' );
+		if ( ! empty( $context['order_id'] ) ) {
+			$title = sprintf(
+				/* translators: %d: Order ID */
+				__( 'Warning - Order #%d', 'zbooks-for-woocommerce' ),
+				$context['order_id']
+			);
 		}
 
-		// Rate limit: max 1 email per 5 minutes.
-		$rate_limit_key = 'zbooks_error_email_sent';
-		if ( get_transient( $rate_limit_key ) ) {
-			return;
+		// Determine notification key based on context.
+		$notification_key = 'warnings';
+		if ( ! empty( $context['currency_mismatch'] ) ) {
+			$notification_key = 'currency_mismatches';
 		}
 
-		$site_name = get_bloginfo( 'name' );
-		$subject   = sprintf(
-			/* translators: 1: site name */
-			__( '[%s] ZBooks for WooCommerce Sync Error', 'zbooks-for-woocommerce' ),
-			$site_name
-		);
+		// Add to notification queue (queue handles enabled check and batching).
+		$context['notification_key'] = $notification_key;
+		$this->get_notification_queue()->queue( 'warning', $title, $message, $context );
+	}
 
-		$body = sprintf(
-			/* translators: 1: error message, 2: context JSON */
-			__( "A sync error occurred on your site:\n\nError: %1\$s\n\nDetails:\n%2\$s\n\nTime: %3\$s\n\nView logs: %4\$s", 'zbooks-for-woocommerce' ),
-			$message,
-			wp_json_encode( $context, JSON_PRETTY_PRINT ),
-			gmdate( 'Y-m-d H:i:s' ) . ' UTC',
-			admin_url( 'admin.php?page=zbooks-logs' )
-		);
+	/**
+	 * Get the email template service instance.
+	 *
+	 * @return EmailTemplateService
+	 */
+	private function get_email_service(): EmailTemplateService {
+		if ( $this->email_service === null ) {
+			$this->email_service = new EmailTemplateService();
+		}
+		return $this->email_service;
+	}
 
-		wp_mail( $email, $subject, $body );
-		set_transient( $rate_limit_key, true, 5 * MINUTE_IN_SECONDS );
+	/**
+	 * Get the notification queue instance.
+	 *
+	 * @return NotificationQueue
+	 */
+	private function get_notification_queue(): NotificationQueue {
+		if ( $this->notification_queue === null ) {
+			$this->notification_queue = new NotificationQueue( $this->get_email_service() );
+		}
+		return $this->notification_queue;
 	}
 
 	/**

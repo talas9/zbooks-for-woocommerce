@@ -3,8 +3,18 @@
  *
  * Tests various discount scenarios in combination with shipping and bank fees.
  * Ensures invoice totals in Zoho match WooCommerce order totals.
+ *
+ * Note: These tests are skipped on mobile viewports because WordPress admin
+ * is not designed for mobile and tests rely on desktop-specific elements.
  */
 import { test, expect, Page } from '@playwright/test';
+
+/**
+ * Helper to check if running on a mobile viewport.
+ * WordPress admin is not designed for mobile, so some tests must skip.
+ */
+const isMobileProject = (projectName: string) =>
+	projectName.includes('mobile');
 
 /**
  * Helper to create a WooCommerce order via the REST API.
@@ -59,7 +69,9 @@ test.describe('Discount Sync to Zoho Books', () => {
         await expect(page.locator('#adminmenu')).toBeVisible();
     });
 
-    test('plugin settings page loads with discount-related settings', async ({ page }) => {
+    test('plugin settings page loads with discount-related settings', async ({ page }, testInfo) => {
+        // Skip on mobile - WordPress admin not designed for mobile viewports
+        test.skip(isMobileProject(testInfo.project.name), 'WordPress admin tests not supported on mobile viewports');
         await page.goto('/wp-admin/admin.php?page=zbooks');
 
         // Verify page loads without errors
@@ -72,7 +84,9 @@ test.describe('Discount Sync to Zoho Books', () => {
         expect(pageTitle).toBeTruthy();
     });
 
-    test('order meta box displays correct sync status fields', async ({ page }) => {
+    test('order meta box displays correct sync status fields', async ({ page }, testInfo) => {
+        // Skip on mobile - WordPress admin not designed for mobile viewports
+        test.skip(isMobileProject(testInfo.project.name), 'WordPress admin tests not supported on mobile viewports');
         // Go to orders list
         await page.goto('/wp-admin/admin.php?page=wc-orders');
 
@@ -99,7 +113,9 @@ test.describe('Discount Sync to Zoho Books', () => {
         }
     });
 
-    test('verify InvoiceService handles discount total correctly', async ({ page }) => {
+    test('verify InvoiceService handles discount total correctly', async ({ page }, testInfo) => {
+        // Skip on mobile - WordPress admin not designed for mobile viewports
+        test.skip(isMobileProject(testInfo.project.name), 'WordPress admin tests not supported on mobile viewports');
         // This test verifies the discount display in an order with discount
         // Go to orders with potential discounts
         await page.goto('/wp-admin/admin.php?page=wc-orders');
@@ -131,7 +147,9 @@ test.describe('Discount Sync to Zoho Books', () => {
         }
     });
 
-    test('verify shipping is captured in order sync', async ({ page }) => {
+    test('verify shipping is captured in order sync', async ({ page }, testInfo) => {
+        // Skip on mobile - WordPress admin not designed for mobile viewports
+        test.skip(isMobileProject(testInfo.project.name), 'WordPress admin tests not supported on mobile viewports');
         // Navigate to orders
         await page.goto('/wp-admin/admin.php?page=wc-orders');
 
@@ -152,7 +170,9 @@ test.describe('Discount Sync to Zoho Books', () => {
         }
     });
 
-    test('bulk sync page handles orders with discounts', async ({ page }) => {
+    test('bulk sync page handles orders with discounts', async ({ page }, testInfo) => {
+        // Skip on mobile - WordPress admin not designed for mobile viewports
+        test.skip(isMobileProject(testInfo.project.name), 'WordPress admin tests not supported on mobile viewports');
         // Navigate to bulk sync page
         await page.goto('/wp-admin/admin.php?page=zbooks-bulk-sync');
 
@@ -172,7 +192,9 @@ test.describe('Order Creation with Discount Scenarios', () => {
      * They verify the invoice mapping logic handles various discount scenarios.
      */
 
-    test('HPOS orders page is accessible', async ({ page }) => {
+    test('HPOS orders page is accessible', async ({ page }, testInfo) => {
+        // Skip on mobile - WordPress admin not designed for mobile viewports
+        test.skip(isMobileProject(testInfo.project.name), 'WordPress admin tests not supported on mobile viewports');
         // Test that HPOS (High-Performance Order Storage) page loads
         await page.goto('/wp-admin/admin.php?page=wc-orders');
 
@@ -191,7 +213,9 @@ test.describe('Order Creation with Discount Scenarios', () => {
         expect(hasTable || hasNoOrders || hasAddButton || hasOrdersHeader || hasWooCommerceNav).toBeTruthy();
     });
 
-    test('order editor loads without errors', async ({ page }) => {
+    test('order editor loads without errors', async ({ page }, testInfo) => {
+        // Skip on mobile - WordPress admin not designed for mobile viewports
+        test.skip(isMobileProject(testInfo.project.name), 'WordPress admin tests not supported on mobile viewports');
         await page.goto('/wp-admin/admin.php?page=wc-orders');
 
         // Try to access order creation/editing
@@ -205,7 +229,9 @@ test.describe('Order Creation with Discount Scenarios', () => {
 });
 
 test.describe('Sync Button Functionality', () => {
-    test('sync buttons are present in order meta box', async ({ page }) => {
+    test('sync buttons are present in order meta box', async ({ page }, testInfo) => {
+        // Skip on mobile - WordPress admin not designed for mobile viewports
+        test.skip(isMobileProject(testInfo.project.name), 'WordPress admin tests not supported on mobile viewports');
         // Go to orders
         await page.goto('/wp-admin/admin.php?page=wc-orders');
 
@@ -227,7 +253,9 @@ test.describe('Sync Button Functionality', () => {
         }
     });
 
-    test('apply payment button appears for synced unpaid orders', async ({ page }) => {
+    test('apply payment button appears for synced unpaid orders', async ({ page }, testInfo) => {
+        // Skip on mobile - WordPress admin not designed for mobile viewports
+        test.skip(isMobileProject(testInfo.project.name), 'WordPress admin tests not supported on mobile viewports');
         // Navigate to orders
         await page.goto('/wp-admin/admin.php?page=wc-orders');
 
@@ -271,7 +299,9 @@ test.describe('Sync Button Functionality', () => {
 });
 
 test.describe('Invoice Totals Verification', () => {
-    test('order total breakdown is visible', async ({ page }) => {
+    test('order total breakdown is visible', async ({ page }, testInfo) => {
+        // Skip on mobile - WordPress admin not designed for mobile viewports
+        test.skip(isMobileProject(testInfo.project.name), 'WordPress admin tests not supported on mobile viewports');
         await page.goto('/wp-admin/admin.php?page=wc-orders');
 
         const ordersTable = page.locator('.wp-list-table tbody tr');
@@ -294,7 +324,9 @@ test.describe('Invoice Totals Verification', () => {
         }
     });
 
-    test('discount is correctly displayed in order totals', async ({ page }) => {
+    test('discount is correctly displayed in order totals', async ({ page }, testInfo) => {
+        // Skip on mobile - WordPress admin not designed for mobile viewports
+        test.skip(isMobileProject(testInfo.project.name), 'WordPress admin tests not supported on mobile viewports');
         await page.goto('/wp-admin/admin.php?page=wc-orders');
 
         // Look for an order with discount
@@ -322,7 +354,9 @@ test.describe('Invoice Totals Verification', () => {
 });
 
 test.describe('Fee Handling (Bank Fees)', () => {
-    test('fees are displayed in order totals', async ({ page }) => {
+    test('fees are displayed in order totals', async ({ page }, testInfo) => {
+        // Skip on mobile - WordPress admin not designed for mobile viewports
+        test.skip(isMobileProject(testInfo.project.name), 'WordPress admin tests not supported on mobile viewports');
         await page.goto('/wp-admin/admin.php?page=wc-orders');
 
         const ordersTable = page.locator('.wp-list-table tbody tr');
@@ -344,7 +378,9 @@ test.describe('Fee Handling (Bank Fees)', () => {
         }
     });
 
-    test('bank fee settings page is accessible', async ({ page }) => {
+    test('bank fee settings page is accessible', async ({ page }, testInfo) => {
+        // Skip on mobile - WordPress admin not designed for mobile viewports
+        test.skip(isMobileProject(testInfo.project.name), 'WordPress admin tests not supported on mobile viewports');
         // Navigate to ZBooks settings
         await page.goto('/wp-admin/admin.php?page=zbooks');
 
@@ -355,7 +391,9 @@ test.describe('Fee Handling (Bank Fees)', () => {
 });
 
 test.describe('Combined Scenarios', () => {
-    test('order with discount, shipping, and fees syncs correctly', async ({ page }) => {
+    test('order with discount, shipping, and fees syncs correctly', async ({ page }, testInfo) => {
+        // Skip on mobile - WordPress admin not designed for mobile viewports
+        test.skip(isMobileProject(testInfo.project.name), 'WordPress admin tests not supported on mobile viewports');
         /**
          * This test verifies orders with complex pricing (discount + shipping + fees)
          * are handled correctly by the sync process.
@@ -399,7 +437,9 @@ test.describe('Combined Scenarios', () => {
         }
     });
 
-    test('meta box displays all synced entity links correctly', async ({ page }) => {
+    test('meta box displays all synced entity links correctly', async ({ page }, testInfo) => {
+        // Skip on mobile - WordPress admin not designed for mobile viewports
+        test.skip(isMobileProject(testInfo.project.name), 'WordPress admin tests not supported on mobile viewports');
         await page.goto('/wp-admin/admin.php?page=wc-orders');
 
         const ordersTable = page.locator('.wp-list-table tbody tr');

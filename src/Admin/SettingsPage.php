@@ -61,6 +61,13 @@ class SettingsPage {
 	private ReconciliationTab $reconciliation_tab;
 
 	/**
+	 * Notifications tab instance.
+	 *
+	 * @var NotificationsTab
+	 */
+	private NotificationsTab $notifications_tab;
+
+	/**
 	 * Advanced tab instance.
 	 *
 	 * @var AdvancedTab
@@ -83,6 +90,7 @@ class SettingsPage {
 	 * @param PaymentsTab       $payments_tab       Payments tab.
 	 * @param CustomFieldsTab   $custom_fields_tab  Custom fields tab.
 	 * @param ReconciliationTab $reconciliation_tab Reconciliation tab.
+	 * @param NotificationsTab  $notifications_tab  Notifications tab.
 	 * @param AdvancedTab       $advanced_tab       Advanced tab.
 	 */
 	public function __construct(
@@ -92,6 +100,7 @@ class SettingsPage {
 		PaymentsTab $payments_tab,
 		CustomFieldsTab $custom_fields_tab,
 		ReconciliationTab $reconciliation_tab,
+		NotificationsTab $notifications_tab,
 		AdvancedTab $advanced_tab
 	) {
 		$this->connection_tab     = $connection_tab;
@@ -100,6 +109,7 @@ class SettingsPage {
 		$this->payments_tab       = $payments_tab;
 		$this->custom_fields_tab  = $custom_fields_tab;
 		$this->reconciliation_tab = $reconciliation_tab;
+		$this->notifications_tab  = $notifications_tab;
 		$this->advanced_tab       = $advanced_tab;
 
 		$this->register_hooks();
@@ -119,6 +129,7 @@ class SettingsPage {
 				'payments'       => __( 'Payments', 'zbooks-for-woocommerce' ),
 				'custom_fields'  => __( 'Custom Fields', 'zbooks-for-woocommerce' ),
 				'reconciliation' => __( 'Reconciliation', 'zbooks-for-woocommerce' ),
+				'notifications'  => __( 'Notifications', 'zbooks-for-woocommerce' ),
 				'advanced'       => __( 'Advanced', 'zbooks-for-woocommerce' ),
 			];
 		}
@@ -152,6 +163,7 @@ class SettingsPage {
 	public function register_settings(): void {
 		$this->connection_tab->register_settings();
 		$this->orders_tab->register_settings();
+		$this->notifications_tab->register_settings();
 		$this->advanced_tab->register_settings();
 	}
 
@@ -228,6 +240,9 @@ class SettingsPage {
 				break;
 			case 'reconciliation':
 				$this->reconciliation_tab->render_content();
+				break;
+			case 'notifications':
+				$this->notifications_tab->render_content();
 				break;
 			case 'advanced':
 				$this->advanced_tab->render_content();

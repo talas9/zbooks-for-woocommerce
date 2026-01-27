@@ -83,6 +83,43 @@ The billing email from the order is used for matching. Consider standardizing cu
 
 Yes. Guest orders create or match contacts based on billing information.
 
+### What if I delete or edit an invoice in Zoho?
+
+The plugin handles manual Zoho modifications gracefully:
+
+- **Deleted invoices**: Automatically recreated on re-sync
+- **Modified invoices**: Plugin detects discrepancies and warns, then updates to match WooCommerce
+- **Locked invoices** (paid/void): Cannot be modified, plugin reports this clearly
+
+### How do I prevent ZBooks from overwriting my Zoho edits?
+
+If you intentionally edit an invoice in Zoho and don't want the plugin to revert your changes:
+
+1. **Mark as Sent**: In Zoho Books, mark the invoice as "Sent" - this locks it from further edits
+2. **Record a Payment**: Paid invoices cannot be modified
+3. **Void the Invoice**: Voided invoices are locked permanently
+
+Once an invoice is locked, the plugin will detect this and report that it cannot be modified, preserving your manual changes.
+
+### What is the "Locked Invoice Handling" setting?
+
+This setting (found in **ZBooks > Settings > Orders > Sync Behavior**) controls what happens when the plugin encounters a locked invoice (paid/void) that differs from the WooCommerce order:
+
+**When enabled (default - recommended):**
+- The entire sync stops when a locked invoice has discrepancies
+- No payment is applied to the invoice
+- A clear error is logged explaining the issue
+- Use this if you want full control and visibility over mismatches
+
+**When disabled:**
+- The invoice update is skipped, but sync continues
+- Payment is still applied to the existing invoice
+- Useful if you intentionally edited the invoice in Zoho but still want payments recorded
+
+### What if I delete a customer in Zoho?
+
+The plugin detects the missing contact and creates a new one on the next order sync. The stale reference is automatically cleared.
+
 ## Troubleshooting
 
 ### Why isn't my order syncing?

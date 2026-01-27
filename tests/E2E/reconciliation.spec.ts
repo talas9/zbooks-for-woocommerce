@@ -47,10 +47,10 @@ test.describe('Reconciliation Settings Tab', () => {
 			page.locator('input[name="reconciliation[amount_tolerance]"]')
 		).toBeVisible();
 
-		// Check for email notification checkbox
+		// Check for email on discrepancy only checkbox (email settings are on Notifications tab)
 		await expect(
 			page.locator(
-				'input[name="reconciliation[email_enabled]"][type="checkbox"]'
+				'input[name="reconciliation[email_on_discrepancy_only]"][type="checkbox"]'
 			)
 		).toBeVisible();
 
@@ -155,25 +155,19 @@ test.describe('Reconciliation Settings Tab', () => {
 	});
 
 	test('email settings can be configured', async ({ page }) => {
-		// Check email enabled checkbox
-		const emailEnabled = page.locator(
-			'input[name="reconciliation[email_enabled]"]'
-		);
+		// Check email on discrepancy only checkbox (this is the only email option on the settings tab)
 		const emailOnDiscrepancy = page.locator(
 			'input[name="reconciliation[email_on_discrepancy_only]"]'
 		);
-		const emailAddress = page.locator(
-			'input[name="reconciliation[email_address]"]'
-		);
 
-		// All email fields should be present
-		await expect(emailEnabled).toBeVisible();
+		// Email option should be present
 		await expect(emailOnDiscrepancy).toBeVisible();
-		await expect(emailAddress).toBeVisible();
 
-		// Email address should have a value (defaults to admin email)
-		const emailValue = await emailAddress.inputValue();
-		expect(emailValue.length).toBeGreaterThan(0);
+		// Check for link to Notifications tab in the form description (where email settings are configured)
+		// Use .zbooks-reconciliation-settings to scope within the form area, avoiding the nav tab
+		await expect(
+			page.locator('.zbooks-reconciliation-settings a[href*="tab=notifications"]')
+		).toBeVisible();
 	});
 });
 
@@ -313,14 +307,29 @@ test.describe('Report History', () => {
 		const hasTable = await reportsTable.isVisible().catch(() => false);
 
 		if (hasTable) {
-			// Check table headers
-			await expect(page.locator('th:has-text("Date")')).toBeVisible();
-			await expect(page.locator('th:has-text("Period")')).toBeVisible();
-			await expect(page.locator('th:has-text("Status")')).toBeVisible();
-			await expect(page.locator('th:has-text("Matched")')).toBeVisible();
-			await expect(page.locator('th:has-text("Discrepancies")')).toBeVisible();
-			await expect(page.locator('th:has-text("Difference")')).toBeVisible();
-			await expect(page.locator('th:has-text("Actions")')).toBeVisible();
+			// Check table headers - scope to the report history table to avoid matching
+			// the "Recent Discrepancies" table which also has Date/Status columns
+			await expect(
+				reportsTable.locator('th:has-text("Date")')
+			).toBeVisible();
+			await expect(
+				reportsTable.locator('th:has-text("Period")')
+			).toBeVisible();
+			await expect(
+				reportsTable.locator('th:has-text("Status")')
+			).toBeVisible();
+			await expect(
+				reportsTable.locator('th:has-text("Matched")')
+			).toBeVisible();
+			await expect(
+				reportsTable.locator('th:has-text("Discrepancies")')
+			).toBeVisible();
+			await expect(
+				reportsTable.locator('th:has-text("Difference")')
+			).toBeVisible();
+			await expect(
+				reportsTable.locator('th:has-text("Actions")')
+			).toBeVisible();
 		}
 	});
 
@@ -386,18 +395,24 @@ test.describe('Latest Report Summary', () => {
 		const hasLatestReport = await latestReport.isVisible().catch(() => false);
 
 		if (hasLatestReport) {
-			// Check for summary cards
+			// Check for summary cards using correct class names from ReconciliationPage.php
 			await expect(
-				page.locator('.summary-card:has-text("Matched")')
+				page.locator('.zbooks-card:has(.zbooks-card-label:has-text("Matched"))')
 			).toBeVisible();
 			await expect(
-				page.locator('.summary-card:has-text("Missing in Zoho")')
+				page.locator(
+					'.zbooks-card:has(.zbooks-card-label:has-text("Missing in Zoho"))'
+				)
 			).toBeVisible();
 			await expect(
-				page.locator('.summary-card:has-text("Amount Mismatches")')
+				page.locator(
+					'.zbooks-card:has(.zbooks-card-label:has-text("Amount Mismatches"))'
+				)
 			).toBeVisible();
 			await expect(
-				page.locator('.summary-card:has-text("Total Difference")')
+				page.locator(
+					'.zbooks-card:has(.zbooks-card-label:has-text("Total Difference"))'
+				)
 			).toBeVisible();
 		}
 	});

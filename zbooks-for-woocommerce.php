@@ -3,7 +3,7 @@
  * Plugin Name: ZBooks for WooCommerce
  * Plugin URI: https://github.com/talas9/zbooks-for-woocommerce
  * Description: Sync WooCommerce orders to Zoho Books automatically or manually.
- * Version: 1.0.13
+ * Version: 1.0.14
  * Author: talas9
  * Author URI: https://github.com/talas9
  * License: GPL-2.0+
@@ -27,7 +27,7 @@ namespace Zbooks;
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'ZBOOKS_VERSION', '1.0.13' );
+define( 'ZBOOKS_VERSION', '1.0.14' );
 define( 'ZBOOKS_PLUGIN_FILE', __FILE__ );
 define( 'ZBOOKS_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'ZBOOKS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
@@ -127,9 +127,19 @@ function zbooks_maybe_upgrade(): void {
  * @param string $from_version Version upgrading from.
  */
 function zbooks_upgrade( string $from_version ): void {
-	// Ensure cron job is scheduled.
+	// Ensure cron jobs are scheduled.
 	if ( ! wp_next_scheduled( 'zbooks_retry_failed_syncs' ) ) {
 		wp_schedule_event( time(), 'fifteen_minutes', 'zbooks_retry_failed_syncs' );
+	}
+
+	// Schedule notification digest cron (if in digest mode).
+	$notification_settings = get_option( 'zbooks_notification_settings', [] );
+	$delivery_mode         = $notification_settings['delivery_mode'] ?? 'digest';
+	$digest_interval       = $notification_settings['digest_interval'] ?? 5;
+
+	if ( 'digest' === $delivery_mode && ! wp_next_scheduled( 'zbooks_send_notification_digest' ) ) {
+		$schedule = 'zbooks_' . $digest_interval . '_minutes';
+		wp_schedule_event( time(), $schedule, 'zbooks_send_notification_digest' );
 	}
 
 	// Ensure database tables exist.
@@ -177,6 +187,16 @@ function zbooks_activate(): void {
 	// Schedule cron job for retrying failed syncs.
 	if ( ! wp_next_scheduled( 'zbooks_retry_failed_syncs' ) ) {
 		wp_schedule_event( time(), 'fifteen_minutes', 'zbooks_retry_failed_syncs' );
+	}
+
+	// Schedule cron job for sending notification digests (if in digest mode).
+	$notification_settings = get_option( 'zbooks_notification_settings', [] );
+	$delivery_mode         = $notification_settings['delivery_mode'] ?? 'digest';
+	$digest_interval       = $notification_settings['digest_interval'] ?? 5;
+
+	if ( 'digest' === $delivery_mode && ! wp_next_scheduled( 'zbooks_send_notification_digest' ) ) {
+		$schedule = 'zbooks_' . $digest_interval . '_minutes';
+		wp_schedule_event( time(), $schedule, 'zbooks_send_notification_digest' );
 	}
 
 	// Set transient to trigger setup wizard redirect.
@@ -228,10 +248,15 @@ register_activation_hook( __FILE__, 'Zbooks\zbooks_activate' );
  * Deactivation hook.
  */
 function zbooks_deactivate(): void {
-	// Clear scheduled cron job.
+	// Clear scheduled cron jobs.
 	$timestamp = wp_next_scheduled( 'zbooks_retry_failed_syncs' );
 	if ( $timestamp ) {
 		wp_unschedule_event( $timestamp, 'zbooks_retry_failed_syncs' );
+	}
+
+	$digest_timestamp = wp_next_scheduled( 'zbooks_send_notification_digest' );
+	if ( $digest_timestamp ) {
+		wp_unschedule_event( $digest_timestamp, 'zbooks_send_notification_digest' );
 	}
 
 	flush_rewrite_rules();
@@ -240,20 +265,54 @@ function zbooks_deactivate(): void {
 register_deactivation_hook( __FILE__, 'Zbooks\zbooks_deactivate' );
 
 /**
- * Add custom cron schedule for 15 minutes.
+ * Add custom cron schedules.
  *
  * @param array $schedules Existing cron schedules.
  * @return array Modified cron schedules.
  */
 function zbooks_add_cron_interval( array $schedules ): array {
+	// For retry failed syncs.
 	$schedules['fifteen_minutes'] = [
 		'interval' => 900,
 		'display'  => esc_html__( 'Every 15 Minutes', 'zbooks-for-woocommerce' ),
 	];
+
+	// For notification digest (configurable intervals).
+	$schedules['zbooks_5_minutes']  = [
+		'interval' => 300,
+		'display'  => esc_html__( 'Every 5 Minutes', 'zbooks-for-woocommerce' ),
+	];
+	$schedules['zbooks_15_minutes'] = [
+		'interval' => 900,
+		'display'  => esc_html__( 'Every 15 Minutes', 'zbooks-for-woocommerce' ),
+	];
+	$schedules['zbooks_30_minutes'] = [
+		'interval' => 1800,
+		'display'  => esc_html__( 'Every 30 Minutes', 'zbooks-for-woocommerce' ),
+	];
+	$schedules['zbooks_60_minutes'] = [
+		'interval' => 3600,
+		'display'  => esc_html__( 'Every Hour', 'zbooks-for-woocommerce' ),
+	];
+
 	return $schedules;
 }
 
 add_filter( 'cron_schedules', 'Zbooks\zbooks_add_cron_interval' );
+
+/**
+ * Handle the notification digest cron job.
+ */
+function zbooks_send_notification_digest(): void {
+	if ( ! ZBOOKS_AUTOLOADER_LOADED ) {
+		return;
+	}
+
+	$queue = new Service\NotificationQueue();
+	$queue->send_digest();
+}
+
+add_action( 'zbooks_send_notification_digest', 'Zbooks\zbooks_send_notification_digest' );
 
 /**
  * Declare HPOS compatibility.

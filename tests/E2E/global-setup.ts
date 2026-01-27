@@ -7,6 +7,153 @@
 import { chromium, FullConfig } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
+import { execSync } from 'child_process';
+
+/**
+ * Run a WP-CLI command in the wp-env tests container.
+ */
+function wpCli(command: string): string {
+	try {
+		const result = execSync(`npx wp-env run tests-cli wp ${command}`, {
+			cwd: process.cwd(),
+			encoding: 'utf-8',
+			stdio: ['pipe', 'pipe', 'pipe'],
+		});
+		return result;
+	} catch (error: unknown) {
+		const err = error as { stderr?: string; stdout?: string };
+		return err.stderr || err.stdout || '';
+	}
+}
+
+/**
+ * Check if environment is already fully configured.
+ * Returns true if all setup has been done.
+ */
+function isEnvironmentConfigured(): boolean {
+	// Single batched check for all required state
+	const checkScript = `
+		\$plugins = get_option('active_plugins', []);
+		\$has_wc = in_array('woocommerce/woocommerce.php', \$plugins);
+		\$has_zbooks = in_array('zbooks-for-woocommerce/zbooks-for-woocommerce.php', \$plugins);
+		\$onboarding = get_option('woocommerce_onboarding_profile', []);
+		\$onboarding_done = isset(\$onboarding['skipped']) && \$onboarding['skipped'];
+		\$zoho_org = get_option('zbooks_organization_id', '');
+		echo json_encode([
+			'plugins_active' => \$has_wc && \$has_zbooks,
+			'onboarding_done' => \$onboarding_done,
+			'zoho_configured' => !empty(\$zoho_org)
+		]);
+	`;
+
+	const result = wpCli(`eval '${checkScript.replace(/\n/g, ' ')}'`);
+	try {
+		const state = JSON.parse(result.trim());
+		return state.plugins_active && state.onboarding_done && state.zoho_configured;
+	} catch {
+		return false;
+	}
+}
+
+/**
+ * Activate required plugins in wp-env.
+ */
+function activatePlugins(): void {
+	console.log('Checking plugins and WooCommerce setup...');
+
+	// Check if plugins are active by checking plugin list
+	const pluginList = wpCli('plugin list --status=active --field=name');
+
+	const hasWooCommerce = pluginList.includes('woocommerce');
+	const hasZBooks = pluginList.includes('zbooks-for-woocommerce');
+
+	if (!hasWooCommerce || !hasZBooks) {
+		// Activate plugins
+		console.log('Activating plugins (WC: ' + hasWooCommerce + ', ZBooks: ' + hasZBooks + ')...');
+		wpCli('plugin activate woocommerce zbooks-for-woocommerce');
+		console.log('Plugins activated.');
+	} else {
+		console.log('Plugins already active.');
+	}
+
+	// Skip WooCommerce onboarding wizard (check first to avoid redundant writes)
+	const onboarding = wpCli('option get woocommerce_onboarding_profile --format=json');
+	if (!onboarding.includes('"skipped":true')) {
+		console.log('Skipping WooCommerce onboarding...');
+		wpCli('option update woocommerce_onboarding_profile \'{"skipped":true}\' --format=json');
+		wpCli('option update woocommerce_task_list_hidden_lists \'["setup"]\' --format=json');
+	} else {
+		console.log('WooCommerce onboarding already skipped.');
+	}
+}
+
+/**
+ * Setup Zoho credentials from .env.local file.
+ */
+function setupZohoCredentials(): void {
+	const envFile = path.join(process.cwd(), '.env.local');
+
+	if (!fs.existsSync(envFile)) {
+		console.log('No .env.local file found, skipping Zoho setup.');
+		return;
+	}
+
+	// Check if already configured
+	const orgId = wpCli('option get zbooks_organization_id');
+	if (orgId && !orgId.includes('Does it exist') && /^\d+/.test(orgId.trim())) {
+		console.log('Zoho credentials already configured.');
+		return;
+	}
+
+	console.log('Setting up Zoho credentials from .env.local...');
+
+	// Read .env.local
+	const envContent = fs.readFileSync(envFile, 'utf-8');
+	const envVars: Record<string, string> = {};
+
+	envContent.split('\n').forEach((line) => {
+		const match = line.match(/^([A-Z_]+)=(.*)$/);
+		if (match) {
+			envVars[match[1]] = match[2];
+		}
+	});
+
+	const clientId = envVars['ZOHO_CLIENT_ID'];
+	const clientSecret = envVars['ZOHO_CLIENT_SECRET'];
+	const refreshToken = envVars['ZOHO_REFRESH_TOKEN'];
+	const organizationId = envVars['ZOHO_ORGANIZATION_ID'];
+	const datacenter = envVars['ZOHO_DATACENTER'] || 'us';
+
+	if (!clientId || !clientSecret || !refreshToken) {
+		console.log('Zoho credentials missing in .env.local');
+		return;
+	}
+
+	// Run setup script
+	try {
+		execSync(
+			`npx wp-env run tests-cli --env-cwd=wp-content/plugins/zbooks-for-woocommerce ` +
+				`bash -c "ZOHO_CLIENT_ID='${clientId}' ZOHO_CLIENT_SECRET='${clientSecret}' ` +
+				`ZOHO_REFRESH_TOKEN='${refreshToken}' ZOHO_ORGANIZATION_ID='${organizationId}' ` +
+				`ZOHO_DATACENTER='${datacenter}' wp eval-file scripts/setup-zoho-credentials.php"`,
+			{ cwd: process.cwd(), stdio: ['pipe', 'pipe', 'pipe'] }
+		);
+
+		// Verify setup
+		const verifyOrgId = wpCli('option get zbooks_organization_id');
+		if (
+			verifyOrgId &&
+			!verifyOrgId.includes('Does it exist') &&
+			/^\d+/.test(verifyOrgId.trim())
+		) {
+			console.log('Zoho credentials configured successfully.');
+		} else {
+			console.log('Warning: Zoho credentials may not have been saved.');
+		}
+	} catch (error) {
+		console.log('Warning: Failed to setup Zoho credentials:', error);
+	}
+}
 
 async function globalSetup(config: FullConfig): Promise<void> {
 	const baseURL = config.projects[0].use.baseURL || 'http://localhost:8889';
@@ -44,6 +191,17 @@ async function globalSetup(config: FullConfig): Promise<void> {
 		await context.close();
 		await browser.close();
 	}
+
+	// Quick check if everything is already configured
+	if (isEnvironmentConfigured()) {
+		console.log('Environment already configured, skipping setup.');
+		console.log('Global setup complete.');
+		return;
+	}
+
+	// Activate plugins and setup Zoho
+	activatePlugins();
+	setupZohoCredentials();
 
 	console.log('Global setup complete.');
 }

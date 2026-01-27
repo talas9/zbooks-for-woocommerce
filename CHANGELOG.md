@@ -5,6 +5,31 @@ All notable changes to ZBooks for WooCommerce will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.14] - 2026-01-27
+
+### Added
+- **Notifications tab** - Dedicated settings tab for managing all email notifications
+- **Professional email templates** - Beautiful HTML email templates for error, warning, and success notifications
+- **Email preview** - Preview email templates directly in the admin settings
+- **Test email** - Send test emails to verify notification settings work correctly
+- **Notification types** - Choose which notifications to receive (sync errors, currency mismatches, warnings, reconciliation alerts, payment confirmations)
+- **Invoice verification** - Validates invoice exists in Zoho and matches WooCommerce order before updates
+- **Automatic invoice recreation** - Automatically creates new invoice if previous one was deleted in Zoho
+- **Invoice-to-order comparison** - Detects discrepancies in total, line item count, and reference number
+- **Locked invoice handling** - Prevents modification of paid/void invoices, logs clear error messages
+- **Locked invoice behavior setting** - Configure whether to stop sync completely or continue with payment when encountering locked invoices with discrepancies (default: stop sync)
+
+### Changed
+- Email notifications now use wp_mail() for seamless integration with SMTP plugins (Brevo, SendGrid, Mailgun, etc.)
+- Email notification settings moved from Advanced tab to dedicated Notifications tab
+- Log settings in Advanced tab now only contains file retention and rotation settings
+- Re-sync now verifies invoice integrity before attempting updates
+
+### Improved
+- **Invoice Settings UI** - Renamed "Invoice Numbering" section to "Invoice Settings" for better clarity
+- **Invoice Options organization** - Added clear subheadings (Invoice Numbering, Invoice Status, Invoice Delivery) to improve settings readability
+- **Currency handling documentation** - Clarified that contact currency cannot be changed once set, with practical multi-currency examples
+
 ## [1.0.13] - 2026-01-26
 
 ### Fixed

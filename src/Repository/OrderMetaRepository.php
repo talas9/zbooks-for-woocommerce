@@ -154,6 +154,20 @@ class OrderMetaRepository {
 	}
 
 	/**
+	 * Clear stale invoice ID from order meta.
+	 *
+	 * Used when an invoice is found to be deleted in Zoho and needs to be recreated.
+	 *
+	 * @param WC_Order $order WooCommerce order.
+	 */
+	public function clear_invoice_id( WC_Order $order ): void {
+		$order->delete_meta_data( self::META_INVOICE_ID );
+		$order->delete_meta_data( self::META_INVOICE_NUMBER );
+		$order->delete_meta_data( self::META_INVOICE_STATUS );
+		$order->save();
+	}
+
+	/**
 	 * Get sync status for an order.
 	 *
 	 * @param WC_Order $order WooCommerce order.

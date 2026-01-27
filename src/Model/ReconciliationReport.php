@@ -309,9 +309,9 @@ class ReconciliationReport {
 	 * @return bool
 	 */
 	public function is_healthy(): bool {
-		return $this->status === 'completed'
-			&& $this->summary['missing_in_zoho'] === 0
-			&& $this->summary['amount_mismatches'] === 0;
+		return 'completed' === $this->status
+			&& 0 === $this->summary['missing_in_zoho']
+			&& 0 === $this->summary['amount_mismatches'];
 	}
 
 	/**
@@ -358,12 +358,12 @@ class ReconciliationReport {
 
 		if ( ! empty( $data['summary'] ) ) {
 			$summary = is_string( $data['summary'] ) ? json_decode( $data['summary'], true ) : $data['summary'];
-			$report->set_summary( $summary ?: [] );
+			$report->set_summary( $summary ? $summary : [] );
 		}
 
 		if ( ! empty( $data['discrepancies'] ) ) {
 			$discrepancies = is_string( $data['discrepancies'] ) ? json_decode( $data['discrepancies'], true ) : $data['discrepancies'];
-			$report->set_discrepancies( $discrepancies ?: [] );
+			$report->set_discrepancies( $discrepancies ? $discrepancies : [] );
 		}
 
 		if ( ! empty( $data['error'] ) ) {

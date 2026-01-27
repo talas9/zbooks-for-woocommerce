@@ -64,6 +64,14 @@ class OrdersTab {
 				'sanitize_callback' => [ $this, 'sanitize_shipping_settings' ],
 			]
 		);
+		register_setting(
+			'zbooks_settings_orders',
+			'zbooks_sync_behavior',
+			[
+				'type'              => 'array',
+				'sanitize_callback' => [ $this, 'sanitize_sync_behavior' ],
+			]
+		);
 
 		// Order sync triggers section.
 		add_settings_section(
@@ -81,17 +89,17 @@ class OrdersTab {
 			'zbooks_orders_section'
 		);
 
-		// Invoice numbering section.
+		// Invoice settings section.
 		add_settings_section(
 			'zbooks_invoice_numbering_section',
-			__( 'Invoice Numbering', 'zbooks-for-woocommerce' ),
+			__( 'Invoice Settings', 'zbooks-for-woocommerce' ),
 			[ $this, 'render_invoice_numbering_section' ],
 			'zbooks-settings-orders'
 		);
 
 		add_settings_field(
 			'zbooks_invoice_numbering',
-			__( 'Order Number Handling', 'zbooks-for-woocommerce' ),
+			__( 'Invoice Options', 'zbooks-for-woocommerce' ),
 			[ $this, 'render_invoice_numbering_field' ],
 			'zbooks-settings-orders',
 			'zbooks_invoice_numbering_section'
@@ -111,6 +119,22 @@ class OrdersTab {
 			[ $this, 'render_shipping_settings_field' ],
 			'zbooks-settings-orders',
 			'zbooks_shipping_section'
+		);
+
+		// Sync behavior section.
+		add_settings_section(
+			'zbooks_sync_behavior_section',
+			__( 'Sync Behavior', 'zbooks-for-woocommerce' ),
+			[ $this, 'render_sync_behavior_section' ],
+			'zbooks-settings-orders'
+		);
+
+		add_settings_field(
+			'zbooks_sync_behavior',
+			__( 'Locked Invoice Handling', 'zbooks-for-woocommerce' ),
+			[ $this, 'render_sync_behavior_field' ],
+			'zbooks-settings-orders',
+			'zbooks_sync_behavior_section'
 		);
 
 		// Currency info section.
@@ -247,6 +271,9 @@ class OrdersTab {
 		$send_invoice_email = ! empty( $settings['send_invoice_email'] );
 		?>
 		<fieldset>
+			<h4 style="margin: 0 0 12px 0; font-size: 13px; font-weight: 600;">
+				<?php esc_html_e( 'Invoice Numbering', 'zbooks-for-woocommerce' ); ?>
+			</h4>
 			<label style="display: block; margin-bottom: 10px;">
 				<input type="checkbox" name="zbooks_invoice_numbering[use_reference_number]" value="1"
 					id="zbooks_use_reference_number"
@@ -274,6 +301,9 @@ class OrdersTab {
 
 			<hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
 
+			<h4 style="margin: 0 0 12px 0; font-size: 13px; font-weight: 600;">
+				<?php esc_html_e( 'Invoice Status', 'zbooks-for-woocommerce' ); ?>
+			</h4>
 			<label style="display: block; margin-bottom: 10px;">
 				<input type="checkbox" name="zbooks_invoice_numbering[mark_as_sent]" value="1"
 					id="zbooks_mark_as_sent"
@@ -286,6 +316,9 @@ class OrdersTab {
 
 			<hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
 
+			<h4 style="margin: 0 0 12px 0; font-size: 13px; font-weight: 600;">
+				<?php esc_html_e( 'Invoice Delivery', 'zbooks-for-woocommerce' ); ?>
+			</h4>
 			<label style="display: block; margin-bottom: 10px;">
 				<input type="checkbox" name="zbooks_invoice_numbering[send_invoice_email]" value="1"
 					id="zbooks_send_invoice_email"
@@ -349,6 +382,64 @@ class OrdersTab {
 	}
 
 	/**
+	 * Render sync behavior section description.
+	 */
+	public function render_sync_behavior_section(): void {
+		?>
+		<p><?php esc_html_e( 'Configure how the plugin handles edge cases during sync operations.', 'zbooks-for-woocommerce' ); ?></p>
+		<?php
+	}
+
+	/**
+	 * Render sync behavior field.
+	 */
+	public function render_sync_behavior_field(): void {
+		$settings          = get_option(
+			'zbooks_sync_behavior',
+			[
+				'backoff_on_locked' => true,
+			]
+		);
+		$backoff_on_locked = $settings['backoff_on_locked'] ?? true;
+		?>
+		<fieldset>
+			<label style="display: block; margin-bottom: 10px;">
+				<input type="checkbox" name="zbooks_sync_behavior[backoff_on_locked]" value="1"
+					id="zbooks_backoff_on_locked"
+					<?php checked( $backoff_on_locked ); ?>>
+				<?php esc_html_e( 'Stop sync completely when invoice is locked', 'zbooks-for-woocommerce' ); ?>
+				<strong style="color: #2271b1;"><?php esc_html_e( '(Recommended)', 'zbooks-for-woocommerce' ); ?></strong>
+			</label>
+			<p class="description">
+				<?php esc_html_e( 'A "locked" invoice is one that has been marked as Sent, Paid, or Void in Zoho Books.', 'zbooks-for-woocommerce' ); ?>
+			</p>
+
+			<div class="zbooks-info-box" style="margin-top: 15px; background: #f0f6fc; border: 1px solid #c3c4c7; border-left: 4px solid #2271b1; padding: 12px 16px; border-radius: 0 4px 4px 0;">
+				<p style="margin: 0 0 10px;">
+					<strong><?php esc_html_e( 'When enabled (default):', 'zbooks-for-woocommerce' ); ?></strong>
+				</p>
+				<ul style="margin: 0 0 0 20px; list-style: disc;">
+					<li><?php esc_html_e( 'If the invoice is locked and has discrepancies with the WooCommerce order, the entire sync stops.', 'zbooks-for-woocommerce' ); ?></li>
+					<li><?php esc_html_e( 'Payment will NOT be applied to the invoice or added to the customer profile.', 'zbooks-for-woocommerce' ); ?></li>
+					<li><?php esc_html_e( 'A clear error message is logged explaining the locked invoice cannot be modified.', 'zbooks-for-woocommerce' ); ?></li>
+				</ul>
+			</div>
+
+			<div class="zbooks-info-box" style="margin-top: 15px; background: #fcf6e5; border: 1px solid #dba617; border-left: 4px solid #dba617; padding: 12px 16px; border-radius: 0 4px 4px 0;">
+				<p style="margin: 0 0 10px;">
+					<strong><?php esc_html_e( 'When disabled:', 'zbooks-for-woocommerce' ); ?></strong>
+				</p>
+				<ul style="margin: 0 0 0 20px; list-style: disc;">
+					<li><?php esc_html_e( 'The invoice update is skipped, but the sync continues.', 'zbooks-for-woocommerce' ); ?></li>
+					<li><?php esc_html_e( 'Payment will be applied to the existing invoice (even if it has discrepancies).', 'zbooks-for-woocommerce' ); ?></li>
+					<li><?php esc_html_e( 'Useful if you intentionally edited the invoice in Zoho but still want payments recorded.', 'zbooks-for-woocommerce' ); ?></li>
+				</ul>
+			</div>
+		</fieldset>
+		<?php
+	}
+
+	/**
 	 * Render currency section description.
 	 */
 	public function render_currency_section(): void {
@@ -359,12 +450,13 @@ class OrdersTab {
 			</p>
 			<ul style="list-style: disc; margin-left: 20px;">
 				<li><?php esc_html_e( 'Currency is automatically taken from each WooCommerce order.', 'zbooks-for-woocommerce' ); ?></li>
-				<li><?php esc_html_e( 'When a new contact is created in Zoho Books, it will be assigned the currency from the first order.', 'zbooks-for-woocommerce' ); ?></li>
-				<li><?php esc_html_e( 'If an existing contact has a different currency than the order, the sync will fail with a clear error message.', 'zbooks-for-woocommerce' ); ?></li>
-				<li><?php esc_html_e( 'Zoho Books does not allow changing a contact\'s currency after transactions exist.', 'zbooks-for-woocommerce' ); ?></li>
+				<li><?php esc_html_e( 'When a new contact is created, it is assigned the currency from the first order.', 'zbooks-for-woocommerce' ); ?></li>
+				<li><?php esc_html_e( 'Once a contact has a currency assigned, it cannot be changed (Zoho Books limitation).', 'zbooks-for-woocommerce' ); ?></li>
+				<li><?php esc_html_e( 'If an existing contact has a different currency than the order, the sync will fail with an error.', 'zbooks-for-woocommerce' ); ?></li>
 			</ul>
 			<p class="description">
-				<?php esc_html_e( 'If you have multi-currency orders, ensure customers use consistent email addresses per currency, or update the contact currency in Zoho Books before syncing.', 'zbooks-for-woocommerce' ); ?>
+				<strong><?php esc_html_e( 'Multi-currency stores:', 'zbooks-for-woocommerce' ); ?></strong>
+				<?php esc_html_e( 'Customers must use separate email addresses for each currency. For example: customer@example.com for USD orders, customer-eur@example.com for EUR orders.', 'zbooks-for-woocommerce' ); ?>
 			</p>
 		</div>
 		<?php
@@ -499,6 +591,18 @@ class OrdersTab {
 			'account_id' => isset( $input['account_id'] )
 				? sanitize_text_field( $input['account_id'] )
 				: '',
+		];
+	}
+
+	/**
+	 * Sanitize sync behavior settings.
+	 *
+	 * @param array $input Input data.
+	 * @return array
+	 */
+	public function sanitize_sync_behavior( array $input ): array {
+		return [
+			'backoff_on_locked' => ! empty( $input['backoff_on_locked'] ),
 		];
 	}
 }

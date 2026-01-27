@@ -155,7 +155,7 @@ class AdvancedTab {
 	 */
 	public function render_log_section(): void {
 		?>
-		<p><?php esc_html_e( 'Configure logging behavior and error notifications.', 'zbooks-for-woocommerce' ); ?></p>
+		<p><?php esc_html_e( 'Configure log file retention and rotation settings.', 'zbooks-for-woocommerce' ); ?></p>
 		<?php
 	}
 
@@ -168,8 +168,6 @@ class AdvancedTab {
 			[
 				'retention_days'   => 30,
 				'max_file_size_mb' => 10,
-				'email_on_error'   => false,
-				'error_email'      => get_option( 'admin_email' ),
 			]
 		);
 		?>
@@ -190,19 +188,15 @@ class AdvancedTab {
 				<?php esc_html_e( 'MB (older entries will be rotated)', 'zbooks-for-woocommerce' ); ?>
 			</label>
 
-			<label style="display: block; margin-bottom: 10px;">
-				<input type="checkbox" name="zbooks_log_settings[email_on_error]" value="1"
-					<?php checked( ! empty( $settings['email_on_error'] ) ); ?>>
-				<?php esc_html_e( 'Send email notification on sync errors', 'zbooks-for-woocommerce' ); ?>
-			</label>
-
-			<label style="display: block; margin-left: 24px;">
-				<?php esc_html_e( 'Error notification email:', 'zbooks-for-woocommerce' ); ?>
-				<?php $error_email = ! empty( $settings['error_email'] ) ? $settings['error_email'] : get_option( 'admin_email' ); ?>
-				<input type="email" name="zbooks_log_settings[error_email]"
-					value="<?php echo esc_attr( $error_email ); ?>"
-					class="regular-text">
-			</label>
+			<p class="description">
+				<?php
+				printf(
+					/* translators: %s: Link to Notifications tab */
+					esc_html__( 'Email notifications have moved to the %s tab.', 'zbooks-for-woocommerce' ),
+					'<a href="' . esc_url( admin_url( 'admin.php?page=zbooks&tab=notifications' ) ) . '">' . esc_html__( 'Notifications', 'zbooks-for-woocommerce' ) . '</a>'
+				);
+				?>
+			</p>
 		</fieldset>
 		<?php
 	}
@@ -232,15 +226,9 @@ class AdvancedTab {
 	 * @return array
 	 */
 	public function sanitize_log_settings( array $input ): array {
-		$error_email = ! empty( $input['error_email'] )
-			? sanitize_email( $input['error_email'] )
-			: get_option( 'admin_email' );
-
 		return [
 			'retention_days'   => min( 365, max( 1, absint( $input['retention_days'] ?? 30 ) ) ),
 			'max_file_size_mb' => min( 100, max( 1, absint( $input['max_file_size_mb'] ?? 10 ) ) ),
-			'email_on_error'   => ! empty( $input['email_on_error'] ),
-			'error_email'      => $error_email,
 		];
 	}
 }

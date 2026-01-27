@@ -42,6 +42,75 @@
         },
 
         /**
+         * Parse AJAX error and return user-friendly message.
+         *
+         * @param {Object} xhr - The XMLHttpRequest object.
+         * @param {string} defaultMsg - Default message if no specific error detected.
+         * @return {string} User-friendly error message.
+         */
+        getAjaxErrorMessage: function(xhr, defaultMsg) {
+            var i18n = this.config.i18n;
+
+            // Check for nonce/authentication failure (WordPress returns -1 with 403).
+            if (xhr.status === 403) {
+                if (xhr.responseText === '-1' || xhr.responseText === '0') {
+                    return i18n.session_expired || 'Session expired. Please refresh the page and try again.';
+                }
+                return i18n.permission_denied || 'Permission denied. You may not have access to this feature.';
+            }
+
+            // Check for server errors.
+            if (xhr.status >= 500) {
+                return i18n.server_error || 'Server error. Please check your server logs or try again later.';
+            }
+
+            // Try to parse JSON error response.
+            try {
+                var response = JSON.parse(xhr.responseText);
+                if (response.data && response.data.message) {
+                    return response.data.message;
+                }
+            } catch (e) {
+                // Not JSON, continue.
+            }
+
+            // Network connectivity issues.
+            if (xhr.status === 0) {
+                return i18n.network_error || 'Network error. Please check your internet connection.';
+            }
+
+            return defaultMsg + ' (HTTP ' + xhr.status + ')';
+        },
+
+        /**
+         * Warn user when navigating away during bulk sync.
+         *
+         * @param {Event} e - The beforeunload event.
+         * @return {string} - Warning message.
+         */
+        handleBeforeUnload: function(e) {
+            var message = ZbooksAdmin.config.i18n.bulk_sync_leave_warning ||
+                'Bulk sync is in progress. Leaving this page will cancel the sync. Are you sure you want to leave?';
+            e.preventDefault();
+            e.returnValue = message;
+            return message;
+        },
+
+        /**
+         * Set or remove the beforeunload handler based on bulk sync state.
+         *
+         * @param {boolean} isActive - Whether bulk sync is active.
+         * @return {void}
+         */
+        setBulkSyncActive: function(isActive) {
+            if (isActive) {
+                $(window).on('beforeunload', this.handleBeforeUnload);
+            } else {
+                $(window).off('beforeunload', this.handleBeforeUnload);
+            }
+        },
+
+        /**
          * Initialize the module
          *
          * @return {void}
@@ -469,6 +538,9 @@
                 total: postIds.length
             };
 
+            // Warn user if they try to navigate away
+            this.setBulkSyncActive(true);
+
             // Show progress UI
             this.showBulkProgress();
 
@@ -535,6 +607,9 @@
                             asDraft: asDraft
                         };
 
+                        // Warn user if they try to navigate away
+                        self.setBulkSyncActive(true);
+
                         // Update progress UI
                         $progress.find('.zbooks-progress-text').text('Syncing 0 / ' + orderIds.length + ' orders...');
 
@@ -578,6 +653,9 @@
                 $progress.find('.zbooks-cancel-bulk-btn').remove();
                 $button.prop('disabled', false).text('Start Bulk Sync');
                 state.isProcessing = false;
+
+                // Remove beforeunload warning
+                self.setBulkSyncActive(false);
 
                 // Reload page to update stats
                 setTimeout(function() {
@@ -751,6 +829,9 @@
             // Reset state
             this.bulkState.isProcessing = false;
 
+            // Remove beforeunload warning
+            this.setBulkSyncActive(false);
+
             // Update stats if they exist
             this.updateStatsBoxes();
         },
@@ -766,6 +847,9 @@
 
             this.bulkState.isProcessing = false;
             this.bulkState.queue = [];
+
+            // Remove beforeunload warning
+            this.setBulkSyncActive(false);
 
             var $container = $('.zbooks-progress-container');
             $container.find('.zbooks-progress-status')
@@ -1752,7 +1836,8 @@
                     return;
                 }
 
-                this.nonce = typeof zbooks_reconciliation !== 'undefined' ? zbooks_reconciliation.nonce : '';
+                // Get reconciliation nonce from main zbooks object
+                this.nonce = typeof zbooks !== 'undefined' ? zbooks.reconciliation_nonce : '';
                 this.bindEvents();
             },
 
@@ -1809,8 +1894,9 @@
                                 $progress.hide();
                             }
                         },
-                        error: function() {
-                            alert(i18n.network_error_try_again || 'Network error. Please try again.');
+                        error: function(xhr) {
+                            var msg = ZbooksAdmin.getAjaxErrorMessage(xhr, i18n.reconciliation_failed || 'Reconciliation failed.');
+                            alert(msg);
                             $btn.prop('disabled', false);
                             $progress.hide();
                         }
@@ -1846,8 +1932,9 @@
                                 $btn.prop('disabled', false);
                             }
                         },
-                        error: function() {
-                            alert(i18n.network_error_try_again || 'Network error. Please try again.');
+                        error: function(xhr) {
+                            var msg = ZbooksAdmin.getAjaxErrorMessage(xhr, i18n.failed_to_delete_report || 'Failed to delete report.');
+                            alert(msg);
                             $btn.prop('disabled', false);
                         }
                     });
@@ -1884,8 +1971,9 @@
                                 alert(response.data.message || (i18n.failed_to_load_report || 'Failed to load report.'));
                             }
                         },
-                        error: function() {
-                            alert(i18n.network_error_try_again || 'Network error. Please try again.');
+                        error: function(xhr) {
+                            var msg = ZbooksAdmin.getAjaxErrorMessage(xhr, i18n.failed_to_load_report || 'Failed to load report.');
+                            alert(msg);
                             $btn.prop('disabled', false);
                         }
                     });

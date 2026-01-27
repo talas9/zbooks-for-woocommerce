@@ -670,6 +670,123 @@ class InvoiceService {
 	}
 
 	/**
+	 * Verify invoice exists in Zoho and optionally validate it matches the order.
+	 *
+	 * @param string        $invoice_id Zoho invoice ID.
+	 * @param WC_Order|null $order      Optional order to validate against.
+	 * @return array{exists: bool, valid: bool, invoice: ?array, discrepancies: array}
+	 */
+	public function verify_invoice_exists( string $invoice_id, ?WC_Order $order = null ): array {
+		$result = [
+			'exists'        => false,
+			'valid'         => false,
+			'invoice'       => null,
+			'discrepancies' => [],
+		];
+
+		$invoice = $this->get_invoice( $invoice_id );
+
+		if ( $invoice === null ) {
+			$this->logger->info(
+				'Invoice not found in Zoho (may have been deleted)',
+				[ 'invoice_id' => $invoice_id ]
+			);
+			return $result;
+		}
+
+		$result['exists']  = true;
+		$result['invoice'] = $invoice;
+
+		// If no order provided, just check existence.
+		if ( $order === null ) {
+			$result['valid'] = true;
+			return $result;
+		}
+
+		// Validate invoice matches order.
+		$result['discrepancies'] = $this->compare_invoice_to_order( $invoice, $order );
+		$result['valid']         = empty( $result['discrepancies'] );
+
+		if ( ! $result['valid'] ) {
+			$this->logger->info(
+				'Invoice exists but has discrepancies with order',
+				[
+					'invoice_id'    => $invoice_id,
+					'order_id'      => $order->get_id(),
+					'discrepancies' => $result['discrepancies'],
+				]
+			);
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Compare Zoho invoice to WooCommerce order for discrepancies.
+	 *
+	 * @param array    $invoice Zoho invoice data.
+	 * @param WC_Order $order   WooCommerce order.
+	 * @return array List of discrepancies found.
+	 */
+	private function compare_invoice_to_order( array $invoice, WC_Order $order ): array {
+		$discrepancies = [];
+		$tolerance     = 0.01; // Allow 1 cent tolerance for rounding.
+
+		// Compare total amount.
+		$invoice_total = (float) ( $invoice['total'] ?? 0 );
+		$order_total   = (float) $order->get_total();
+
+		if ( abs( $invoice_total - $order_total ) > $tolerance ) {
+			$discrepancies[] = [
+				'field'    => 'total',
+				'invoice'  => $invoice_total,
+				'order'    => $order_total,
+				'severity' => 'high',
+			];
+		}
+
+		// Compare line item count.
+		$invoice_items = $invoice['line_items'] ?? [];
+		$order_items   = $order->get_items();
+
+		if ( count( $invoice_items ) !== count( $order_items ) ) {
+			$discrepancies[] = [
+				'field'    => 'line_item_count',
+				'invoice'  => count( $invoice_items ),
+				'order'    => count( $order_items ),
+				'severity' => 'high',
+			];
+		}
+
+		// Compare reference number (order number).
+		$invoice_ref  = $invoice['reference_number'] ?? '';
+		$order_number = $order->get_order_number();
+
+		if ( $invoice_ref !== $order_number && $invoice_ref !== '' ) {
+			$discrepancies[] = [
+				'field'    => 'reference_number',
+				'invoice'  => $invoice_ref,
+				'order'    => $order_number,
+				'severity' => 'medium',
+			];
+		}
+
+		// Check if invoice is locked (cannot be edited).
+		$status = strtolower( $invoice['status'] ?? '' );
+		if ( in_array( $status, [ 'paid', 'void' ], true ) ) {
+			$discrepancies[] = [
+				'field'    => 'status',
+				'invoice'  => $status,
+				'order'    => 'n/a',
+				'severity' => 'info',
+				'message'  => 'Invoice is ' . $status . ' and cannot be modified',
+			];
+		}
+
+		return $discrepancies;
+	}
+
+	/**
 	 * Void an invoice in Zoho Books.
 	 *
 	 * @param string $invoice_id Zoho invoice ID.

@@ -50,6 +50,10 @@ Sync WooCommerce orders to Zoho Books automatically or manually.
 - **Sync Logging**: Detailed logs with filtering by date and level
 - **Sync Statistics**: Track success/failure rates and sync history
 - **Background Processing**: Automatic retry via cron jobs (every 15 minutes)
+- **Invoice Verification**: Validates invoice exists and matches order before updates
+- **Auto-Recovery**: Recreates deleted invoices, clears stale references
+- **Locked Invoice Detection**: Prevents modifications to paid/void invoices
+- **Locked Invoice Handling**: Configurable behavior when encountering locked invoices with discrepancies (stop sync vs continue with payment)
 
 ### Administration
 - **Setup Wizard**: Guided multi-step configuration (can be re-run from Settings page)

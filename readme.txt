@@ -4,7 +4,7 @@ Tags: woocommerce, zoho, zoho-books, invoice, sync
 Requires at least: 6.9
 Tested up to: 6.9
 Requires PHP: 8.2
-Stable tag: 1.0.13
+Stable tag: 1.0.14
 License: GPL-2.0+
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -141,6 +141,17 @@ Yes, each reconciliation report can be exported to CSV format for further analys
 5. Reconciliation report with discrepancy detection
 
 == Changelog ==
+
+= 1.0.14 =
+* **NEW: Notifications tab** - Dedicated settings tab for managing email notifications with granular control over notification types
+* **NEW: Professional email templates** - Beautiful HTML email templates for sync errors, warnings, and success notifications
+* **NEW: Email preview** - Preview email templates directly in the admin before sending
+* **NEW: Test email** - Send test emails to verify your notification settings
+* **NEW: Locked invoice behavior setting** - Configure whether to stop sync or continue with payment when encountering locked invoices with discrepancies
+* **Improvement: Invoice Settings UI** - Reorganized with clear subheadings (Invoice Numbering, Invoice Status, Invoice Delivery) for better clarity
+* **Improvement: Currency handling docs** - Clarified that contact currency cannot be changed once set, with multi-currency examples
+* **Improvement** - Email notifications now use wp_mail() which integrates with SMTP plugins (Brevo, SendGrid, etc.)
+* **Moved** - Email notification settings relocated from Advanced tab to new Notifications tab
 
 = 1.0.13 =
 * **Fix: Contact email/phone sync** - Customer email and phone are now properly sent to Zoho using contact_persons array (Zoho API requirement)

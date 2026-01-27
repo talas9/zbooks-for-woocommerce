@@ -102,6 +102,63 @@ Common issues and solutions for ZBooks for WooCommerce.
 2. Check currency and decimal settings
 3. Review line item prices and quantities
 
+### Invoice Deleted in Zoho
+
+**What happens**: If you delete an invoice directly in Zoho Books, the plugin detects this on re-sync.
+
+**Behavior**:
+- Plugin automatically clears the stale reference
+- Creates a new invoice on re-sync
+- Adds order note explaining what happened
+
+**Prevention**: To prevent re-sync overwriting manual changes, lock the invoice in Zoho Books (mark as sent/paid).
+
+### Invoice Modified in Zoho
+
+**What happens**: If you edit an invoice directly in Zoho (change total, line items), the plugin detects discrepancies.
+
+**Behavior**:
+- Plugin compares invoice total, line items, and reference number
+- Warns if discrepancies found
+- Paid/void invoices cannot be modified (Zoho enforces this)
+
+**Note**: Changes made in Zoho will be overwritten on re-sync unless the invoice is locked.
+
+### Prevent Plugin from Overwriting Zoho Edits
+
+**Scenario**: You intentionally edited an invoice in Zoho and want to keep those changes.
+
+**Solution**: Lock the invoice in Zoho Books using any of these methods:
+1. Mark the invoice as "Sent"
+2. Record a payment (even partial)
+3. Void the invoice (if no longer needed)
+
+Once locked, the plugin will detect this and skip modifications, reporting that the invoice cannot be updated.
+
+### Configuring Locked Invoice Behavior
+
+**Setting location**: ZBooks > Settings > Orders > Sync Behavior > Locked Invoice Handling
+
+This setting controls what happens when a locked invoice has discrepancies with the WooCommerce order:
+
+| Setting | Behavior |
+|---------|----------|
+| **Enabled (default)** | Stops sync completely. No payment applied. Error logged. |
+| **Disabled** | Skips invoice update but continues to apply payment. |
+
+**When to disable**: If you intentionally edit invoices in Zoho but still want the plugin to record payments against them.
+
+**When to keep enabled**: If you want full visibility and control over any mismatches between WooCommerce orders and Zoho invoices.
+
+### Customer Deleted in Zoho
+
+**What happens**: If you delete a contact in Zoho Books that was linked to WooCommerce orders.
+
+**Behavior**:
+- Plugin detects the contact no longer exists
+- Clears the stale customer ID from order meta
+- Creates a new contact on next sync
+
 ## Payment Issues
 
 ### Payment Not Recorded

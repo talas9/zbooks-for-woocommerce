@@ -245,31 +245,59 @@ draw_progress() {
     printf '\033[2K'
     echo ""
 
-    # Console area (Docker-style activity log)
+    # Console area (Docker-style activity log) - uses full terminal width
     if [ "$has_console" -eq 1 ]; then
+        local term_width=$(tput cols 2>/dev/null || echo 120)
+        local box_width=$((term_width - 4))  # Account for "  │ " prefix and "│" suffix
+        local inner_width=$((box_width - 4)) # Content width inside the box
+        [ "$inner_width" -lt 40 ] && inner_width=40
+
+        # Build dynamic border
+        local border_line=""
+        for ((i=0; i<box_width; i++)); do border_line+="─"; done
+
         printf '\033[2K'
-        echo -e "  ${DIM}┌─ Activity ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐${NC}"
+        echo -e "  ${DIM}┌─ Activity ${border_line:12}┐${NC}"
         printf '\033[2K'
-        printf "  ${DIM}│${NC} %-140s${DIM}│${NC}\n" "${CONSOLE_LINE_1:- }"
+        echo -e "  ${DIM}│${NC} ${CONSOLE_LINE_1:- }"
         printf '\033[2K'
-        printf "  ${DIM}│${NC} %-140s${DIM}│${NC}\n" "${CONSOLE_LINE_2:- }"
+        echo -e "  ${DIM}│${NC} ${CONSOLE_LINE_2:- }"
         printf '\033[2K'
-        printf "  ${DIM}│${NC} ${CYAN}%-140s${NC}${DIM}│${NC}\n" "${CONSOLE_LINE_3:- }"
+        echo -e "  ${DIM}│${NC} ${CYAN}${CONSOLE_LINE_3:- }${NC}"
         printf '\033[2K'
-        echo -e "  ${DIM}└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘${NC}"
+        echo -e "  ${DIM}└${border_line}┘${NC}"
     fi
 
     printf '\033[2K'
 
-    # Progress bar - based on total tests across all suites
-    # Setup steps (deps, wpenv, phpcs) = 5% combined
-    # Unit tests + E2E tests = 95% (proportional to test count)
-    local pct=0
+    # Progress bar - dynamic calculation based on actual test counts
+    # Total tasks = 3 setup steps + unit tests + e2e tests
+    # Each completed task contributes proportionally to 100%
 
-    # Check setup steps status
-    local deps_done=0
-    local wpenv_done=0
-    local phpcs_done=0
+    # Sanitize test counts
+    local safe_unit_total=$(echo "$UNIT_TOTAL" | tr -cd '0-9')
+    local safe_unit_done=$(echo "$UNIT_DONE" | tr -cd '0-9')
+    local safe_e2e_total=$(echo "$E2E_TOTAL" | tr -cd '0-9')
+    local safe_e2e_done=$(echo "$E2E_DONE" | tr -cd '0-9')
+    [ -z "$safe_unit_total" ] && safe_unit_total=0
+    [ -z "$safe_unit_done" ] && safe_unit_done=0
+    [ -z "$safe_e2e_total" ] && safe_e2e_total=0
+    [ -z "$safe_e2e_done" ] && safe_e2e_done=0
+
+    # Calculate total tasks (3 setup + tests)
+    # Use estimates if tests haven't started yet
+    local unit_count=$safe_unit_total
+    local e2e_count=$safe_e2e_total
+    [ "$unit_count" -eq 0 ] && unit_count=74   # Default estimate
+    [ "$e2e_count" -eq 0 ] && e2e_count=50     # Default estimate
+
+    local total_tasks=$((3 + unit_count + e2e_count))
+
+    # Count completed tasks
+    local done_count=0
+    local deps_status="pending"
+    local wpenv_status="pending"
+    local phpcs_status="pending"
     local unit_status="pending"
     local e2e_status="pending"
 
@@ -277,44 +305,41 @@ draw_progress() {
         local s="${STEP_STATUS[$i]}"
         local step="${STEPS[$i]}"
         case "$step" in
-            deps) [[ "$s" == "passed" || "$s" == "warning" || "$s" == "failed" ]] && deps_done=1 ;;
-            wpenv) [[ "$s" == "passed" || "$s" == "warning" || "$s" == "failed" ]] && wpenv_done=1 ;;
-            phpcs) [[ "$s" == "passed" || "$s" == "warning" || "$s" == "failed" ]] && phpcs_done=1 ;;
+            deps)
+                deps_status="$s"
+                [[ "$s" == "passed" || "$s" == "warning" || "$s" == "failed" ]] && done_count=$((done_count + 1))
+                ;;
+            wpenv)
+                wpenv_status="$s"
+                [[ "$s" == "passed" || "$s" == "warning" || "$s" == "failed" ]] && done_count=$((done_count + 1))
+                ;;
+            phpcs)
+                phpcs_status="$s"
+                [[ "$s" == "passed" || "$s" == "warning" || "$s" == "failed" ]] && done_count=$((done_count + 1))
+                ;;
             unit) unit_status="$s" ;;
             e2e) e2e_status="$s" ;;
         esac
     done
 
-    # Setup steps = 5% total (deps=1%, wpenv=2%, phpcs=2%)
-    local setup_pct=$((deps_done + wpenv_done * 2 + phpcs_done * 2))
-
-    # Test portion = 95% split between unit and e2e by test count
-    # Default: unit=74, e2e=331, total=405
-    local total_tests=$((UNIT_TOTAL + E2E_TOTAL))
-    if [ "$total_tests" -eq 0 ]; then
-        total_tests=405  # fallback estimate
-    fi
-
-    local unit_pct=0
-    local e2e_pct=0
-
-    # Unit tests portion
+    # Add test progress
     if [[ "$unit_status" == "passed" || "$unit_status" == "warning" || "$unit_status" == "failed" ]]; then
-        local unit_weight=$((UNIT_TOTAL > 0 ? UNIT_TOTAL : 74))
-        unit_pct=$((unit_weight * 95 / total_tests))
-    elif [[ "$unit_status" == "running" && "$UNIT_TOTAL" -gt 0 ]]; then
-        unit_pct=$((UNIT_DONE * 95 / total_tests))
+        done_count=$((done_count + unit_count))
+    elif [[ "$unit_status" == "running" ]]; then
+        done_count=$((done_count + safe_unit_done))
     fi
 
-    # E2E tests portion
     if [[ "$e2e_status" == "passed" || "$e2e_status" == "warning" || "$e2e_status" == "failed" ]]; then
-        local e2e_weight=$((E2E_TOTAL > 0 ? E2E_TOTAL : 331))
-        e2e_pct=$((e2e_weight * 95 / total_tests))
-    elif [[ "$e2e_status" == "running" && "$E2E_TOTAL" -gt 0 ]]; then
-        e2e_pct=$((E2E_DONE * 95 / total_tests))
+        done_count=$((done_count + e2e_count))
+    elif [[ "$e2e_status" == "running" ]]; then
+        done_count=$((done_count + safe_e2e_done))
     fi
 
-    pct=$((setup_pct + unit_pct + e2e_pct))
+    # Calculate percentage
+    local pct=0
+    if [ "$total_tasks" -gt 0 ]; then
+        pct=$((done_count * 100 / total_tasks))
+    fi
     # Cap at 100
     [ "$pct" -gt 100 ] && pct=100
 
@@ -479,15 +504,58 @@ check_deps() {
     return 0
 }
 
+# Check if wp-env is already running and responsive
+check_wp_env_running() {
+    # Check if WordPress is responding on the test port (8889)
+    if curl -s --max-time 3 http://localhost:8889 > /dev/null 2>&1; then
+        # Also verify wp-env thinks it's running
+        if npx wp-env run tests-cli wp --info > /dev/null 2>&1; then
+            return 0  # Running and responsive
+        fi
+    fi
+    return 1  # Not running or not responsive
+}
+
 # Start wp-env
 start_wp_env() {
-    update_status "wpenv" "running" "Starting..."
+    update_status "wpenv" "running" "Checking..."
     draw_progress
 
     local output_file="/tmp/zbooks_test_wpenv.log"
 
+    # First check if already running and responsive
+    if check_wp_env_running; then
+        update_status "wpenv" "running" "Already running, verifying..."
+        draw_progress
+
+        # Ensure plugins are activated
+        update_status "wpenv" "running" "Activating plugins..."
+        draw_progress
+        activate_plugins
+
+        # Setup Zoho credentials if .env.local exists
+        if [ -f "$SCRIPT_DIR/.env.local" ]; then
+            update_status "wpenv" "running" "Setting up Zoho..."
+            draw_progress
+            setup_zoho_credentials
+        fi
+
+        update_status "wpenv" "passed" "http://localhost:8889"
+        draw_progress
+        return 0
+    fi
+
+    # Not running - need to start it
+    update_status "wpenv" "running" "Starting..."
+    draw_progress
+
     if npx wp-env start > "$output_file" 2>&1; then
         local url=$(grep -o 'http://localhost:[0-9]*' "$output_file" | head -1)
+
+        # Ensure plugins are activated
+        update_status "wpenv" "running" "Activating plugins..."
+        draw_progress
+        activate_plugins
 
         # Setup Zoho credentials if .env.local exists
         if [ -f "$SCRIPT_DIR/.env.local" ]; then
@@ -506,10 +574,31 @@ start_wp_env() {
     fi
 }
 
+# Activate required plugins in wp-env
+activate_plugins() {
+    # Check if WooCommerce is active by testing wp wc command
+    if ! npx wp-env run tests-cli wp wc --version > /dev/null 2>&1; then
+        console_log "Activating WooCommerce and ZBooks..."
+        npx wp-env run tests-cli wp plugin activate woocommerce zbooks-for-woocommerce > /dev/null 2>&1 || true
+    fi
+}
+
+# Check if Zoho credentials are set in the tests environment
+check_zoho_credentials() {
+    local org_id=$(npx wp-env run tests-cli wp option get zbooks_organization_id 2>/dev/null | grep -v "Starting\|warning\|version\|Ran\|ℹ\|✔" | tr -d '\n\r ')
+    [ -n "$org_id" ] && [ "$org_id" != "" ] && [[ "$org_id" =~ ^[0-9]+$ ]]
+}
+
 # Setup Zoho credentials from .env.local
 setup_zoho_credentials() {
     # Source .env.local to get credentials
     if [ ! -f "$SCRIPT_DIR/.env.local" ]; then
+        return 0
+    fi
+
+    # Check if credentials are already set
+    if check_zoho_credentials; then
+        console_log "Zoho credentials already configured"
         return 0
     fi
 
@@ -522,13 +611,22 @@ setup_zoho_credentials() {
 
     # Skip if credentials are missing
     if [ -z "$client_id" ] || [ -z "$client_secret" ] || [ -z "$refresh_token" ]; then
+        console_log "Zoho credentials not found in .env.local"
         return 0
     fi
 
     # Run setup script inside wp-env with environment variables
+    console_log "Configuring Zoho API credentials..."
     npx wp-env run tests-cli --env-cwd=wp-content/plugins/zbooks-for-woocommerce \
         bash -c "ZOHO_CLIENT_ID='$client_id' ZOHO_CLIENT_SECRET='$client_secret' ZOHO_REFRESH_TOKEN='$refresh_token' ZOHO_ORGANIZATION_ID='$org_id' ZOHO_DATACENTER='${datacenter:-us}' wp eval-file scripts/setup-zoho-credentials.php" \
-        > /tmp/zbooks_zoho_setup.log 2>&1 || true
+        > /tmp/zbooks_zoho_setup.log 2>&1
+
+    # Verify credentials were saved
+    if check_zoho_credentials; then
+        console_log "Zoho credentials configured successfully"
+    else
+        console_log "Warning: Zoho credentials may not have been saved"
+    fi
 }
 
 # Run PHPCS
@@ -616,11 +714,23 @@ run_e2e() {
 
     local output_file="/tmp/zbooks_test_e2e.log"
 
+    # Build playwright command with optional pattern
+    local playwright_cmd="npx playwright test"
+    if [ -n "$E2E_PATTERN" ]; then
+        # If pattern looks like a file name, use -g for grep, otherwise it's a file path
+        if [[ "$E2E_PATTERN" == *.spec.ts ]] || [[ "$E2E_PATTERN" == *.spec.js ]]; then
+            playwright_cmd="$playwright_cmd tests/E2E/$E2E_PATTERN"
+        else
+            playwright_cmd="$playwright_cmd -g \"$E2E_PATTERN\""
+        fi
+        console_log "Running E2E tests matching: $E2E_PATTERN"
+    fi
+
     # In CI mode, run directly without live updates
     if [ "$CI_MODE" -eq 1 ]; then
-        if npx playwright test > "$output_file" 2>&1; then
+        if eval "$playwright_cmd" > "$output_file" 2>&1; then
             local passed=$(grep -oE '[0-9]+ passed' "$output_file" 2>/dev/null | head -1)
-            local passed_count=$(echo "$passed" | grep -oE '[0-9]+' || echo "331")
+            local passed_count=$(echo "$passed" | grep -oE '[0-9]+' | tr -d '\n' || echo "331")
             E2E_TOTAL=${passed_count:-331}
             E2E_DONE=$E2E_TOTAL
             update_status "e2e" "passed" "${passed:-All passed}"
@@ -630,7 +740,7 @@ run_e2e() {
             local passed=$(grep -oE '[0-9]+ passed' "$output_file" 2>/dev/null | head -1)
             local failed=$(grep -oE '[0-9]+ failed' "$output_file" 2>/dev/null | head -1)
             if [ -n "$passed" ]; then
-                local passed_count=$(echo "$passed" | grep -oE '[0-9]+' || echo "331")
+                local passed_count=$(echo "$passed" | grep -oE '[0-9]+' | tr -d '\n' || echo "331")
                 E2E_TOTAL=${passed_count:-331}
                 E2E_DONE=$E2E_TOTAL
                 update_status "e2e" "warning" "${passed}, ${failed:-0 failed}"
@@ -652,7 +762,7 @@ run_e2e() {
     local last_line_count=0
 
     # Start playwright in background
-    npx playwright test > "$output_file" 2>&1 &
+    eval "$playwright_cmd" > "$output_file" 2>&1 &
     local pid=$!
 
     # Monitor output while tests run
@@ -673,8 +783,8 @@ run_e2e() {
                     if [ -n "$new_line" ]; then
                         console_log "$new_line"
                         # Count passed/failed so far and total tests
-                        local done_so_far=$(grep -cE "✓|✘" "$output_file" 2>/dev/null || echo "0")
-                        local total_tests=$(grep -oE '[0-9]+ tests' "$output_file" 2>/dev/null | head -1 | grep -oE '[0-9]+' || echo "")
+                        local done_so_far=$(grep -cE "✓|✘" "$output_file" 2>/dev/null | tr -d '\n' || echo "0")
+                        local total_tests=$(grep -oE '[0-9]+ tests' "$output_file" 2>/dev/null | head -1 | grep -oE '[0-9]+' | tr -d '\n' || echo "")
                         if [ -z "$total_tests" ]; then
                             # Try to count spec files mentioned
                             total_tests=$(grep -cE "\.spec\.ts" "$output_file" 2>/dev/null || echo "331")
@@ -705,7 +815,7 @@ run_e2e() {
 
     if [ "$exit_code" -eq 0 ]; then
         local passed=$(grep -oE '[0-9]+ passed' "$output_file" 2>/dev/null | head -1)
-        local passed_count=$(echo "$passed" | grep -oE '[0-9]+' || echo "331")
+        local passed_count=$(echo "$passed" | grep -oE '[0-9]+' | tr -d '\n' || echo "331")
         # Mark E2E as complete for progress bar
         E2E_TOTAL=${passed_count:-331}
         E2E_DONE=$E2E_TOTAL
@@ -719,7 +829,7 @@ run_e2e() {
         local failed=$(grep -oE '[0-9]+ failed' "$output_file" 2>/dev/null | head -1)
 
         if [ -n "$passed" ]; then
-            local passed_count=$(echo "$passed" | grep -oE '[0-9]+' || echo "331")
+            local passed_count=$(echo "$passed" | grep -oE '[0-9]+' | tr -d '\n' || echo "331")
             # Mark E2E as complete for progress bar
             E2E_TOTAL=${passed_count:-331}
             E2E_DONE=$E2E_TOTAL
@@ -810,13 +920,21 @@ print_help() {
     echo "Usage: $0 [option]"
     echo ""
     echo "Options:"
-    echo "  (none)    Run all tests (interactive UI)"
-    echo "  --phpcs   Run only PHPCS"
-    echo "  --unit    Run only unit tests"
-    echo "  --e2e     Run only E2E tests"
-    echo "  --ci      CI/agent-friendly output (no colors, no cursor control)"
-    echo "  --help    Show this help"
+    echo "  (none)            Run all tests (interactive UI)"
+    echo "  --phpcs           Run only PHPCS"
+    echo "  --unit            Run only unit tests"
+    echo "  --e2e             Run only E2E tests"
+    echo "  --e2e=<pattern>   Run E2E tests matching pattern (file or test name)"
+    echo "                    Examples:"
+    echo "                      --e2e=bulk-sync.spec.ts"
+    echo "                      --e2e=reconciliation"
+    echo "                      --e2e='Customer Verification'"
+    echo "  --ci              CI/agent-friendly output (no colors, no cursor control)"
+    echo "  --help            Show this help"
 }
+
+# E2E test pattern (for running specific tests)
+E2E_PATTERN=""
 
 # Main
 main() {
@@ -828,6 +946,10 @@ main() {
             --ci)
                 CI_MODE=1
                 disable_fancy_output
+                ;;
+            --e2e=*)
+                test_type="--e2e"
+                E2E_PATTERN="${arg#--e2e=}"
                 ;;
             --phpcs|--unit|--e2e|--help|-h)
                 test_type="$arg"

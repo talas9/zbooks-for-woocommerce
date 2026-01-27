@@ -643,6 +643,25 @@ class ConnectionTab {
 
 		<script>
 		jQuery(document).ready(function($) {
+			/**
+			 * Parse AJAX error and return user-friendly message.
+			 */
+			function getAjaxErrorMessage(xhr, defaultMsg) {
+				if (xhr.status === 403) {
+					if (xhr.responseText === '-1' || xhr.responseText === '0') {
+						return '<?php echo esc_js( __( 'Session expired. Please refresh the page and try again.', 'zbooks-for-woocommerce' ) ); ?>';
+					}
+					return '<?php echo esc_js( __( 'Permission denied.', 'zbooks-for-woocommerce' ) ); ?>';
+				}
+				if (xhr.status >= 500) {
+					return '<?php echo esc_js( __( 'Server error. Please try again later.', 'zbooks-for-woocommerce' ) ); ?>';
+				}
+				if (xhr.status === 0) {
+					return '<?php echo esc_js( __( 'Network error. Please check your connection.', 'zbooks-for-woocommerce' ) ); ?>';
+				}
+				return defaultMsg + ' (HTTP ' + xhr.status + ')';
+			}
+
 			var $authBtn = $('#zbooks-authenticate-btn');
 			var $saveOrgBtn = $('#zbooks-save-org-btn');
 			var $credentialFields = $('.zbooks-credential-field');
@@ -982,9 +1001,10 @@ class ConnectionTab {
 							$btn.prop('disabled', false);
 						}
 					},
-					error: function() {
+					error: function(xhr) {
 						$spinner.removeClass('is-active');
-						$status.html('<span style="color: #d63638;"><?php echo esc_js( __( 'Request failed. Please try again.', 'zbooks-for-woocommerce' ) ); ?></span>');
+						var msg = getAjaxErrorMessage(xhr, '<?php echo esc_js( __( 'Authentication failed.', 'zbooks-for-woocommerce' ) ); ?>');
+						$status.html('<span style="color: #d63638;">' + msg + '</span>');
 						$btn.prop('disabled', false);
 					}
 				});
@@ -1028,10 +1048,11 @@ class ConnectionTab {
 							$status.html('<span style="color: #d63638;">' + response.data.message + '</span>');
 						}
 					},
-					error: function() {
+					error: function(xhr) {
 						$spinner.removeClass('is-active');
 						$btn.prop('disabled', false);
-						$status.html('<span style="color: #d63638;"><?php echo esc_js( __( 'Request failed. Please try again.', 'zbooks-for-woocommerce' ) ); ?></span>');
+						var msg = getAjaxErrorMessage(xhr, '<?php echo esc_js( __( 'Failed to save organization.', 'zbooks-for-woocommerce' ) ); ?>');
+						$status.html('<span style="color: #d63638;">' + msg + '</span>');
 					}
 				});
 			});

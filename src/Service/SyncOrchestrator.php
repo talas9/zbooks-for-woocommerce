@@ -153,6 +153,19 @@ class SyncOrchestrator {
 	}
 
 	/**
+	 * Check if sync should stop completely when encountering a locked invoice.
+	 *
+	 * @return bool True to stop sync on locked invoice (default), false to skip invoice update but continue.
+	 */
+	private function should_backoff_on_locked(): bool {
+		$settings = get_option(
+			'zbooks_sync_behavior',
+			[ 'backoff_on_locked' => true ]
+		);
+		return $settings['backoff_on_locked'] ?? true;
+	}
+
+	/**
 	 * Sync an order to Zoho Books.
 	 *
 	 * @param WC_Order $order    WooCommerce order.
@@ -344,15 +357,142 @@ class SyncOrchestrator {
 		}
 
 		try {
+			// Verify the invoice still exists in Zoho and check for discrepancies.
+			$verification = $this->invoice_service->verify_invoice_exists( $invoice_id, $order );
+
+			if ( ! $verification['exists'] ) {
+				// Invoice was deleted in Zoho - clear stale reference and create new.
+				$this->logger->warning(
+					'Cached invoice no longer exists in Zoho, recreating',
+					[
+						'order_id'   => $order_id,
+						'invoice_id' => $invoice_id,
+					]
+				);
+				$this->repository->clear_invoice_id( $order );
+				$this->release_sync_lock( $order_id );
+
+				$this->note_service->add_order_note(
+					$order,
+					__( 'Previous Zoho invoice was deleted. Creating new invoice.', 'zbooks-for-woocommerce' )
+				);
+
+				return $this->sync_order( $order, $as_draft );
+			}
+
+			// Check if invoice is locked (paid/void).
+			$is_locked = ! empty(
+				array_filter(
+					$verification['discrepancies'],
+					fn( $d ) => $d['field'] === 'status' && $d['severity'] === 'info'
+				)
+			);
+
+			// Check for high severity discrepancies (amount, line items - not just status).
+			$has_real_discrepancies = ! empty(
+				array_filter(
+					$verification['discrepancies'],
+					fn( $d ) => $d['severity'] === 'high'
+				)
+			);
+
+			$invoice_status = $verification['invoice']['status'] ?? 'unknown';
+			$contact_id     = $this->repository->get_contact_id( $order );
+
+			if ( $is_locked ) {
+				if ( $has_real_discrepancies ) {
+					// Invoice is locked AND has amount/line item discrepancies.
+					$this->logger->warning(
+						'Invoice is locked and has discrepancies',
+						[
+							'order_id'       => $order_id,
+							'invoice_id'     => $invoice_id,
+							'invoice_status' => $invoice_status,
+							'discrepancies'  => $verification['discrepancies'],
+						]
+					);
+
+					// Check the backoff setting.
+					if ( $this->should_backoff_on_locked() ) {
+						// Default behavior: Stop completely, don't apply payment.
+						$this->note_service->add_order_note(
+							$order,
+							sprintf(
+								/* translators: %s: Invoice status */
+								__( 'Sync stopped: Invoice is %s and cannot be modified. Payment was NOT applied. Disable "Stop sync on locked invoice" in settings to apply payment anyway.', 'zbooks-for-woocommerce' ),
+								$invoice_status
+							)
+						);
+
+						return SyncResult::failure(
+							sprintf(
+								/* translators: %s: Invoice status */
+								__( 'Invoice is %s and cannot be modified. Manual adjustment may be required.', 'zbooks-for-woocommerce' ),
+								$invoice_status
+							)
+						);
+					}
+
+					// Setting disabled: Skip invoice update but return success to allow payment.
+					$this->logger->info(
+						'Skipping locked invoice update (backoff disabled), proceeding with payment',
+						[
+							'order_id'   => $order_id,
+							'invoice_id' => $invoice_id,
+						]
+					);
+
+					$this->note_service->add_order_note(
+						$order,
+						sprintf(
+							/* translators: %s: Invoice status */
+							__( 'Invoice is %s and was not updated (has discrepancies). Payment will be applied to existing invoice.', 'zbooks-for-woocommerce' ),
+							$invoice_status
+						)
+					);
+
+					return SyncResult::success(
+						invoice_id: $invoice_id,
+						contact_id: $contact_id,
+						status: $this->repository->get_sync_status( $order ) ?? SyncStatus::SYNCED,
+						data: [
+							'invoice_skipped' => true,
+							'reason'          => 'locked_with_discrepancies',
+						]
+					);
+				}
+
+				// Invoice is locked but matches order - no update needed.
+				$this->logger->info(
+					'Invoice is locked but matches order, skipping update',
+					[
+						'order_id'       => $order_id,
+						'invoice_id'     => $invoice_id,
+						'invoice_status' => $invoice_status,
+					]
+				);
+
+				return SyncResult::success(
+					invoice_id: $invoice_id,
+					contact_id: $contact_id,
+					status: $this->repository->get_sync_status( $order ) ?? SyncStatus::SYNCED,
+					data: [
+						'invoice_skipped' => true,
+						'reason'          => 'locked_no_changes_needed',
+					]
+				);
+			}
+
 			$this->logger->info(
 				'Re-syncing order (updating existing invoice)',
 				[
-					'order_id'   => $order_id,
-					'invoice_id' => $invoice_id,
+					'order_id'          => $order_id,
+					'invoice_id'        => $invoice_id,
+					'has_discrepancies' => $has_real_discrepancies,
 				]
 			);
 
-			// Get or verify contact.
+			// Get or verify contact (may have changed since last sync).
 			$contact_id = $this->get_or_create_contact( $order );
 
 			// Update the existing invoice.

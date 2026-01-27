@@ -15,6 +15,7 @@ use Zbooks\Api\ZohoClient;
 use Zbooks\Logger\SyncLogger;
 use Zbooks\Model\ReconciliationReport;
 use Zbooks\Repository\ReconciliationRepository;
+use Zbooks\Service\EmailTemplateService;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -48,6 +49,13 @@ class ReconciliationService {
 	private ReconciliationRepository $repository;
 
 	/**
+	 * Email template service.
+	 *
+	 * @var EmailTemplateService|null
+	 */
+	private ?EmailTemplateService $email_service = null;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param ZohoClient               $client     Zoho client.
@@ -62,6 +70,35 @@ class ReconciliationService {
 		$this->client     = $client;
 		$this->logger     = $logger;
 		$this->repository = $repository;
+	}
+
+	/**
+	 * Get the email template service instance.
+	 *
+	 * @return EmailTemplateService
+	 */
+	private function get_email_service(): EmailTemplateService {
+		if ( $this->email_service === null ) {
+			$this->email_service = new EmailTemplateService();
+		}
+		return $this->email_service;
+	}
+
+	/**
+	 * Get centralized notification settings.
+	 *
+	 * @return array
+	 */
+	private function get_notification_settings(): array {
+		$defaults = [
+			'email' => get_option( 'admin_email' ),
+			'types' => [
+				'reconciliation' => false,
+			],
+		];
+
+		$saved = get_option( 'zbooks_notification_settings', [] );
+		return array_replace_recursive( $defaults, $saved );
 	}
 
 	/**
@@ -712,29 +749,54 @@ class ReconciliationService {
 	 * @return bool True if email sent.
 	 */
 	public function send_email_notification( ReconciliationReport $report ): bool {
-		$settings = $this->get_settings();
+		// Check centralized notification settings first.
+		$notification_settings = $this->get_notification_settings();
 
-		if ( empty( $settings['email_enabled'] ) ) {
+		if ( empty( $notification_settings['types']['reconciliation'] ) ) {
 			return false;
 		}
+
+		// Get reconciliation-specific settings for discrepancy-only logic.
+		$recon_settings = $this->get_settings();
 
 		// Skip if no discrepancies and set to only email on discrepancy.
-		if ( ! empty( $settings['email_on_discrepancy_only'] ) && ! $report->has_discrepancies() ) {
+		if ( ! empty( $recon_settings['email_on_discrepancy_only'] ) && ! $report->has_discrepancies() ) {
 			return false;
 		}
 
-		$to      = $settings['email_address'] ?? get_option( 'admin_email' );
-		$summary = $report->get_summary();
+		// Use centralized email address.
+		$to = $notification_settings['email'] ?? '';
+		if ( empty( $to ) || ! is_email( $to ) ) {
+			$to = get_option( 'admin_email' );
+		}
 
-		$subject = $report->has_discrepancies()
+		if ( empty( $to ) || ! is_email( $to ) ) {
+			return false;
+		}
+
+		$site_name = get_bloginfo( 'name' );
+		$subject   = $report->has_discrepancies()
 			? sprintf(
-				/* translators: %d: Number of discrepancies */
-				__( '[ZBooks] Reconciliation Report: %d discrepancies found', 'zbooks-for-woocommerce' ),
+				/* translators: 1: Site name, 2: Number of discrepancies */
+				__( '[%1$s] Reconciliation Report: %2$d discrepancies found', 'zbooks-for-woocommerce' ),
+				$site_name,
 				$report->get_discrepancy_count()
 			)
-			: __( '[ZBooks] Reconciliation Report: All matched', 'zbooks-for-woocommerce' );
+			: sprintf(
+				/* translators: %s: Site name */
+				__( '[%s] Reconciliation Report: All matched', 'zbooks-for-woocommerce' ),
+				$site_name
+			);
 
-		$message = $this->build_email_body( $report );
+		// Use EmailTemplateService for professional template.
+		$report_url = admin_url( 'admin.php?page=zbooks-reconciliation&report_id=' . $report->get_id() );
+		$message    = $this->get_email_service()->build_reconciliation_email(
+			$report->get_summary(),
+			$report->get_discrepancies(),
+			$report->get_period_start()->format( 'Y-m-d' ),
+			$report->get_period_end()->format( 'Y-m-d' ),
+			$report_url
+		);
 
 		$headers = [ 'Content-Type: text/html; charset=UTF-8' ];
 
@@ -759,136 +821,6 @@ class ReconciliationService {
 		}
 
 		return $sent;
-	}
-
-	/**
-	 * Build email body for reconciliation report.
-	 *
-	 * @param ReconciliationReport $report Report.
-	 * @return string HTML email body.
-	 */
-	private function build_email_body( ReconciliationReport $report ): string {
-		$summary       = $report->get_summary();
-		$discrepancies = $report->get_discrepancies();
-
-		ob_start();
-		?>
-		<html>
-		<head>
-			<style>
-				body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-				.summary { background: #f5f5f5; padding: 15px; margin-bottom: 20px; border-radius: 4px; }
-				.summary h3 { margin-top: 0; }
-				.summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-				.summary-item { padding: 8px; background: #fff; border-radius: 4px; }
-				.summary-label { font-size: 12px; color: #666; }
-				.summary-value { font-size: 18px; font-weight: bold; }
-				.discrepancy { border-left: 4px solid #dc3545; padding: 10px; margin-bottom: 10px; background: #fff; }
-				.discrepancy.warning { border-color: #ffc107; }
-				.discrepancy-type { font-weight: bold; text-transform: uppercase; font-size: 11px; color: #666; }
-				.healthy { color: #28a745; }
-				.warning { color: #ffc107; }
-				.danger { color: #dc3545; }
-			</style>
-		</head>
-		<body>
-			<h2><?php esc_html_e( 'Reconciliation Report', 'zbooks-for-woocommerce' ); ?></h2>
-			<p>
-				<?php
-				printf(
-					/* translators: 1: Start date, 2: End date */
-					esc_html__( 'Period: %1$s to %2$s', 'zbooks-for-woocommerce' ),
-					esc_html( $report->get_period_start()->format( 'Y-m-d' ) ),
-					esc_html( $report->get_period_end()->format( 'Y-m-d' ) )
-				);
-				?>
-			</p>
-
-			<div class="summary">
-				<h3><?php esc_html_e( 'Summary', 'zbooks-for-woocommerce' ); ?></h3>
-				<div class="summary-grid">
-					<div class="summary-item">
-						<div class="summary-label"><?php esc_html_e( 'WooCommerce Orders', 'zbooks-for-woocommerce' ); ?></div>
-						<div class="summary-value"><?php echo esc_html( $summary['total_wc_orders'] ); ?></div>
-					</div>
-					<div class="summary-item">
-						<div class="summary-label"><?php esc_html_e( 'Zoho Invoices', 'zbooks-for-woocommerce' ); ?></div>
-						<div class="summary-value"><?php echo esc_html( $summary['total_zoho_invoices'] ); ?></div>
-					</div>
-					<div class="summary-item">
-						<div class="summary-label"><?php esc_html_e( 'Matched', 'zbooks-for-woocommerce' ); ?></div>
-						<div class="summary-value healthy"><?php echo esc_html( $summary['matched_count'] ); ?></div>
-					</div>
-					<div class="summary-item">
-						<div class="summary-label"><?php esc_html_e( 'Missing in Zoho', 'zbooks-for-woocommerce' ); ?></div>
-						<div class="summary-value <?php echo $summary['missing_in_zoho'] > 0 ? 'danger' : ''; ?>">
-							<?php echo esc_html( $summary['missing_in_zoho'] ); ?>
-						</div>
-					</div>
-					<div class="summary-item">
-						<div class="summary-label"><?php esc_html_e( 'Amount Mismatches', 'zbooks-for-woocommerce' ); ?></div>
-						<div class="summary-value <?php echo $summary['amount_mismatches'] > 0 ? 'warning' : ''; ?>">
-							<?php echo esc_html( $summary['amount_mismatches'] ); ?>
-						</div>
-					</div>
-					<div class="summary-item">
-						<div class="summary-label"><?php esc_html_e( 'Total Difference', 'zbooks-for-woocommerce' ); ?></div>
-						<div class="summary-value">
-							<?php echo wp_kses_post( wc_price( $summary['amount_difference'] ) ); ?>
-						</div>
-					</div>
-				</div>
-			</div>
-
-			<?php if ( ! empty( $discrepancies ) ) : ?>
-				<h3><?php esc_html_e( 'Discrepancies', 'zbooks-for-woocommerce' ); ?></h3>
-				<?php foreach ( array_slice( $discrepancies, 0, 20 ) as $discrepancy ) : ?>
-					<div class="discrepancy <?php echo $discrepancy['type'] === 'status_mismatch' ? 'warning' : ''; ?>">
-						<div class="discrepancy-type"><?php echo esc_html( $discrepancy['type'] ); ?></div>
-						<p><?php echo esc_html( $discrepancy['message'] ); ?></p>
-						<?php if ( ! empty( $discrepancy['order_number'] ) ) : ?>
-							<small>
-								<?php
-								printf(
-									/* translators: %s: Order number */
-									esc_html__( 'Order: %s', 'zbooks-for-woocommerce' ),
-									esc_html( $discrepancy['order_number'] )
-								);
-								?>
-							</small>
-						<?php endif; ?>
-					</div>
-				<?php endforeach; ?>
-
-				<?php if ( count( $discrepancies ) > 20 ) : ?>
-					<p>
-						<?php
-						printf(
-							/* translators: %d: Number of additional discrepancies */
-							esc_html__( '... and %d more discrepancies. View full report in WordPress admin.', 'zbooks-for-woocommerce' ),
-							count( $discrepancies ) - 20
-						);
-						?>
-					</p>
-				<?php endif; ?>
-			<?php else : ?>
-				<p class="healthy"><?php esc_html_e( 'No discrepancies found. All orders match their invoices.', 'zbooks-for-woocommerce' ); ?></p>
-			<?php endif; ?>
-
-			<hr>
-			<p style="font-size: 12px; color: #666;">
-				<?php
-				printf(
-					/* translators: %s: Site URL */
-					esc_html__( 'This report was generated by ZBooks for WooCommerce on %s', 'zbooks-for-woocommerce' ),
-					esc_html( home_url() )
-				);
-				?>
-			</p>
-		</body>
-		</html>
-		<?php
-		return ob_get_clean();
 	}
 
 	/**
