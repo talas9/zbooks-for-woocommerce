@@ -88,16 +88,9 @@ function activatePlugins(): void {
 }
 
 /**
- * Setup Zoho credentials from .env.local file.
+ * Setup Zoho credentials from .env.local file or environment variables.
  */
 function setupZohoCredentials(): void {
-	const envFile = path.join(process.cwd(), '.env.local');
-
-	if (!fs.existsSync(envFile)) {
-		console.log('No .env.local file found, skipping Zoho setup.');
-		return;
-	}
-
 	// Check if already configured
 	const orgId = wpCli('option get zbooks_organization_id');
 	if (orgId && !orgId.includes('Does it exist') && /^\d+/.test(orgId.trim())) {
@@ -105,27 +98,46 @@ function setupZohoCredentials(): void {
 		return;
 	}
 
-	console.log('Setting up Zoho credentials from .env.local...');
+	// Try to get credentials from environment variables first (CI)
+	let clientId = process.env.ZOHO_CLIENT_ID;
+	let clientSecret = process.env.ZOHO_CLIENT_SECRET;
+	let refreshToken = process.env.ZOHO_REFRESH_TOKEN;
+	let organizationId = process.env.ZOHO_ORGANIZATION_ID;
+	let datacenter = process.env.ZOHO_DATACENTER || 'us';
 
-	// Read .env.local
-	const envContent = fs.readFileSync(envFile, 'utf-8');
-	const envVars: Record<string, string> = {};
+	// If not in env vars, try .env.local file (local dev)
+	if (!clientId || !clientSecret || !refreshToken) {
+		const envFile = path.join(process.cwd(), '.env.local');
 
-	envContent.split('\n').forEach((line) => {
-		const match = line.match(/^([A-Z_]+)=(.*)$/);
-		if (match) {
-			envVars[match[1]] = match[2];
+		if (!fs.existsSync(envFile)) {
+			console.log('No .env.local file or environment variables found, skipping Zoho setup.');
+			return;
 		}
-	});
 
-	const clientId = envVars['ZOHO_CLIENT_ID'];
-	const clientSecret = envVars['ZOHO_CLIENT_SECRET'];
-	const refreshToken = envVars['ZOHO_REFRESH_TOKEN'];
-	const organizationId = envVars['ZOHO_ORGANIZATION_ID'];
-	const datacenter = envVars['ZOHO_DATACENTER'] || 'us';
+		console.log('Setting up Zoho credentials from .env.local...');
+
+		// Read .env.local
+		const envContent = fs.readFileSync(envFile, 'utf-8');
+		const envVars: Record<string, string> = {};
+
+		envContent.split('\n').forEach((line) => {
+			const match = line.match(/^([A-Z_]+)=(.*)$/);
+			if (match) {
+				envVars[match[1]] = match[2];
+			}
+		});
+
+		clientId = envVars['ZOHO_CLIENT_ID'];
+		clientSecret = envVars['ZOHO_CLIENT_SECRET'];
+		refreshToken = envVars['ZOHO_REFRESH_TOKEN'];
+		organizationId = envVars['ZOHO_ORGANIZATION_ID'];
+		datacenter = envVars['ZOHO_DATACENTER'] || 'us';
+	} else {
+		console.log('Setting up Zoho credentials from environment variables...');
+	}
 
 	if (!clientId || !clientSecret || !refreshToken) {
-		console.log('Zoho credentials missing in .env.local');
+		console.log('Zoho credentials incomplete, skipping setup.');
 		return;
 	}
 

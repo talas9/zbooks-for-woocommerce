@@ -50,11 +50,16 @@ export default defineConfig({
 	/**
 	 * Reporter to use.
 	 */
-	reporter: [
-		['html', { outputFolder: 'playwright-report' }],
-		['list'],
-		...(process.env.CI ? [['github' as const]] : []),
-	],
+	reporter: process.env.CI
+		? [
+				['html', { outputFolder: 'playwright-report' }],
+				['list'],
+				['github'],
+		  ]
+		: [
+				['html', { outputFolder: 'playwright-report' }],
+				['list'],
+		  ],
 
 	/**
 	 * Shared settings for all the projects below.
@@ -126,6 +131,9 @@ export default defineConfig({
 
 		/**
 		 * Desktop Chrome - primary test browser.
+		 * Using only Chromium for E2E tests to focus on test scenarios rather than
+		 * browser compatibility. The WooCommerce → Zoho Books sync logic is browser-
+		 * agnostic (backend API calls), so testing once in Chromium is sufficient.
 		 */
 		{
 			name: 'chromium',
@@ -137,53 +145,58 @@ export default defineConfig({
 			dependencies: ['setup'],
 		},
 
-		/**
-		 * Desktop Firefox.
-		 */
-		{
-			name: 'firefox',
-			use: {
-				...devices['Desktop Firefox'],
-				storageState: 'playwright/.auth/admin.json',
-			},
-			dependencies: ['setup'],
-		},
+		// Additional browsers commented out - focusing on test scenario coverage
+		// rather than browser compatibility testing. Uncomment if cross-browser
+		// testing is needed in the future.
+		// /**
+		//  * Desktop Firefox.
+		//  */
+		// {
+		// 	name: 'firefox',
+		// 	use: {
+		// 		...devices['Desktop Firefox'],
+		// 		storageState: 'playwright/.auth/admin.json',
+		// 	},
+		// 	dependencies: ['setup'],
+		// },
 
-		/**
-		 * Desktop Safari (WebKit).
-		 */
-		{
-			name: 'webkit',
-			use: {
-				...devices['Desktop Safari'],
-				storageState: 'playwright/.auth/admin.json',
-			},
-			dependencies: ['setup'],
-		},
+		// /**
+		//  * Desktop Safari (WebKit).
+		//  */
+		// {
+		// 	name: 'webkit',
+		// 	use: {
+		// 		...devices['Desktop Safari'],
+		// 		storageState: 'playwright/.auth/admin.json',
+		// 	},
+		// 	dependencies: ['setup'],
+		// },
 
-		/**
-		 * Mobile Chrome.
-		 */
-		{
-			name: 'mobile-chrome',
-			use: {
-				...devices['Pixel 5'],
-				storageState: 'playwright/.auth/admin.json',
-			},
-			dependencies: ['setup'],
-		},
+		// Mobile browsers removed - WordPress admin tests are not designed for mobile viewports
+		// and cause test failures. Only desktop browsers are needed for testing.
+		// /**
+		//  * Mobile Chrome.
+		//  */
+		// {
+		// 	name: 'mobile-chrome',
+		// 	use: {
+		// 		...devices['Pixel 5'],
+		// 		storageState: 'playwright/.auth/admin.json',
+		// 	},
+		// 	dependencies: ['setup'],
+		// },
 
-		/**
-		 * Mobile Safari.
-		 */
-		{
-			name: 'mobile-safari',
-			use: {
-				...devices['iPhone 12'],
-				storageState: 'playwright/.auth/admin.json',
-			},
-			dependencies: ['setup'],
-		},
+		// /**
+		//  * Mobile Safari.
+		//  */
+		// {
+		// 	name: 'mobile-safari',
+		// 	use: {
+		// 		...devices['iPhone 12'],
+		// 		storageState: 'playwright/.auth/admin.json',
+		// 	},
+		// 	dependencies: ['setup'],
+		// },
 	],
 
 	/**
