@@ -242,15 +242,15 @@ draw_progress() {
     # Console area (Docker-style activity log)
     if [ "$has_console" -eq 1 ]; then
         printf '\033[2K'
-        echo -e "  ${DIM}┌─ Activity ───────────────────────────────────────────────────────────────────────────────┐${NC}"
+        echo -e "  ${DIM}┌─ Activity ────────────────────────────────────────────────────────────────────────────────────────────────────────┐${NC}"
         printf '\033[2K'
-        printf "  ${DIM}│${NC} %-85s${DIM}│${NC}\n" "${CONSOLE_LINE_1:- }"
+        printf "  ${DIM}│${NC} %-110s${DIM}│${NC}\n" "${CONSOLE_LINE_1:- }"
         printf '\033[2K'
-        printf "  ${DIM}│${NC} %-85s${DIM}│${NC}\n" "${CONSOLE_LINE_2:- }"
+        printf "  ${DIM}│${NC} %-110s${DIM}│${NC}\n" "${CONSOLE_LINE_2:- }"
         printf '\033[2K'
-        printf "  ${DIM}│${NC} ${CYAN}%-85s${NC}${DIM}│${NC}\n" "${CONSOLE_LINE_3:- }"
+        printf "  ${DIM}│${NC} ${CYAN}%-110s${NC}${DIM}│${NC}\n" "${CONSOLE_LINE_3:- }"
         printf '\033[2K'
-        echo -e "  ${DIM}└───────────────────────────────────────────────────────────────────────────────────────────┘${NC}"
+        echo -e "  ${DIM}└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘${NC}"
     fi
 
     printf '\033[2K'
@@ -596,7 +596,7 @@ run_e2e() {
 
                 if [ -n "$new_line" ]; then
                     # Clean up the line (remove ANSI codes, trim)
-                    new_line=$(echo "$new_line" | sed 's/\x1b\[[0-9;]*m//g' | sed 's/^[[:space:]]*//' | cut -c1-85)
+                    new_line=$(echo "$new_line" | sed 's/\x1b\[[0-9;]*m//g' | sed 's/^[[:space:]]*//' | cut -c1-110)
                     if [ -n "$new_line" ]; then
                         console_log "$new_line"
                         # Count passed/failed so far and total tests
