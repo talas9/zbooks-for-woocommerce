@@ -290,9 +290,28 @@ function verify_invoice_by_order( $zoho_client, string $order_id ): array {
 function verify_connection( $zoho_client ): array {
 	try {
 		$connected = $zoho_client->test_connection();
+		
+		// If connection failed, try to get more details about why
+		if ( ! $connected ) {
+			// Check if credentials are configured
+			$org_id = get_option( 'zbooks_organization_id' );
+			$client_id = get_option( 'zbooks_client_id' );
+			$has_creds = ! empty( $org_id ) && ! empty( $client_id );
+			
+			return [
+				'success'   => false,
+				'connected' => false,
+				'error'     => 'Connection test returned false. Credentials configured: ' . ( $has_creds ? 'yes' : 'no' ),
+				'debug'     => [
+					'has_organization_id' => ! empty( $org_id ),
+					'has_client_id'       => ! empty( $client_id ),
+				],
+			];
+		}
+		
 		return [
-			'success'   => $connected,
-			'connected' => $connected,
+			'success'   => true,
+			'connected' => true,
 		];
 	} catch ( Exception $e ) {
 		return [
