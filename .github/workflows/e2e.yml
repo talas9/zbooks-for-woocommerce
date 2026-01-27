@@ -109,6 +109,11 @@ jobs:
           WP_BASE_URL: http://localhost:8889
           WP_ADMIN_USER: admin
           WP_ADMIN_PASSWORD: password
+          ZOHO_CLIENT_ID: ${{ secrets.ZOHO_CLIENT_ID }}
+          ZOHO_CLIENT_SECRET: ${{ secrets.ZOHO_CLIENT_SECRET }}
+          ZOHO_REFRESH_TOKEN: ${{ secrets.ZOHO_REFRESH_TOKEN }}
+          ZOHO_ORGANIZATION_ID: ${{ secrets.ZOHO_ORGANIZATION_ID }}
+          ZOHO_DATACENTER: ${{ secrets.ZOHO_DATACENTER || 'us' }}
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
