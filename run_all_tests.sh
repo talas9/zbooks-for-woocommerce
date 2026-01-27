@@ -49,6 +49,12 @@ STEP_NAMES=("Dependencies" "WordPress Environment" "PHP Code Sniffer" "Unit Test
 STEP_STATUS=("pending" "pending" "pending" "pending" "pending")
 STEP_DETAILS=("" "" "" "" "")
 
+# Test progress tracking (for accurate progress bar)
+E2E_DONE=0
+E2E_TOTAL=0
+UNIT_DONE=0
+UNIT_TOTAL=0
+
 # Get step index
 get_step_index() {
     local step="$1"
@@ -242,31 +248,78 @@ draw_progress() {
     # Console area (Docker-style activity log)
     if [ "$has_console" -eq 1 ]; then
         printf '\033[2K'
-        echo -e "  ${DIM}┌─ Activity ────────────────────────────────────────────────────────────────────────────────────────────────────────┐${NC}"
+        echo -e "  ${DIM}┌─ Activity ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐${NC}"
         printf '\033[2K'
-        printf "  ${DIM}│${NC} %-110s${DIM}│${NC}\n" "${CONSOLE_LINE_1:- }"
+        printf "  ${DIM}│${NC} %-140s${DIM}│${NC}\n" "${CONSOLE_LINE_1:- }"
         printf '\033[2K'
-        printf "  ${DIM}│${NC} %-110s${DIM}│${NC}\n" "${CONSOLE_LINE_2:- }"
+        printf "  ${DIM}│${NC} %-140s${DIM}│${NC}\n" "${CONSOLE_LINE_2:- }"
         printf '\033[2K'
-        printf "  ${DIM}│${NC} ${CYAN}%-110s${NC}${DIM}│${NC}\n" "${CONSOLE_LINE_3:- }"
+        printf "  ${DIM}│${NC} ${CYAN}%-140s${NC}${DIM}│${NC}\n" "${CONSOLE_LINE_3:- }"
         printf '\033[2K'
-        echo -e "  ${DIM}└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘${NC}"
+        echo -e "  ${DIM}└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘${NC}"
     fi
 
     printf '\033[2K'
 
-    # Progress bar
-    local completed=0
-    local total=${#STEPS[@]}
+    # Progress bar - based on total tests across all suites
+    # Setup steps (deps, wpenv, phpcs) = 5% combined
+    # Unit tests + E2E tests = 95% (proportional to test count)
+    local pct=0
+
+    # Check setup steps status
+    local deps_done=0
+    local wpenv_done=0
+    local phpcs_done=0
+    local unit_status="pending"
+    local e2e_status="pending"
+
     for i in "${!STEPS[@]}"; do
         local s="${STEP_STATUS[$i]}"
-        if [[ "$s" == "passed" || "$s" == "warning" || "$s" == "failed" ]]; then
-            completed=$((completed + 1))
-        fi
+        local step="${STEPS[$i]}"
+        case "$step" in
+            deps) [[ "$s" == "passed" || "$s" == "warning" || "$s" == "failed" ]] && deps_done=1 ;;
+            wpenv) [[ "$s" == "passed" || "$s" == "warning" || "$s" == "failed" ]] && wpenv_done=1 ;;
+            phpcs) [[ "$s" == "passed" || "$s" == "warning" || "$s" == "failed" ]] && phpcs_done=1 ;;
+            unit) unit_status="$s" ;;
+            e2e) e2e_status="$s" ;;
+        esac
     done
 
-    local pct=$((completed * 100 / total))
-    local filled=$((completed * 30 / total))
+    # Setup steps = 5% total (deps=1%, wpenv=2%, phpcs=2%)
+    local setup_pct=$((deps_done + wpenv_done * 2 + phpcs_done * 2))
+
+    # Test portion = 95% split between unit and e2e by test count
+    # Default: unit=74, e2e=331, total=405
+    local total_tests=$((UNIT_TOTAL + E2E_TOTAL))
+    if [ "$total_tests" -eq 0 ]; then
+        total_tests=405  # fallback estimate
+    fi
+
+    local unit_pct=0
+    local e2e_pct=0
+
+    # Unit tests portion
+    if [[ "$unit_status" == "passed" || "$unit_status" == "warning" || "$unit_status" == "failed" ]]; then
+        local unit_weight=$((UNIT_TOTAL > 0 ? UNIT_TOTAL : 74))
+        unit_pct=$((unit_weight * 95 / total_tests))
+    elif [[ "$unit_status" == "running" && "$UNIT_TOTAL" -gt 0 ]]; then
+        unit_pct=$((UNIT_DONE * 95 / total_tests))
+    fi
+
+    # E2E tests portion
+    if [[ "$e2e_status" == "passed" || "$e2e_status" == "warning" || "$e2e_status" == "failed" ]]; then
+        local e2e_weight=$((E2E_TOTAL > 0 ? E2E_TOTAL : 331))
+        e2e_pct=$((e2e_weight * 95 / total_tests))
+    elif [[ "$e2e_status" == "running" && "$E2E_TOTAL" -gt 0 ]]; then
+        e2e_pct=$((E2E_DONE * 95 / total_tests))
+    fi
+
+    pct=$((setup_pct + unit_pct + e2e_pct))
+    # Cap at 100
+    [ "$pct" -gt 100 ] && pct=100
+
+    # Calculate filled blocks (30 total)
+    local filled=$((pct * 30 / 100))
     local empty=$((30 - filled))
 
     printf "  Progress: ["
@@ -515,6 +568,9 @@ run_unit() {
             # Extract from "OK (5 tests, 10 assertions)"
             local tests=$(echo "$ok_line" | sed -n 's/.*OK (\([0-9]*\) test.*/\1/p')
             local assertions=$(echo "$ok_line" | sed -n 's/.*, \([0-9]*\) assertion.*/\1/p')
+            # Set UNIT_TOTAL for progress bar calculation
+            UNIT_TOTAL=${tests:-74}
+            UNIT_DONE=$UNIT_TOTAL
             update_status "unit" "passed" "${tests:-?} tests, ${assertions:-?} assertions"
             draw_progress
             return 0
@@ -523,6 +579,9 @@ run_unit() {
         # Fallback: Try "Tests: X, Assertions: Y" format
         local tests=$(grep -oE 'Tests: [0-9]+' "$output_file" 2>/dev/null | sed 's/Tests: //' | tail -1)
         local assertions=$(grep -oE 'Assertions: [0-9]+' "$output_file" 2>/dev/null | sed 's/Assertions: //' | tail -1)
+        # Set UNIT_TOTAL for progress bar calculation
+        UNIT_TOTAL=${tests:-74}
+        UNIT_DONE=$UNIT_TOTAL
         update_status "unit" "passed" "${tests:-?} tests, ${assertions:-?} assertions"
         draw_progress
         return 0
@@ -531,6 +590,9 @@ run_unit() {
         if grep -q "OK (" "$output_file" 2>/dev/null; then
             local ok_line=$(grep "OK (" "$output_file" 2>/dev/null | tail -1)
             local tests=$(echo "$ok_line" | sed -n 's/.*OK (\([0-9]*\) test.*/\1/p')
+            # Set UNIT_TOTAL for progress bar calculation
+            UNIT_TOTAL=${tests:-74}
+            UNIT_DONE=$UNIT_TOTAL
             update_status "unit" "passed" "${tests:-?} tests passed"
             draw_progress
             return 0
@@ -538,6 +600,9 @@ run_unit() {
 
         local failures=$(grep -oE 'Failures: [0-9]+' "$output_file" 2>/dev/null | sed 's/Failures: //' | tail -1)
         local skipped=$(grep -oE 'Skipped: [0-9]+' "$output_file" 2>/dev/null | sed 's/Skipped: //' | tail -1)
+        # Set fallback UNIT_TOTAL for progress bar
+        UNIT_TOTAL=74
+        UNIT_DONE=$UNIT_TOTAL
         update_status "unit" "warning" "${failures:-?} failures, ${skipped:-0} skipped"
         draw_progress
         return 0  # Non-blocking for now
@@ -555,6 +620,9 @@ run_e2e() {
     if [ "$CI_MODE" -eq 1 ]; then
         if npx playwright test > "$output_file" 2>&1; then
             local passed=$(grep -oE '[0-9]+ passed' "$output_file" 2>/dev/null | head -1)
+            local passed_count=$(echo "$passed" | grep -oE '[0-9]+' || echo "331")
+            E2E_TOTAL=${passed_count:-331}
+            E2E_DONE=$E2E_TOTAL
             update_status "e2e" "passed" "${passed:-All passed}"
             draw_progress
             return 0
@@ -562,10 +630,15 @@ run_e2e() {
             local passed=$(grep -oE '[0-9]+ passed' "$output_file" 2>/dev/null | head -1)
             local failed=$(grep -oE '[0-9]+ failed' "$output_file" 2>/dev/null | head -1)
             if [ -n "$passed" ]; then
+                local passed_count=$(echo "$passed" | grep -oE '[0-9]+' || echo "331")
+                E2E_TOTAL=${passed_count:-331}
+                E2E_DONE=$E2E_TOTAL
                 update_status "e2e" "warning" "${passed}, ${failed:-0 failed}"
                 draw_progress
                 return 0
             fi
+            E2E_TOTAL=331
+            E2E_DONE=$E2E_TOTAL
             update_status "e2e" "failed" "Tests failed"
             draw_progress
             return 1
@@ -596,17 +669,20 @@ run_e2e() {
 
                 if [ -n "$new_line" ]; then
                     # Clean up the line (remove ANSI codes, trim)
-                    new_line=$(echo "$new_line" | sed 's/\x1b\[[0-9;]*m//g' | sed 's/^[[:space:]]*//' | cut -c1-110)
+                    new_line=$(echo "$new_line" | sed 's/\x1b\[[0-9;]*m//g' | sed 's/^[[:space:]]*//' | cut -c1-140)
                     if [ -n "$new_line" ]; then
                         console_log "$new_line"
                         # Count passed/failed so far and total tests
                         local done_so_far=$(grep -cE "✓|✘" "$output_file" 2>/dev/null || echo "0")
-                        local total_tests=$(grep -oE '[0-9]+ tests' "$output_file" 2>/dev/null | head -1 | grep -oE '[0-9]+' || echo "?")
-                        if [ "$total_tests" = "?" ]; then
+                        local total_tests=$(grep -oE '[0-9]+ tests' "$output_file" 2>/dev/null | head -1 | grep -oE '[0-9]+' || echo "")
+                        if [ -z "$total_tests" ]; then
                             # Try to count spec files mentioned
-                            total_tests=$(grep -cE "\.spec\.ts" "$output_file" 2>/dev/null || echo "?")
+                            total_tests=$(grep -cE "\.spec\.ts" "$output_file" 2>/dev/null || echo "331")
                         fi
-                        update_status "e2e" "running" "${done_so_far}/${total_tests} tests..."
+                        # Update E2E tracking for progress bar
+                        E2E_DONE=$done_so_far
+                        E2E_TOTAL=${total_tests:-331}
+                        update_status "e2e" "running" "${done_so_far}/${E2E_TOTAL} tests..."
                         draw_progress
                     fi
                 fi
@@ -629,6 +705,10 @@ run_e2e() {
 
     if [ "$exit_code" -eq 0 ]; then
         local passed=$(grep -oE '[0-9]+ passed' "$output_file" 2>/dev/null | head -1)
+        local passed_count=$(echo "$passed" | grep -oE '[0-9]+' || echo "331")
+        # Mark E2E as complete for progress bar
+        E2E_TOTAL=${passed_count:-331}
+        E2E_DONE=$E2E_TOTAL
         update_status "e2e" "passed" "${passed:-All passed}"
         # Clear and redraw fresh
         clear
@@ -639,12 +719,19 @@ run_e2e() {
         local failed=$(grep -oE '[0-9]+ failed' "$output_file" 2>/dev/null | head -1)
 
         if [ -n "$passed" ]; then
+            local passed_count=$(echo "$passed" | grep -oE '[0-9]+' || echo "331")
+            # Mark E2E as complete for progress bar
+            E2E_TOTAL=${passed_count:-331}
+            E2E_DONE=$E2E_TOTAL
             update_status "e2e" "warning" "${passed}, ${failed:-0 failed}"
             clear
             draw_progress
             return 0
         fi
 
+        # Mark E2E as complete even on failure
+        E2E_TOTAL=331
+        E2E_DONE=$E2E_TOTAL
         update_status "e2e" "failed" "Tests failed"
         clear
         draw_progress
