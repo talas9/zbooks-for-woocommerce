@@ -359,8 +359,12 @@ async function verifyZohoConnection(): Promise<{ success: boolean; connected: bo
 		const result = await wpCli(
 			`eval-file /var/www/html/wp-content/plugins/zbooks-for-woocommerce/scripts/verify-zoho.php connection`
 		);
-		return JSON.parse(result);
+		console.log('Zoho connection verification raw result:', result);
+		const parsed = JSON.parse(result);
+		console.log('Zoho connection verification parsed:', JSON.stringify(parsed, null, 2));
+		return parsed;
 	} catch (error) {
+		console.error('Zoho connection verification failed:', error);
 		return { success: false, connected: false, error: String(error) };
 	}
 }
