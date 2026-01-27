@@ -440,58 +440,28 @@ src/Admin/SetupWizard.php = First-time setup wizard
 readme.txt = WordPress.org plugin readme (required)
 composer.json = PHP dependencies (required if vendor/ exists)
 .distignore = WordPress.org deploy exclusions
+RELEASE.md = Release process and WordPress.org packaging rules
+CHANGELOG.md = Detailed changelog (Keep a Changelog format)
 
 ## WPORG_PACKAGING (WordPress.org Plugin Packaging Rules)
-# These rules MUST be followed when creating plugin zip files for WordPress.org
+# Full release process documented in RELEASE.md
 
-### REQUIRED FILES (must be in zip)
-REQ readme.txt = Plugin readme (required by WordPress.org)
-REQ composer.json = Required if vendor/ directory exists
-REQ zbooks-for-woocommerce.php = Main plugin file
-REQ LICENSE = GPL-2.0+ license file
+### QUICK REFERENCE
+REQ readme.txt, composer.json, LICENSE, zbooks-for-woocommerce.php
+!ALLOW *.sh, *.md, tests/, .git/, node_modules/, composer.lock, package*.json
+REQ composer install --no-dev (no dev dependencies in vendor/)
+REQ zip must have plugin-slug/ as root folder
 
-### FORBIDDEN FILES (will cause rejection)
-!ALLOW *.sh = Shell scripts not permitted
-!ALLOW .DS_Store = macOS files not permitted
-!ALLOW *.md = Markdown files (use readme.txt instead)
-!ALLOW tests/ = Test files not permitted
-!ALLOW .git/ = Git directory not permitted
-!ALLOW .github/ = GitHub directory not permitted
-!ALLOW node_modules/ = Node modules not permitted
-!ALLOW phpcs.xml* = PHPCS config not permitted
-!ALLOW phpunit.xml* = PHPUnit config not permitted
-!ALLOW composer.lock = Lock file not permitted
-!ALLOW package*.json = NPM files not permitted
+### VERSION BUMP FILES
+- zbooks-for-woocommerce.php (Version header + ZBOOKS_VERSION constant)
+- readme.txt (Stable tag)
+- package.json (version)
+- CHANGELOG.md (new section)
 
-### BUILD REQUIREMENTS
-REQ composer-no-dev = Must run `composer install --no-dev` (no dev dependencies)
-REQ folder-structure = Zip must have plugin-slug/ as root folder
-REQ tested-up-to = readme.txt "Tested up to" must match current WordPress version
-REQ no-load-textdomain = Do NOT use load_plugin_textdomain() for WordPress.org hosted plugins (auto-loaded since WP 4.6)
-
-### ZIP BUILD COMMAND (manual)
-```bash
-# 1. Install production dependencies only
-composer install --no-dev --optimize-autoloader
-
-# 2. Create plugin directory structure
-mkdir -p dist/zbooks-for-woocommerce
-
-# 3. Copy required files
-cp zbooks-for-woocommerce.php LICENSE readme.txt composer.json dist/zbooks-for-woocommerce/
-cp -R src assets languages vendor dist/zbooks-for-woocommerce/
-
-# 4. Create zip (exclude forbidden files)
-cd dist && zip -rq zbooks-for-woocommerce-VERSION.zip zbooks-for-woocommerce -x "*.DS_Store" -x "*.sh"
-
-# 5. Cleanup
-rm -rf dist/zbooks-for-woocommerce
-```
-
-### GITHUB WORKFLOW
-# See .github/workflows/release.yml for automated release builds
-# See .github/workflows/deploy-wporg.yml for WordPress.org SVN deploy
-# See .distignore for file exclusion list
+### WORKFLOWS
+.github/workflows/release.yml = Automated release build
+.github/workflows/deploy-wporg.yml = WordPress.org SVN deploy
+.distignore = File exclusion list
 
 ## CHECKLIST (before submit)
 CHK TESTS: all tests pass
