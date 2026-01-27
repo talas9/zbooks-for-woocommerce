@@ -782,13 +782,22 @@ run_e2e() {
                     new_line=$(echo "$new_line" | sed 's/\x1b\[[0-9;]*m//g' | sed 's/^[[:space:]]*//' | cut -c1-140)
                     if [ -n "$new_line" ]; then
                         console_log "$new_line"
-                        # Count passed/failed so far and total tests
+                        # Count passed/failed so far
                         local done_so_far=$(grep -cE "✓|✘" "$output_file" 2>/dev/null | tr -d '\n' || echo "0")
-                        local total_tests=$(grep -oE '[0-9]+ tests' "$output_file" 2>/dev/null | head -1 | grep -oE '[0-9]+' | tr -d '\n' || echo "")
-                        if [ -z "$total_tests" ]; then
-                            # Try to count spec files mentioned
-                            total_tests=$(grep -cE "\.spec\.ts" "$output_file" 2>/dev/null || echo "331")
+                        
+                        # Try to get total from "Running X tests" line (Playwright's initial output)
+                        local total_tests=$(grep -oE 'Running [0-9]+ tests?' "$output_file" 2>/dev/null | head -1 | grep -oE '[0-9]+' | tr -d '\n' || echo "")
+                        
+                        # Fallback: look for final "X passed" line
+                        if [ -z "$total_tests" ] || [ "$total_tests" == "0" ]; then
+                            total_tests=$(grep -oE '[0-9]+ passed' "$output_file" 2>/dev/null | head -1 | grep -oE '[0-9]+' | tr -d '\n' || echo "")
                         fi
+                        
+                        # Last fallback: use default estimate
+                        if [ -z "$total_tests" ] || [ "$total_tests" == "0" ]; then
+                            total_tests="331"
+                        fi
+                        
                         # Update E2E tracking for progress bar
                         E2E_DONE=$done_so_far
                         E2E_TOTAL=${total_tests:-331}
