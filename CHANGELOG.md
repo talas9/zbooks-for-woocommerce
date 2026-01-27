@@ -1,0 +1,130 @@
+# Changelog
+
+All notable changes to ZBooks for WooCommerce will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.0.13] - 2026-01-26
+
+### Fixed
+- **Contact email/phone sync** - Customer email and phone are now properly sent to Zoho using contact_persons array (Zoho API requirement)
+- **Bank fee currency conversion** - Automatically converts bank fees to order currency when payment gateway processes in a different currency (e.g., Stripe processing in AED for USD orders)
+
+### Developer
+- Unit test improvements - Fixed mock configuration for invoice creation tests
+- PHPCS configuration - Excluded temp and scripts directories from linting, auto-fixed 30 coding style issues
+
+## [1.0.12] - 2026-01-25
+
+### Added
+- **Test runner script** - `run_all_tests.sh` for running all tests locally with progress UI
+
+### Changed
+- CI: Branch protection - PR to main now requires all tests to pass and admin approval
+- Improved GitHub Actions workflow with unified test status check
+
+## [1.0.11] - 2026-01-24
+
+### Fixed
+- **Bitcoin payment reference** - Uses order number for Bitcoin payments (transaction hashes exceed Zoho's 50 char limit). Transaction hash is added to order notes for reference. Other payment methods continue using transaction ID
+
+## [1.0.10] - 2026-01-23
+
+### Fixed
+- **Improved upgrade error handling** - Better error messages when autoloader is missing
+- Clearer instructions for resolving activation issues during upgrades
+- Payment reference truncated to 50 chars (Zoho Books limit)
+
+## [1.0.9] - 2026-01-22
+
+### Changed
+- Updated translation template with new strings
+- Documentation improvements
+
+## [1.0.8] - 2026-01-21
+
+### Fixed
+- **Plugin zip structure** - Zip now has correct folder structure for WordPress upgrades
+- Uploading new version properly replaces old version instead of creating duplicates
+
+## [1.0.7] - 2026-01-20
+
+### Fixed
+- **Seamless upgrades** - Plugin now properly detects version changes and runs upgrade routines
+- No need to deactivate/reactivate after uploading new versions
+- All settings and Zoho connection preserved during upgrades
+
+## [1.0.6] - 2026-01-19
+
+### Added
+- **Complete translations** for 19 languages:
+  - Arabic, Chinese, Danish, Dutch, English UK, French, German, Hindi, Italian, Japanese, Korean, Polish, Portuguese, Russian, Spanish, Swedish, Turkish, Ukrainian, Urdu
+- Project documentation (Getting Started, Configuration, Troubleshooting, FAQ)
+- GitHub issue templates for bug reports and feature requests
+
+### Changed
+- Applied WordPress Coding Standards formatting across all PHP files
+- Added .editorconfig for consistent coding style
+- Improved CI compatibility
+
+## [1.0.5] - 2026-01-18
+
+### Added
+- **Reconciliation Tab** - Compare WooCommerce orders with Zoho Books invoices
+- Discrepancy detection for missing, unsynced, or mismatched records
+- Amount verification between WooCommerce and Zoho
+- One-click sync for unsynced orders from reconciliation view
+- E2E tests for discount sync and reconciliation features
+
+### Changed
+- Enhanced order notes with detailed sync status information
+- Improved order meta box with reconciliation status display
+
+## [1.0.4] - 2026-01-17
+
+### Changed
+- Enhanced bulk sync with better progress tracking
+- Improved error handling for API requests
+
+### Fixed
+- Edge cases in payment reconciliation
+
+## [1.0.3] - 2026-01-16
+
+### Added
+- Payment method mapping to Zoho deposit accounts
+- Bank fee tracking from payment gateways (Stripe, PayPal, etc.)
+- Fee account mapping for expense categorization
+- Shipping account configuration
+
+## [1.0.2] - 2026-01-15
+
+### Added
+- Payment reconciliation - automatically apply payments to invoices
+- Refund sync as credit notes in Zoho Books
+- Custom field mapping support
+- Invoice numbering options (auto or order number)
+- Mark as sent toggle
+
+## [1.0.1] - 2026-01-14
+
+### Added
+- Setup wizard for guided configuration
+- Log viewer with filtering and search
+- Improved sync status display
+
+### Fixed
+- Bug fixes and performance improvements
+
+## [1.0.0] - 2026-01-13
+
+### Added
+- Initial release
+- Automatic order sync on status change
+- Manual sync from order page
+- Bulk sync by date range
+- Customer contact sync
+- Product linking to Zoho items
+- Configurable retry logic
+- Rate limiting support
