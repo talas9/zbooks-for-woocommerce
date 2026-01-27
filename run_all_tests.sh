@@ -785,22 +785,21 @@ run_e2e() {
                         # Count passed/failed so far
                         local done_so_far=$(grep -cE "✓|✘" "$output_file" 2>/dev/null | tr -d '\n' || echo "0")
                         
-                        # Try to get total from "Running X tests" line (Playwright's initial output)
-                        local total_tests=$(grep -oE 'Running [0-9]+ tests?' "$output_file" 2>/dev/null | head -1 | grep -oE '[0-9]+' | tr -d '\n' || echo "")
-                        
-                        # Fallback: look for final "X passed" line
-                        if [ -z "$total_tests" ] || [ "$total_tests" == "0" ]; then
-                            total_tests=$(grep -oE '[0-9]+ passed' "$output_file" 2>/dev/null | head -1 | grep -oE '[0-9]+' | tr -d '\n' || echo "")
-                        fi
-                        
-                        # Last fallback: use default estimate
-                        if [ -z "$total_tests" ] || [ "$total_tests" == "0" ]; then
-                            total_tests="331"
+                        # Only update E2E_TOTAL once when we first see it (cache it)
+                        if [ "$E2E_TOTAL" -eq 0 ] || [ "$E2E_TOTAL" -eq 331 ]; then
+                            # Try to get total from "Running X tests using" line (Playwright's initial output)
+                            local total_tests=$(grep -oE 'Running [0-9]+ test' "$output_file" 2>/dev/null | head -1 | grep -oE '[0-9]+' | tr -d '\n' || echo "")
+                            
+                            # If found, update the cached total
+                            if [ -n "$total_tests" ] && [ "$total_tests" -gt 0 ]; then
+                                E2E_TOTAL=$total_tests
+                            fi
                         fi
                         
                         # Update E2E tracking for progress bar
                         E2E_DONE=$done_so_far
-                        E2E_TOTAL=${total_tests:-331}
+                        # Use cached total or default
+                        [ "$E2E_TOTAL" -eq 0 ] && E2E_TOTAL=331
                         update_status "e2e" "running" "${done_so_far}/${E2E_TOTAL} tests..."
                         draw_progress
                     fi
