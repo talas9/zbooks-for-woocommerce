@@ -620,14 +620,18 @@ run_e2e() {
     wait "$pid"
     local exit_code=$?
 
-    # Clear console after E2E completes
+    # Clear console after E2E completes - reset progress tracking since display height changes
     CONSOLE_LINE_1=""
     CONSOLE_LINE_2=""
     CONSOLE_LINE_3=""
+    # Force full redraw since console area is gone (display height changed)
+    PROGRESS_DRAWN=0
 
     if [ "$exit_code" -eq 0 ]; then
         local passed=$(grep -oE '[0-9]+ passed' "$output_file" 2>/dev/null | head -1)
         update_status "e2e" "passed" "${passed:-All passed}"
+        # Clear and redraw fresh
+        clear
         draw_progress
         return 0
     else
@@ -636,11 +640,13 @@ run_e2e() {
 
         if [ -n "$passed" ]; then
             update_status "e2e" "warning" "${passed}, ${failed:-0 failed}"
+            clear
             draw_progress
             return 0
         fi
 
         update_status "e2e" "failed" "Tests failed"
+        clear
         draw_progress
         return 1
     fi
