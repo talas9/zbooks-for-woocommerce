@@ -778,8 +778,8 @@ run_e2e() {
                     grep -E "(✓|✘|›|test|spec|\.ts)" | tail -1)
 
                 if [ -n "$new_line" ]; then
-                    # Clean up the line (remove ANSI codes, trim)
-                    new_line=$(echo "$new_line" | sed 's/\x1b\[[0-9;]*m//g' | sed 's/^[[:space:]]*//' | cut -c1-140)
+                    # Clean up the line (remove ANSI codes, trim, remove browser/file path details)
+                    new_line=$(echo "$new_line" | sed 's/\x1b\[[0-9;]*m//g' | sed 's/^[[:space:]]*//' | sed 's/\[[^]]*\] › tests\/[^›]*› //' | cut -c1-140)
                     if [ -n "$new_line" ]; then
                         console_log "$new_line"
                         
