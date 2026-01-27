@@ -123,16 +123,20 @@ PROGRESS_DRAWN=0
 PROGRESS_LINES=0
 LAST_CI_STEP=""
 
-# Console activity log (last 3 lines)
+# Console activity log (last 5 lines)
 CONSOLE_LINE_1=""
 CONSOLE_LINE_2=""
 CONSOLE_LINE_3=""
+CONSOLE_LINE_4=""
+CONSOLE_LINE_5=""
 
 # Add a line to the console log (shifts previous lines up)
 console_log() {
     CONSOLE_LINE_1="$CONSOLE_LINE_2"
     CONSOLE_LINE_2="$CONSOLE_LINE_3"
-    CONSOLE_LINE_3="$1"
+    CONSOLE_LINE_3="$CONSOLE_LINE_4"
+    CONSOLE_LINE_4="$CONSOLE_LINE_5"
+    CONSOLE_LINE_5="$1"
 }
 
 # Draw the progress display (CI mode: simple output)
@@ -173,11 +177,11 @@ draw_progress() {
     # Calculate how many lines this display will take
     local num_steps=${#STEPS[@]}
     local has_console=0
-    if [ -n "$CONSOLE_LINE_1" ] || [ -n "$CONSOLE_LINE_2" ] || [ -n "$CONSOLE_LINE_3" ]; then
+    if [ -n "$CONSOLE_LINE_1" ] || [ -n "$CONSOLE_LINE_2" ] || [ -n "$CONSOLE_LINE_3" ] || [ -n "$CONSOLE_LINE_4" ] || [ -n "$CONSOLE_LINE_5" ]; then
         has_console=1
     fi
     local console_lines=0
-    [ "$has_console" -eq 1 ] && console_lines=5  # border(1) + 3 lines + border(1)
+    [ "$has_console" -eq 1 ] && console_lines=7  # border(1) + 5 lines + border(1)
     local total_lines=$((5 + num_steps + 5 + console_lines))  # header(5) + steps + footer(5) + console
 
     # If we've drawn before, move cursor back up to overwrite
@@ -263,7 +267,11 @@ draw_progress() {
         printf '\033[2K'
         echo -e "  ${DIM}│${NC} ${CONSOLE_LINE_2:- }"
         printf '\033[2K'
-        echo -e "  ${DIM}│${NC} ${CYAN}${CONSOLE_LINE_3:- }${NC}"
+        echo -e "  ${DIM}│${NC} ${CONSOLE_LINE_3:- }"
+        printf '\033[2K'
+        echo -e "  ${DIM}│${NC} ${CONSOLE_LINE_4:- }"
+        printf '\033[2K'
+        echo -e "  ${DIM}│${NC} ${CYAN}${CONSOLE_LINE_5:- }${NC}"
         printf '\033[2K'
         echo -e "  ${DIM}└${border_line}┘${NC}"
     fi
@@ -820,6 +828,8 @@ run_e2e() {
     CONSOLE_LINE_1=""
     CONSOLE_LINE_2=""
     CONSOLE_LINE_3=""
+    CONSOLE_LINE_4=""
+    CONSOLE_LINE_5=""
     # Force full redraw since console area is gone (display height changed)
     PROGRESS_DRAWN=0
 
