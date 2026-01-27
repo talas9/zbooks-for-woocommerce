@@ -782,13 +782,11 @@ run_e2e() {
                     new_line=$(echo "$new_line" | sed 's/\x1b\[[0-9;]*m//g' | sed 's/^[[:space:]]*//' | cut -c1-140)
                     if [ -n "$new_line" ]; then
                         console_log "$new_line"
-                        # Count passed/failed so far
-                        local done_so_far=$(grep -cE "✓|✘" "$output_file" 2>/dev/null | tr -d '\n' || echo "0")
                         
                         # Only update E2E_TOTAL once when we first see it (cache it)
                         if [ "$E2E_TOTAL" -eq 0 ] || [ "$E2E_TOTAL" -eq 331 ]; then
-                            # Try to get total from "Running X tests using" line (Playwright's initial output)
-                            local total_tests=$(grep -oE 'Running [0-9]+ test' "$output_file" 2>/dev/null | head -1 | grep -oE '[0-9]+' | tr -d '\n' || echo "")
+                            # Extract from "Running 199 tests using 8 workers"
+                            local total_tests=$(grep -oE 'Running [0-9]+ tests using' "$output_file" 2>/dev/null | head -1 | grep -oE '[0-9]+' | tr -d '\n' || echo "")
                             
                             # If found, update the cached total
                             if [ -n "$total_tests" ] && [ "$total_tests" -gt 0 ]; then
@@ -796,11 +794,15 @@ run_e2e() {
                             fi
                         fi
                         
+                        # Count done by finding the highest test number completed
+                        # Format: "✓    36 [chromium] › tests/..." 
+                        local done_so_far=$(grep -oE '✓[[:space:]]+[0-9]+[[:space:]]' "$output_file" 2>/dev/null | grep -oE '[0-9]+' | sort -n | tail -1 | tr -d '\n' || echo "0")
+                        
                         # Update E2E tracking for progress bar
-                        E2E_DONE=$done_so_far
+                        E2E_DONE=${done_so_far:-0}
                         # Use cached total or default
                         [ "$E2E_TOTAL" -eq 0 ] && E2E_TOTAL=331
-                        update_status "e2e" "running" "${done_so_far}/${E2E_TOTAL} tests..."
+                        update_status "e2e" "running" "${E2E_DONE}/${E2E_TOTAL} tests..."
                         draw_progress
                     fi
                 fi
