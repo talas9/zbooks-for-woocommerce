@@ -768,66 +768,81 @@ test.describe('Sync Robustness E2E Tests', () => {
 			const notes = await getOrderNotes(orderId);
 			console.log('WP Order notes:', notes);
 
+			// Sync should succeed - fail the test if it doesn't
+			if (!meta['_zbooks_zoho_invoice_id']) {
+				const zohoConnection = await verifyZohoConnection();
+				if (zohoConnection.connected) {
+					// Zoho is connected but sync failed - this is a real failure
+					throw new Error(
+						'Sync failed even though Zoho is connected. ' +
+						'Status: ' + meta['_zbooks_sync_status'] + '. ' +
+						'Notes: ' + JSON.stringify(notes)
+					);
+				} else {
+					// Zoho not connected - skip this verification
+					console.warn('Zoho not connected - skipping sync verification');
+					return;
+				}
+			}
+
 			// Check for sync success indicators
-			if (meta['_zbooks_zoho_invoice_id']) {
-				// Invoice was created in WP
-				expect(meta['_zbooks_zoho_contact_id']).toBeTruthy();
-				expect(meta['_zbooks_sync_status']).toBe('synced');
+			// Invoice was created in WP
+			expect(meta['_zbooks_zoho_contact_id']).toBeTruthy();
+			expect(meta['_zbooks_sync_status']).toBe('synced');
 
-				// Should have order note about sync
-				const hasSyncNote = notes.some(
-					(note) =>
-						note.includes('Invoice') ||
-						note.includes('synced') ||
-						note.includes('Zoho')
-				);
-				expect(hasSyncNote).toBeTruthy();
+			// Should have order note about sync
+			const hasSyncNote = notes.some(
+				(note) =>
+					note.includes('Invoice') ||
+					note.includes('synced') ||
+					note.includes('Zoho')
+			);
+			expect(hasSyncNote).toBeTruthy();
 
-				// ========== VERIFY ZOHO SIDE ==========
-				console.log('Verifying data in Zoho Books...');
+			// ========== VERIFY ZOHO SIDE ==========
+			console.log('Verifying data in Zoho Books...');
 
-				// Add delay to avoid Zoho API rate limiting
-				await page.waitForTimeout(1500);
+			// Add delay to avoid Zoho API rate limiting
+			await page.waitForTimeout(1500);
 
-				// Verify invoice exists in Zoho
-				const zohoInvoice = await verifyZohoInvoice(meta['_zbooks_zoho_invoice_id']);
-				console.log('Zoho Invoice:', zohoInvoice);
+			// Verify invoice exists in Zoho
+			const zohoInvoice = await verifyZohoInvoice(meta['_zbooks_zoho_invoice_id']);
+			console.log('Zoho Invoice:', zohoInvoice);
 
-				if (zohoInvoice.success && zohoInvoice.exists) {
-					// Invoice exists in Zoho
-					expect(zohoInvoice.invoice_id).toBe(meta['_zbooks_zoho_invoice_id']);
-					expect(zohoInvoice.status).toBeTruthy();
+			if (zohoInvoice.success && zohoInvoice.exists) {
+				// Invoice exists in Zoho
+				expect(zohoInvoice.invoice_id).toBe(meta['_zbooks_zoho_invoice_id']);
+				expect(zohoInvoice.status).toBeTruthy();
 
-					// Verify totals match (allowing for rounding differences up to ±0.5)
-					if (zohoInvoice.total !== undefined) {
-						const totalDiff = Math.abs(zohoInvoice.total - orderTotal);
-						console.log(`Total comparison: Zoho=${zohoInvoice.total}, WC=${orderTotal}, diff=${totalDiff}`);
-						expect(totalDiff).toBeLessThan(0.5);
-					}
+				// Verify totals match (allowing for rounding differences up to ±0.5)
+				if (zohoInvoice.total !== undefined) {
+					const totalDiff = Math.abs(zohoInvoice.total - orderTotal);
+					console.log(`Total comparison: Zoho=${zohoInvoice.total}, WC=${orderTotal}, diff=${totalDiff}`);
+					expect(totalDiff).toBeLessThan(0.5);
 				}
+			}
 
-				// Add delay before next Zoho API call
-				await page.waitForTimeout(1500);
+			// Add delay before next Zoho API call
+			await page.waitForTimeout(1500);
 
-				// Verify contact exists in Zoho
-				const zohoContact = await verifyZohoContact(meta['_zbooks_zoho_contact_id']);
-				console.log('Zoho Contact:', zohoContact);
+			// Verify contact exists in Zoho
+			const zohoContact = await verifyZohoContact(meta['_zbooks_zoho_contact_id']);
+			console.log('Zoho Contact:', zohoContact);
 
-				if (zohoContact.success && zohoContact.exists) {
-					expect(zohoContact.contact_id).toBe(meta['_zbooks_zoho_contact_id']);
-					expect(zohoContact.contact_name).toBeTruthy();
-				}
+			if (zohoContact.success && zohoContact.exists) {
+				expect(zohoContact.contact_id).toBe(meta['_zbooks_zoho_contact_id']);
+				expect(zohoContact.contact_name).toBeTruthy();
+			}
 
-				// Add delay before final Zoho API call
-				await page.waitForTimeout(1500);
+			// Add delay before final Zoho API call
+			await page.waitForTimeout(1500);
 
-				// Use the combined verification helper
-				const zohoVerification = await verifyZohoInvoiceByOrder(orderId);
-				console.log('Zoho verification by order:', zohoVerification);
+			// Use the combined verification helper
+			const zohoVerification = await verifyZohoInvoiceByOrder(orderId);
+			console.log('Zoho verification by order:', zohoVerification);
 
-				if (zohoVerification.success && zohoVerification.synced) {
-					expect(zohoVerification.totals_match).toBe(true);
-				}
+			if (zohoVerification.success && zohoVerification.synced) {
+				expect(zohoVerification.totals_match).toBe(true);
 			}
 		});
 
@@ -986,11 +1001,14 @@ test.describe('Sync Robustness E2E Tests', () => {
 
 	test.describe('Contact Email & Phone Sync', () => {
 		test('syncs customer email and phone to Zoho contact', async ({ page }) => {
-			// Skip if Zoho not connected
+			// Fail if Zoho not connected (required for this test)
 			const zohoConnection = await verifyZohoConnection();
 			if (!zohoConnection.connected) {
-				test.skip();
-				return;
+				throw new Error(
+					'Zoho connection required but not available. ' +
+					'Error: ' + (zohoConnection.error || 'Unknown') + '. ' +
+					'Check GitHub Secrets and refresh token validity.'
+				);
 			}
 
 			// Generate unique test data with specific email and phone
@@ -1063,11 +1081,14 @@ test.describe('Sync Robustness E2E Tests', () => {
 
 	test.describe('Bank Fee Currency Handling', () => {
 		test('converts bank fees from different currency before syncing to Zoho', async ({ page }) => {
-			// Skip if Zoho not connected
+			// Fail if Zoho not connected (required for this test)
 			const zohoConnection = await verifyZohoConnection();
 			if (!zohoConnection.connected) {
-				test.skip();
-				return;
+				throw new Error(
+					'Zoho connection required but not available. ' +
+					'Error: ' + (zohoConnection.error || 'Unknown') + '. ' +
+					'Check GitHub Secrets and refresh token validity.'
+				);
 			}
 
 			const testId = uniqueId();
@@ -1174,11 +1195,14 @@ test.describe('Sync Robustness E2E Tests', () => {
 		});
 
 		test('skips bank fees when currency cannot be determined', async ({ page }) => {
-			// Skip if Zoho not connected
+			// Fail if Zoho not connected (required for this test)
 			const zohoConnection = await verifyZohoConnection();
 			if (!zohoConnection.connected) {
-				test.skip();
-				return;
+				throw new Error(
+					'Zoho connection required but not available. ' +
+					'Error: ' + (zohoConnection.error || 'Unknown') + '. ' +
+					'Check GitHub Secrets and refresh token validity.'
+				);
 			}
 
 			const testId = uniqueId();
