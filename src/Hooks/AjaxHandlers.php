@@ -107,6 +107,8 @@ class AjaxHandlers {
 
 	/**
 	 * Handle bulk sync AJAX request.
+	 *
+	 * Each order is synced according to trigger settings.
 	 */
 	public function handle_bulk_sync(): void {
 		check_ajax_referer( 'zbooks_ajax_nonce', 'nonce' );
@@ -120,7 +122,6 @@ class AjaxHandlers {
 		}
 
 		$order_ids = isset( $_POST['order_ids'] ) ? array_map( 'absint', (array) $_POST['order_ids'] ) : [];
-		$as_draft  = isset( $_POST['as_draft'] ) && $_POST['as_draft'] === 'true';
 
 		if ( empty( $order_ids ) ) {
 			wp_send_json_error(
@@ -133,7 +134,7 @@ class AjaxHandlers {
 		$plugin       = \Zbooks\Plugin::get_instance();
 		$bulk_service = $plugin->get_service( 'bulk_sync_service' );
 
-		$results = $bulk_service->sync_orders( $order_ids, $as_draft );
+		$results = $bulk_service->sync_orders( $order_ids );
 
 		wp_send_json_success(
 			[
@@ -326,6 +327,8 @@ class AjaxHandlers {
 
 	/**
 	 * Handle bulk sync by date range AJAX request.
+	 *
+	 * Each order is synced according to trigger settings.
 	 */
 	public function handle_bulk_sync_date_range(): void {
 		check_ajax_referer( 'zbooks_ajax_nonce', 'nonce' );
@@ -340,7 +343,6 @@ class AjaxHandlers {
 
 		$date_from = isset( $_POST['date_from'] ) ? sanitize_text_field( $_POST['date_from'] ) : '';
 		$date_to   = isset( $_POST['date_to'] ) ? sanitize_text_field( $_POST['date_to'] ) : '';
-		$as_draft  = isset( $_POST['as_draft'] ) && $_POST['as_draft'] === 'true';
 
 		if ( empty( $date_from ) || empty( $date_to ) ) {
 			wp_send_json_error(
@@ -353,7 +355,7 @@ class AjaxHandlers {
 		$plugin       = \Zbooks\Plugin::get_instance();
 		$bulk_service = $plugin->get_service( 'bulk_sync_service' );
 
-		$results = $bulk_service->sync_date_range( $date_from, $date_to, $as_draft );
+		$results = $bulk_service->sync_date_range( $date_from, $date_to );
 
 		wp_send_json_success(
 			[
