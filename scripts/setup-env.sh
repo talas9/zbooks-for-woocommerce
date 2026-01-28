@@ -48,13 +48,34 @@ else
     echo "  ZOHO_DATACENTER (optional, defaults to 'us')"
 fi
 
-# Check if required variables are set
-if [[ -z "$ZOHO_CLIENT_ID" || -z "$ZOHO_CLIENT_SECRET" || -z "$ZOHO_REFRESH_TOKEN" || -z "$ZOHO_ORGANIZATION_ID" ]]; then
+# Check if required variables are set and log which ones are missing
+MISSING_VARS=()
+if [[ -z "$ZOHO_CLIENT_ID" ]]; then
+    MISSING_VARS+=("ZOHO_CLIENT_ID")
+fi
+if [[ -z "$ZOHO_CLIENT_SECRET" ]]; then
+    MISSING_VARS+=("ZOHO_CLIENT_SECRET")
+fi
+if [[ -z "$ZOHO_REFRESH_TOKEN" ]]; then
+    MISSING_VARS+=("ZOHO_REFRESH_TOKEN")
+fi
+if [[ -z "$ZOHO_ORGANIZATION_ID" ]]; then
+    MISSING_VARS+=("ZOHO_ORGANIZATION_ID")
+fi
+
+if [[ ${#MISSING_VARS[@]} -gt 0 ]]; then
     echo ""
     echo "Warning: Zoho credentials not fully configured."
+    echo "Missing variables: ${MISSING_VARS[*]}"
     echo "E2E tests requiring Zoho will be skipped."
     exit 0
 fi
+
+# Log confirmation that credentials are detected (show first 10 chars of client ID only for security)
+echo "Zoho credentials detected:"
+echo "  Client ID: ${ZOHO_CLIENT_ID:0:10}..."
+echo "  Organization ID: $ZOHO_ORGANIZATION_ID"
+echo "  Datacenter: ${ZOHO_DATACENTER:-us}"
 
 # Check if wp-env is running
 if ! npx wp-env run "$CONTAINER" wp core version &>/dev/null; then

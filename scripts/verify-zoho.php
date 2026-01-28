@@ -32,15 +32,80 @@ if ( ! $action ) {
 	exit( 1 );
 }
 
-// Ensure plugin is loaded.
+// Ensure plugin is loaded - with retry logic for CI environments
 if ( ! class_exists( 'Zbooks\\Plugin' ) ) {
-	echo json_encode( [ 'error' => 'ZBooks plugin not loaded' ] );
+	// Try to manually load the plugin if it's not loaded yet
+	$plugin_file = dirname( __DIR__ ) . '/zbooks-for-woocommerce.php';
+	
+	if ( file_exists( $plugin_file ) ) {
+		// Attempt to load the plugin
+		require_once $plugin_file;
+		
+		// Wait for plugin initialization with retry logic (max 5 attempts, 1 second each)
+		$max_attempts = 5;
+		$attempt = 0;
+		
+		while ( $attempt < $max_attempts && ! class_exists( 'Zbooks\\Plugin' ) ) {
+			sleep( 1 );
+			$attempt++;
+		}
+		
+		if ( ! class_exists( 'Zbooks\\Plugin' ) ) {
+			echo json_encode( [
+				'error' => 'ZBooks plugin class not available after loading plugin file',
+				'success' => false,
+				'plugin_file' => $plugin_file,
+				'attempts' => $attempt
+			] );
+			exit( 1 );
+		}
+	} else {
+		echo json_encode( [
+			'error' => 'ZBooks plugin file not found',
+			'success' => false,
+			'expected_path' => $plugin_file
+		] );
+		exit( 1 );
+	}
+}
+
+// Ensure the service container is initialized
+$max_init_attempts = 3;
+$init_attempt = 0;
+$plugin = null;
+
+while ( $init_attempt < $max_init_attempts ) {
+	try {
+		$plugin = \Zbooks\Plugin::get_instance();
+		if ( $plugin ) {
+			break;
+		}
+	} catch ( Exception $e ) {
+		// Plugin not initialized yet, wait and retry
+		sleep( 1 );
+	}
+	$init_attempt++;
+}
+
+if ( ! $plugin ) {
+	echo json_encode( [
+		'error' => 'Failed to get plugin instance after ' . $max_init_attempts . ' attempts',
+		'success' => false
+	] );
 	exit( 1 );
 }
 
 try {
-	$plugin      = \Zbooks\Plugin::get_instance();
+	// Plugin instance already obtained above with retry logic
 	$zoho_client = $plugin->get_service( 'zoho_client' );
+	
+	if ( ! $zoho_client ) {
+		echo json_encode( [
+			'error' => 'Zoho client service not available',
+			'success' => false
+		] );
+		exit( 1 );
+	}
 
 	switch ( $action ) {
 		case 'invoice':

@@ -90,7 +90,7 @@ function activatePlugins(): void {
 /**
  * Setup Zoho credentials from .env.local file or environment variables.
  */
-function setupZohoCredentials(): void {
+async function setupZohoCredentials(): Promise<void> {
 	// Check if already configured
 	const orgId = wpCli('option get zbooks_organization_id');
 	if (orgId && !orgId.includes('Does it exist') && /^\d+/.test(orgId.trim())) {
@@ -141,29 +141,73 @@ function setupZohoCredentials(): void {
 		return;
 	}
 
-	// Run setup script
+	// Run setup script with improved error handling
 	try {
-		execSync(
-			`npx wp-env run tests-cli --env-cwd=wp-content/plugins/zbooks-for-woocommerce ` +
-				`bash -c "ZOHO_CLIENT_ID='${clientId}' ZOHO_CLIENT_SECRET='${clientSecret}' ` +
-				`ZOHO_REFRESH_TOKEN='${refreshToken}' ZOHO_ORGANIZATION_ID='${organizationId}' ` +
-				`ZOHO_DATACENTER='${datacenter}' wp eval-file scripts/setup-zoho-credentials.php"`,
-			{ cwd: process.cwd(), stdio: ['pipe', 'pipe', 'pipe'] }
-		);
+		console.log('Running Zoho credential setup script...');
+		
+		// Simplified command structure for better environment variable passing
+		const setupCommand = `npx wp-env run tests-cli wp eval-file wp-content/plugins/zbooks-for-woocommerce/scripts/setup-zoho-credentials.php`;
+		
+		const result = execSync(setupCommand, {
+			cwd: process.cwd(),
+			encoding: 'utf-8',
+			stdio: 'pipe',
+			env: {
+				...process.env,
+				ZOHO_CLIENT_ID: clientId,
+				ZOHO_CLIENT_SECRET: clientSecret,
+				ZOHO_REFRESH_TOKEN: refreshToken,
+				ZOHO_ORGANIZATION_ID: organizationId,
+				ZOHO_DATACENTER: datacenter
+			}
+		});
+		
+		console.log('Setup script output:', result);
 
-		// Verify setup
-		const verifyOrgId = wpCli('option get zbooks_organization_id');
-		if (
-			verifyOrgId &&
-			!verifyOrgId.includes('Does it exist') &&
-			/^\d+/.test(verifyOrgId.trim())
-		) {
-			console.log('Zoho credentials configured successfully.');
-		} else {
-			console.log('Warning: Zoho credentials may not have been saved.');
+		// Wait for credentials to be saved
+		await new Promise(resolve => setTimeout(resolve, 2000));
+
+		// Verify setup with retry logic (3 attempts)
+		let verifySuccess = false;
+		for (let attempt = 1; attempt <= 3; attempt++) {
+			console.log(`Verifying credentials (attempt ${attempt}/3)...`);
+			
+			try {
+				const verifyOrgId = wpCli('option get zbooks_organization_id');
+				if (
+					verifyOrgId &&
+					!verifyOrgId.includes('Does it exist') &&
+					/^\d+/.test(verifyOrgId.trim())
+				) {
+					console.log('Zoho credentials configured successfully.');
+					verifySuccess = true;
+					break;
+				}
+			} catch (verifyError) {
+				console.warn(`Verification attempt ${attempt} failed:`, verifyError);
+			}
+			
+			if (attempt < 3) {
+				await new Promise(resolve => setTimeout(resolve, 1000));
+			}
 		}
-	} catch (error) {
-		console.log('Warning: Failed to setup Zoho credentials:', error);
+		
+		if (!verifySuccess) {
+			const errorMsg = 'Failed to verify Zoho credentials after setup';
+			console.error(errorMsg);
+			throw new Error(errorMsg);
+		}
+	} catch (error: unknown) {
+		const err = error as { message?: string; stderr?: string; stdout?: string };
+		console.error('Failed to setup Zoho credentials:');
+		console.error('Error message:', err.message);
+		if (err.stderr) {
+			console.error('stderr:', err.stderr);
+		}
+		if (err.stdout) {
+			console.error('stdout:', err.stdout);
+		}
+		throw error;
 	}
 }
 
@@ -213,7 +257,7 @@ async function globalSetup(config: FullConfig): Promise<void> {
 
 	// Activate plugins and setup Zoho
 	activatePlugins();
-	setupZohoCredentials();
+	await setupZohoCredentials();
 
 	console.log('Global setup complete.');
 }

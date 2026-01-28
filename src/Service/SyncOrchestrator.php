@@ -995,6 +995,18 @@ class SyncOrchestrator {
 			 * @param string   $payment_id The Zoho payment ID.
 			 */
 			do_action( 'zbooks_payment_applied', $order, $result['payment_id'] );
+		} elseif ( ! $result['success'] && ! empty( $result['error'] ) ) {
+			// Save payment error to order meta for debugging.
+			$this->repository->set_payment_error( $order, $result['error'] );
+
+			$this->logger->warning(
+				'Failed to apply payment',
+				[
+					'order_id'   => $order_id,
+					'invoice_id' => $invoice_id,
+					'error'      => $result['error'],
+				]
+			);
 		}
 
 		$this->release_payment_lock( $order_id );

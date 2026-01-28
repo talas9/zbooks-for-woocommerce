@@ -87,6 +87,14 @@ jobs:
           npx wp-env run cli wp plugin activate zbooks-for-woocommerce
           npx wp-env run tests-cli wp plugin activate zbooks-for-woocommerce
 
+      - name: Verify Plugin Activation
+        run: |
+          echo "Verifying plugin activation in tests environment..."
+          npx wp-env run tests-cli wp plugin list --status=active | grep zbooks-for-woocommerce
+          echo "Verifying plugin class is available..."
+          npx wp-env run tests-cli wp eval 'echo class_exists("Zbooks\\Plugin") ? "Plugin class exists" : "Plugin class NOT found";'
+          echo "Plugin verification complete."
+
       - name: Wait for WordPress
         run: |
           echo "Waiting for WordPress to be ready..."

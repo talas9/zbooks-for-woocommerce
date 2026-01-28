@@ -220,7 +220,36 @@ class CustomerService {
 			if ( ! empty( $contacts ) && isset( $contacts[0] ) ) {
 				// Get full contact details.
 				$contact_id = $contacts[0]['contact_id'];
-				return $this->get_contact( $contact_id );
+				$full_contact = $this->get_contact( $contact_id );
+				
+				// Verify email matches exactly (Zoho API filter may do partial matching).
+				if ( $full_contact !== null ) {
+					$contact_email = $full_contact['email'] ?? '';
+					
+					// Also check contact_persons for email.
+					if ( empty( $contact_email ) && ! empty( $full_contact['contact_persons'] ) ) {
+						foreach ( $full_contact['contact_persons'] as $person ) {
+							if ( ! empty( $person['email'] ) ) {
+								$contact_email = $person['email'];
+								break;
+							}
+						}
+					}
+					
+					// Only return contact if email matches exactly (case-insensitive).
+					if ( strcasecmp( $contact_email, $email ) === 0 ) {
+						return $full_contact;
+					}
+					
+					$this->logger->debug(
+						'Contact found but email does not match exactly',
+						[
+							'search_email'  => $email,
+							'contact_email' => $contact_email,
+							'contact_id'    => $contact_id,
+						]
+					);
+				}
 			}
 		} catch ( \Exception $e ) {
 			$this->logger->warning(
