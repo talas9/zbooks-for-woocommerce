@@ -357,16 +357,19 @@ class OrderMetaRepository {
 			],
 		];
 
-		if ( $date_from ) {
+		// Build date_created query parameter.
+		// WooCommerce WC_Order_Query expects:
+		// - ">=YYYY-MM-DD" for on-or-after
+		// - "<=YYYY-MM-DD" for on-or-before
+		// - "YYYY-MM-DD...YYYY-MM-DD" for date range (no prefix!)
+		if ( $date_from && $date_to ) {
+			// Date range: use the range syntax without any prefix.
+			// Bug fix: Previously used ">=$date_from...$date_to" which is malformed.
+			$args['date_created'] = $date_from . '...' . $date_to;
+		} elseif ( $date_from ) {
 			$args['date_created'] = '>=' . $date_from;
-		}
-
-		if ( $date_to ) {
-			if ( isset( $args['date_created'] ) ) {
-				$args['date_created'] .= '...' . $date_to;
-			} else {
-				$args['date_created'] = '<=' . $date_to;
-			}
+		} elseif ( $date_to ) {
+			$args['date_created'] = '<=' . $date_to;
 		}
 
 		$query = new \WC_Order_Query( $args );
