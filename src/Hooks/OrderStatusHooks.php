@@ -93,14 +93,15 @@ class OrderStatusHooks {
 		WC_Order $order
 	): void {
 		// Get trigger configuration (action => status).
-		$triggers = get_option(
-			'zbooks_sync_triggers',
-			[
-				'sync_draft'        => 'processing',
-				'sync_submit'       => 'completed',
-				'create_creditnote' => 'refunded',
-			]
-		);
+		$triggers = get_option( 'zbooks_sync_triggers', [] );
+		// If never configured, default to disabled (not auto-enabled).
+		if ( empty( $triggers ) ) {
+			$triggers = [
+				'sync_draft'        => '',
+				'sync_submit'       => '',
+				'create_creditnote' => '',
+			];
+		}
 
 		// Find which action is configured for this status.
 		$action = array_search( $new_status, $triggers, true );
