@@ -79,11 +79,14 @@ class BulkSyncService {
 	/**
 	 * Sync multiple orders.
 	 *
+	 * Each order is synced according to trigger settings - the system determines
+	 * whether to create as draft or submit based on the order's current status
+	 * and the configured trigger mappings.
+	 *
 	 * @param array $order_ids Order IDs to sync.
-	 * @param bool  $as_draft  Create as draft.
 	 * @return array{success: int, failed: int, results: array}
 	 */
-	public function sync_orders( array $order_ids, bool $as_draft = false ): array {
+	public function sync_orders( array $order_ids ): array {
 		$results = [
 			'success' => 0,
 			'failed'  => 0,
@@ -94,7 +97,16 @@ class BulkSyncService {
 			'Starting bulk sync',
 			[
 				'order_count' => count( $order_ids ),
-				'as_draft'    => $as_draft,
+			]
+		);
+
+		// Get trigger settings once for all orders.
+		$triggers = get_option(
+			'zbooks_sync_triggers',
+			[
+				'sync_draft'        => 'processing',
+				'sync_submit'       => 'completed',
+				'create_creditnote' => 'refunded',
 			]
 		);
 
@@ -110,7 +122,49 @@ class BulkSyncService {
 				continue;
 			}
 
+			// Determine if this order should be created as draft based on its status.
+			$as_draft = $this->should_create_as_draft( $order, $triggers );
+
+			$this->logger->debug(
+				'Syncing order in bulk',
+				[
+					'order_id' => $order_id,
+					'status'   => $order->get_status(),
+					'as_draft' => $as_draft,
+				]
+			);
+
 			$result = $this->orchestrator->sync_order( $order, $as_draft );
+
+			// Apply payment if:
+			// 1. Sync was successful
+			// 2. Not created as draft (matches sync_submit trigger)
+			// 3. Order is marked as paid in WooCommerce
+			// This matches the behavior of OrderStatusHooks::on_order_completed()
+			// which applies payment when order status changes to completed.
+			$payment_result = null;
+			if ( $result->success && ! $as_draft && $order->is_paid() ) {
+				$this->logger->debug(
+					'Applying payment for bulk-synced order',
+					[
+						'order_id'   => $order_id,
+						'invoice_id' => $result->invoice_id,
+					]
+				);
+				$payment_result = $this->orchestrator->apply_payment( $order );
+
+				// Log payment result but don't fail the sync if payment fails.
+				// This matches the separate handling in OrderStatusHooks.
+				if ( ! $payment_result['success'] && ! empty( $payment_result['error'] ) ) {
+					$this->logger->warning(
+						'Payment application failed during bulk sync',
+						[
+							'order_id' => $order_id,
+							'error'    => $payment_result['error'],
+						]
+					);
+				}
+			}
 
 			if ( $result->success ) {
 				++$results['success'];
@@ -118,7 +172,12 @@ class BulkSyncService {
 				++$results['failed'];
 			}
 
-			$results['results'][ $order_id ] = $result->to_array();
+			// Include payment result in the sync result.
+			$result_array = $result->to_array();
+			if ( $payment_result !== null ) {
+				$result_array['payment'] = $payment_result;
+			}
+			$results['results'][ $order_id ] = $result_array;
 
 			// Small delay to respect rate limits.
 			usleep( 100000 ); // 100ms
@@ -136,24 +195,48 @@ class BulkSyncService {
 	}
 
 	/**
+	 * Determine if invoice should be created as draft based on order status and triggers.
+	 *
+	 * @param \WC_Order $order    WooCommerce order.
+	 * @param array     $triggers Trigger settings.
+	 * @return bool True if should create as draft, false if should submit.
+	 */
+	private function should_create_as_draft( \WC_Order $order, array $triggers ): bool {
+		$status = $order->get_status();
+
+		// Check if sync_draft is configured for this status.
+		if ( isset( $triggers['sync_draft'] ) && $triggers['sync_draft'] === $status ) {
+			return true;
+		}
+
+		// Check if sync_submit is configured for this status.
+		if ( isset( $triggers['sync_submit'] ) && $triggers['sync_submit'] === $status ) {
+			return false;
+		}
+
+		// Default to draft for safety (orders not matching any trigger).
+		return true;
+	}
+
+	/**
 	 * Sync orders in date range.
+	 *
+	 * Each order is synced according to trigger settings.
 	 *
 	 * @param string $date_from Start date (Y-m-d).
 	 * @param string $date_to   End date (Y-m-d).
-	 * @param bool   $as_draft  Create as draft.
 	 * @param int    $batch     Batch size.
 	 * @return array
 	 */
 	public function sync_date_range(
 		string $date_from,
 		string $date_to,
-		bool $as_draft = false,
 		int $batch = 50
 	): array {
 		$orders    = $this->get_syncable_orders( $date_from, $date_to, $batch );
 		$order_ids = array_map( fn( $order ) => $order->get_id(), $orders );
 
-		return $this->sync_orders( $order_ids, $as_draft );
+		return $this->sync_orders( $order_ids );
 	}
 
 	/**

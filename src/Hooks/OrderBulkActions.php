@@ -60,13 +60,15 @@ class OrderBulkActions {
 	 * @return array Modified bulk actions.
 	 */
 	public function add_bulk_action( array $actions ): array {
-		$actions['zbooks_sync']       = __( 'Sync to Zoho Books', 'zbooks-for-woocommerce' );
-		$actions['zbooks_sync_draft'] = __( 'Sync to Zoho Books (Draft)', 'zbooks-for-woocommerce' );
+		$actions['zbooks_sync'] = __( 'Sync to Zoho Books', 'zbooks-for-woocommerce' );
 		return $actions;
 	}
 
 	/**
 	 * Handle the bulk action.
+	 *
+	 * Each order is synced according to trigger settings - the system determines
+	 * whether to create as draft or submit based on the order's current status.
 	 *
 	 * @param string $redirect_url Redirect URL.
 	 * @param string $action       Action name.
@@ -74,7 +76,7 @@ class OrderBulkActions {
 	 * @return string Modified redirect URL.
 	 */
 	public function handle_bulk_action( string $redirect_url, string $action, array $order_ids ): string {
-		if ( ! in_array( $action, [ 'zbooks_sync', 'zbooks_sync_draft' ], true ) ) {
+		if ( $action !== 'zbooks_sync' ) {
 			return $redirect_url;
 		}
 
@@ -86,8 +88,7 @@ class OrderBulkActions {
 			return $redirect_url;
 		}
 
-		$as_draft = 'zbooks_sync_draft' === $action;
-		$results  = $this->bulk_sync_service->sync_orders( $order_ids, $as_draft );
+		$results = $this->bulk_sync_service->sync_orders( $order_ids );
 
 		// Add query args to show notice.
 		$redirect_url = add_query_arg(
