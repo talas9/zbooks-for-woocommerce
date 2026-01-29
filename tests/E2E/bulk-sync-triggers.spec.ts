@@ -4,9 +4,35 @@
  * This test verifies that bulk sync respects trigger settings and syncs orders
  * according to their status, not with a hardcoded draft/submit flag.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 
 test.describe.configure({ mode: 'serial' });
+
+/**
+ * Navigate to WooCommerce orders page (works with both HPOS and classic).
+ */
+async function navigateToOrdersPage(page: Page): Promise<void> {
+    // Try HPOS URL first (most common in modern WooCommerce)
+    await page.goto('/wp-admin/admin.php?page=wc-orders');
+    await page.waitForLoadState('networkidle');
+    
+    // Check if we're on the orders page (either HPOS or classic)
+    const isHPOS = await page.locator('.wp-heading-inline, h1.wp-heading-inline').isVisible();
+    
+    if (!isHPOS) {
+        // Fall back to classic orders page
+        await page.goto('/wp-admin/edit.php?post_type=shop_order');
+        await page.waitForLoadState('networkidle');
+    }
+}
+
+/**
+ * Wait for orders table to load (works with both HPOS and classic).
+ */
+async function waitForOrdersTable(page: Page): Promise<void> {
+    // Wait for either HPOS list or classic wp-list-table
+    await page.waitForSelector('.wp-list-table, table.widefat', { timeout: 30000 });
+}
 
 test.describe('Bulk Sync with Trigger Settings', () => {
     test.beforeAll(async ({ browser }) => {
@@ -16,10 +42,11 @@ test.describe('Bulk Sync with Trigger Settings', () => {
         const page = await context.newPage();
         
         // Navigate to WooCommerce orders page
-        await page.goto('/wp-admin/edit.php?post_type=shop_order');
+        await navigateToOrdersPage(page);
+        await waitForOrdersTable(page);
         
         // Check if we have pre-existing orders
-        const ordersExist = await page.locator('.wp-list-table tbody tr').count() > 0;
+        const ordersExist = await page.locator('.wp-list-table tbody tr, table.widefat tbody tr').count() > 0;
         
         if (!ordersExist) {
             console.log('No pre-existing orders found. Creating test orders...');
@@ -53,16 +80,11 @@ test.describe('Bulk Sync with Trigger Settings', () => {
         // (In a real scenario, these would be created by a setup script)
         
         // Step 3: Navigate to orders page
-        await page.goto('/wp-admin/edit.php?post_type=shop_order');
-        
-        // Wait for page to fully load
-        await page.waitForLoadState('networkidle');
-        
-        // Wait for orders to load (increased timeout for CI environment)
-        await page.waitForSelector('.wp-list-table', { timeout: 30000 });
+        await navigateToOrdersPage(page);
+        await waitForOrdersTable(page);
         
         // Step 4: Select multiple orders with different statuses
-        const orderRows = page.locator('.wp-list-table tbody tr');
+        const orderRows = page.locator('.wp-list-table tbody tr, table.widefat tbody tr');
         const orderCount = await orderRows.count();
         
         if (orderCount === 0) {
@@ -99,8 +121,10 @@ test.describe('Bulk Sync with Trigger Settings', () => {
         console.log('Selected orders:', selectedOrders);
         
         // Step 5: Execute bulk sync action
-        await page.locator('select#bulk-action-selector-top').selectOption('zbooks_sync');
-        await page.locator('#doaction').click();
+        const bulkActionSelector = page.locator('select#bulk-action-selector-top, select[name="action"]').first();
+        await bulkActionSelector.selectOption('zbooks_sync');
+        const applyButton = page.locator('#doaction, button:has-text("Apply")').first();
+        await applyButton.click();
         
         // Wait for redirect and notice (HPOS or classic)
         await page.waitForURL(/.*(page=wc-orders|edit\.php\?post_type=shop_order).*/, { timeout: 30000 });
@@ -165,14 +189,11 @@ test.describe('Bulk Sync with Trigger Settings', () => {
         // This test verifies that when syncing orders with different statuses,
         // each order is synced according to its own status, not a global setting
         
-        await page.goto('/wp-admin/edit.php?post_type=shop_order');
-        
-        // Wait for page to fully load
-        await page.waitForLoadState('networkidle');
-        await page.waitForSelector('.wp-list-table', { timeout: 30000 });
+        await navigateToOrdersPage(page);
+        await waitForOrdersTable(page);
         
         // Get order count
-        const orderRows = page.locator('.wp-list-table tbody tr');
+        const orderRows = page.locator('.wp-list-table tbody tr, table.widefat tbody tr');
         const orderCount = await orderRows.count();
         
         if (orderCount < 2) {
@@ -221,8 +242,10 @@ test.describe('Bulk Sync with Trigger Settings', () => {
         console.log('Completed orders:', completedOrders);
         
         // Execute bulk sync
-        await page.locator('select#bulk-action-selector-top').selectOption('zbooks_sync');
-        await page.locator('#doaction').click();
+        const bulkActionSelector = page.locator('select#bulk-action-selector-top, select[name="action"]').first();
+        await bulkActionSelector.selectOption('zbooks_sync');
+        const applyButton = page.locator('#doaction, button:has-text("Apply")').first();
+        await applyButton.click();
         
         // Wait for completion (HPOS or classic)
         await page.waitForURL(/.*(page=wc-orders|edit\.php\?post_type=shop_order).*/, { timeout: 30000 });
@@ -259,14 +282,11 @@ test.describe('Bulk Sync with Trigger Settings', () => {
 
     test('bulk sync action dropdown only shows single sync option', async ({ page }) => {
         // Verify that the bulk actions dropdown no longer has separate draft/submit options
-        await page.goto('/wp-admin/edit.php?post_type=shop_order');
-        
-        // Wait for page to fully load
-        await page.waitForLoadState('networkidle');
-        await page.waitForSelector('.wp-list-table', { timeout: 30000 });
+        await navigateToOrdersPage(page);
+        await waitForOrdersTable(page);
         
         // Open bulk actions dropdown
-        const bulkActionSelect = page.locator('select#bulk-action-selector-top');
+        const bulkActionSelect = page.locator('select#bulk-action-selector-top, select[name="action"]').first();
         await expect(bulkActionSelect).toBeVisible();
         
         // Get all options
