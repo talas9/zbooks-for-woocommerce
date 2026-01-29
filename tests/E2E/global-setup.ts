@@ -10,6 +10,51 @@ import * as path from 'path';
 import { execSync } from 'child_process';
 
 /**
+ * Check if wp-env is currently running by checking for active containers.
+ */
+function isWpEnvRunning(): boolean {
+	try {
+		const result = execSync('docker ps --format "{{.Names}}" | grep -E "tests-wordpress|tests-mysql"', {
+			encoding: 'utf-8',
+			stdio: ['pipe', 'pipe', 'pipe'],
+		});
+		return result.trim().length > 0;
+	} catch {
+		return false;
+	}
+}
+
+/**
+ * Start wp-env if it's not already running.
+ * Returns true if environment was started, false if already running.
+ */
+function ensureWpEnvRunning(): boolean {
+	if (isWpEnvRunning()) {
+		console.log('wp-env is already running, using existing environment.');
+		return false;
+	}
+
+	console.log('wp-env is not running, starting it now...');
+	try {
+		execSync('npm run env:start', {
+			cwd: process.cwd(),
+			encoding: 'utf-8',
+			stdio: 'inherit',
+		});
+		console.log('wp-env started successfully.');
+		
+		// Wait a bit for services to be fully ready
+		console.log('Waiting for services to be ready...');
+		execSync('sleep 5');
+		
+		return true;
+	} catch (error) {
+		console.error('Failed to start wp-env:', error);
+		throw new Error('Cannot start wp-env. Make sure Docker is running and ports 8888/8889 are available.');
+	}
+}
+
+/**
  * Run a WP-CLI command in the wp-env tests container.
  */
 function wpCli(command: string): string {
@@ -216,6 +261,9 @@ async function globalSetup(config: FullConfig): Promise<void> {
 
 	console.log('Global setup: Preparing test environment...');
 	console.log('Base URL: ' + baseURL);
+
+	// Ensure wp-env is running before attempting any setup
+	ensureWpEnvRunning();
 
 	// Ensure auth directory exists
 	const authDir = path.join(process.cwd(), 'playwright', '.auth');
