@@ -4,7 +4,7 @@ Tags: woocommerce, zoho, zoho-books, invoice, sync
 Requires at least: 6.9
 Tested up to: 6.9
 Requires PHP: 8.2
-Stable tag: 1.0.14
+Stable tag: 1.0.15
 License: GPL-2.0+
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -141,6 +141,12 @@ Yes, each reconciliation report can be exported to CSV format for further analys
 5. Reconciliation report with discrepancy detection
 
 == Changelog ==
+
+= 1.0.15 =
+* **Fix: Bulk sync date filtering** - Corrected date range query to properly filter orders within specified date boundaries
+* **Fix: Bulk sync payment application** - Bulk sync now applies payments for completed orders based on trigger settings, matching order meta box behavior
+* **Fix: Trigger settings defaults** - Fixed hardcoded defaults that prevented full disabling of auto-sync; setting triggers to "— None —" now truly disables auto-sync
+* **Improvement: E2E test reliability** - Added retry with exponential backoff for Zoho API calls to prevent rate limiting failures
 
 = 1.0.14 =
 * **NEW: Notifications tab** - Dedicated settings tab for managing email notifications with granular control over notification types

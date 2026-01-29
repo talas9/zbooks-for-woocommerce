@@ -5,6 +5,17 @@ All notable changes to ZBooks for WooCommerce will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.15] - 2026-01-29
+
+### Fixed
+- **Bulk sync date filtering** - Fixed date range query syntax to correctly filter orders within specified date boundaries
+- **Bulk sync payment application** - Bulk sync now applies payments for completed orders based on trigger settings (matching order meta box behavior)
+- **Trigger settings defaults** - Fixed hardcoded defaults that prevented users from fully disabling auto-sync triggers; setting all triggers to "— None —" now truly disables auto-sync
+
+### Improved
+- **E2E test reliability** - Added retry with exponential backoff for Zoho API calls to prevent rate limit failures
+- **E2E test execution** - Tests now run serially with delays between operations to avoid overwhelming Zoho API
+
 ## [1.0.14] - 2026-01-27
 
 ### Added

@@ -174,14 +174,15 @@ class OrdersTab {
 	 * Render sync triggers field.
 	 */
 	public function render_triggers_field(): void {
-		$triggers = get_option(
-			'zbooks_sync_triggers',
-			[
-				'sync_draft'        => 'processing',
-				'sync_submit'       => 'completed',
-				'create_creditnote' => 'refunded',
-			]
-		);
+		$triggers = get_option( 'zbooks_sync_triggers', [] );
+		// If never configured, default to disabled (not auto-enabled).
+		if ( empty( $triggers ) ) {
+			$triggers = [
+				'sync_draft'        => '',
+				'sync_submit'       => '',
+				'create_creditnote' => '',
+			];
+		}
 
 		// Get all order statuses for the dropdowns.
 		$all_statuses   = wc_get_order_statuses();
