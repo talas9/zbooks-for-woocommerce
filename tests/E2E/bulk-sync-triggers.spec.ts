@@ -55,8 +55,11 @@ test.describe('Bulk Sync with Trigger Settings', () => {
         // Step 3: Navigate to orders page
         await page.goto('/wp-admin/edit.php?post_type=shop_order');
         
-        // Wait for orders to load
-        await page.waitForSelector('.wp-list-table', { timeout: 10000 });
+        // Wait for page to fully load
+        await page.waitForLoadState('networkidle');
+        
+        // Wait for orders to load (increased timeout for CI environment)
+        await page.waitForSelector('.wp-list-table', { timeout: 30000 });
         
         // Step 4: Select multiple orders with different statuses
         const orderRows = page.locator('.wp-list-table tbody tr');
@@ -164,6 +167,10 @@ test.describe('Bulk Sync with Trigger Settings', () => {
         
         await page.goto('/wp-admin/edit.php?post_type=shop_order');
         
+        // Wait for page to fully load
+        await page.waitForLoadState('networkidle');
+        await page.waitForSelector('.wp-list-table', { timeout: 30000 });
+        
         // Get order count
         const orderRows = page.locator('.wp-list-table tbody tr');
         const orderCount = await orderRows.count();
@@ -253,6 +260,10 @@ test.describe('Bulk Sync with Trigger Settings', () => {
     test('bulk sync action dropdown only shows single sync option', async ({ page }) => {
         // Verify that the bulk actions dropdown no longer has separate draft/submit options
         await page.goto('/wp-admin/edit.php?post_type=shop_order');
+        
+        // Wait for page to fully load
+        await page.waitForLoadState('networkidle');
+        await page.waitForSelector('.wp-list-table', { timeout: 30000 });
         
         // Open bulk actions dropdown
         const bulkActionSelect = page.locator('select#bulk-action-selector-top');
