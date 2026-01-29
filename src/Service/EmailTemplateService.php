@@ -23,7 +23,7 @@ class EmailTemplateService {
 	/**
 	 * Brand colors.
 	 */
-	private const COLORS = [
+	private const COLORS = array(
 		'primary'    => '#0073aa',
 		'success'    => '#00a32a',
 		'warning'    => '#dba617',
@@ -33,7 +33,7 @@ class EmailTemplateService {
 		'text'       => '#1d2327',
 		'text_muted' => '#646970',
 		'border'     => '#c3c4c7',
-	];
+	);
 
 	/**
 	 * Get the base email template.
@@ -48,78 +48,78 @@ class EmailTemplateService {
 		$site_url     = home_url();
 		$year         = gmdate( 'Y' );
 
-		return <<<HTML
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>ZBooks for WooCommerce</title>
-    <!--[if mso]>
-    <noscript>
-        <xml>
-            <o:OfficeDocumentSettings>
-                <o:PixelsPerInch>96</o:PixelsPerInch>
-            </o:OfficeDocumentSettings>
-        </xml>
-    </noscript>
-    <![endif]-->
-</head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif; background-color: #f0f0f1; -webkit-font-smoothing: antialiased;">
-    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f0f0f1;">
-        <tr>
-            <td style="padding: 40px 20px;">
-                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" align="center" style="max-width: 600px; margin: 0 auto;">
-                    <!-- Header -->
-                    <tr>
-                        <td style="background-color: {$accent_color}; padding: 30px 40px; border-radius: 8px 8px 0 0;">
-                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-                                <tr>
-                                    <td>
-                                        <h1 style="margin: 0; font-size: 24px; font-weight: 600; color: #ffffff; letter-spacing: -0.5px;">
-                                            ZBooks for WooCommerce
-                                        </h1>
-                                        <p style="margin: 8px 0 0 0; font-size: 14px; color: rgba(255,255,255,0.85);">
-                                            Zoho Books Integration
-                                        </p>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
+		$html  = '<!DOCTYPE html>' . "\n";
+		$html .= '<html lang="en">' . "\n";
+		$html .= '<head>' . "\n";
+		$html .= '    <meta charset="UTF-8">' . "\n";
+		$html .= '    <meta name="viewport" content="width=device-width, initial-scale=1.0">' . "\n";
+		$html .= '    <meta http-equiv="X-UA-Compatible" content="IE=edge">' . "\n";
+		$html .= '    <title>ZBooks for WooCommerce</title>' . "\n";
+		$html .= '    <!--[if mso]>' . "\n";
+		$html .= '    <noscript>' . "\n";
+		$html .= '        <xml>' . "\n";
+		$html .= '            <o:OfficeDocumentSettings>' . "\n";
+		$html .= '                <o:PixelsPerInch>96</o:PixelsPerInch>' . "\n";
+		$html .= '            </o:OfficeDocumentSettings>' . "\n";
+		$html .= '        </xml>' . "\n";
+		$html .= '    </noscript>' . "\n";
+		$html .= '    <![endif]-->' . "\n";
+		$html .= '</head>' . "\n";
+		$html .= '<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, Oxygen-Sans, Ubuntu, Cantarell, \'Helvetica Neue\', sans-serif; background-color: #f0f0f1; -webkit-font-smoothing: antialiased;">' . "\n";
+		$html .= '    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f0f0f1;">' . "\n";
+		$html .= '        <tr>' . "\n";
+		$html .= '            <td style="padding: 40px 20px;">' . "\n";
+		$html .= '                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" align="center" style="max-width: 600px; margin: 0 auto;">' . "\n";
+		$html .= '                    <!-- Header -->' . "\n";
+		$html .= '                    <tr>' . "\n";
+		$html .= '                        <td style="background-color: ' . $accent_color . '; padding: 30px 40px; border-radius: 8px 8px 0 0;">' . "\n";
+		$html .= '                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">' . "\n";
+		$html .= '                                <tr>' . "\n";
+		$html .= '                                    <td>' . "\n";
+		$html .= '                                        <h1 style="margin: 0; font-size: 24px; font-weight: 600; color: #ffffff; letter-spacing: -0.5px;">' . "\n";
+		$html .= '                                            ZBooks for WooCommerce' . "\n";
+		$html .= '                                        </h1>' . "\n";
+		$html .= '                                        <p style="margin: 8px 0 0 0; font-size: 14px; color: rgba(255,255,255,0.85);">' . "\n";
+		$html .= '                                            Zoho Books Integration' . "\n";
+		$html .= '                                        </p>' . "\n";
+		$html .= '                                    </td>' . "\n";
+		$html .= '                                </tr>' . "\n";
+		$html .= '                            </table>' . "\n";
+		$html .= '                        </td>' . "\n";
+		$html .= '                    </tr>' . "\n";
+		$html .= "\n";
+		$html .= '                    <!-- Content -->' . "\n";
+		$html .= '                    <tr>' . "\n";
+		$html .= '                        <td style="background-color: #ffffff; padding: 40px; border-left: 1px solid #c3c4c7; border-right: 1px solid #c3c4c7;">' . "\n";
+		$html .= '                            ' . $content . "\n";
+		$html .= '                        </td>' . "\n";
+		$html .= '                    </tr>' . "\n";
+		$html .= "\n";
+		$html .= '                    <!-- Footer -->' . "\n";
+		$html .= '                    <tr>' . "\n";
+		$html .= '                        <td style="background-color: #ffffff; padding: 24px 40px; border-top: 1px solid #e0e0e0; border-radius: 0 0 8px 8px; border-left: 1px solid #c3c4c7; border-right: 1px solid #c3c4c7; border-bottom: 1px solid #c3c4c7;">' . "\n";
+		$html .= '                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">' . "\n";
+		$html .= '                                <tr>' . "\n";
+		$html .= '                                    <td style="font-size: 13px; color: #646970; line-height: 1.5;">' . "\n";
+		$html .= '                                        <p style="margin: 0 0 8px 0;">' . "\n";
+		$html .= '                                            This notification was sent from <a href="' . $site_url . '" style="color: #0073aa; text-decoration: none;">' . $site_name . '</a>' . "\n";
+		$html .= '                                        </p>' . "\n";
+		$html .= '                                        <p style="margin: 0; color: #8c8f94; font-size: 12px;">' . "\n";
+		$html .= '                                            &copy; ' . $year . ' ZBooks for WooCommerce' . "\n";
+		$html .= '                                        </p>' . "\n";
+		$html .= '                                    </td>' . "\n";
+		$html .= '                                </tr>' . "\n";
+		$html .= '                            </table>' . "\n";
+		$html .= '                        </td>' . "\n";
+		$html .= '                    </tr>' . "\n";
+		$html .= '                </table>' . "\n";
+		$html .= '            </td>' . "\n";
+		$html .= '        </tr>' . "\n";
+		$html .= '    </table>' . "\n";
+		$html .= '</body>' . "\n";
+		$html .= '</html>';
 
-                    <!-- Content -->
-                    <tr>
-                        <td style="background-color: #ffffff; padding: 40px; border-left: 1px solid #c3c4c7; border-right: 1px solid #c3c4c7;">
-                            {$content}
-                        </td>
-                    </tr>
-
-                    <!-- Footer -->
-                    <tr>
-                        <td style="background-color: #ffffff; padding: 24px 40px; border-top: 1px solid #e0e0e0; border-radius: 0 0 8px 8px; border-left: 1px solid #c3c4c7; border-right: 1px solid #c3c4c7; border-bottom: 1px solid #c3c4c7;">
-                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-                                <tr>
-                                    <td style="font-size: 13px; color: #646970; line-height: 1.5;">
-                                        <p style="margin: 0 0 8px 0;">
-                                            This notification was sent from <a href="{$site_url}" style="color: #0073aa; text-decoration: none;">{$site_name}</a>
-                                        </p>
-                                        <p style="margin: 0; color: #8c8f94; font-size: 12px;">
-                                            &copy; {$year} ZBooks for WooCommerce
-                                        </p>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
-</body>
-</html>
-HTML;
+		return $html;
 	}
 
 	/**
@@ -136,77 +136,75 @@ HTML;
 		// Build context details.
 		$details_html = $this->build_details_table( $context );
 
-		$content = <<<HTML
-<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-    <!-- Alert Badge -->
-    <tr>
-        <td style="padding-bottom: 24px;">
-            <table role="presentation" cellspacing="0" cellpadding="0" border="0">
-                <tr>
-                    <td style="background-color: #fcf0f1; border: 1px solid #f0b8b8; border-radius: 4px; padding: 8px 16px;">
-                        <span style="color: #d63638; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
-                            &#9888; Sync Error
-                        </span>
-                    </td>
-                </tr>
-            </table>
-        </td>
-    </tr>
-
-    <!-- Main Message -->
-    <tr>
-        <td style="padding-bottom: 24px;">
-            <h2 style="margin: 0 0 12px 0; font-size: 20px; font-weight: 600; color: #1d2327; line-height: 1.3;">
-                A sync error has occurred
-            </h2>
-            <p style="margin: 0; font-size: 15px; color: #50575e; line-height: 1.6;">
-                The following error was encountered while syncing data between WooCommerce and Zoho Books:
-            </p>
-        </td>
-    </tr>
-
-    <!-- Error Box -->
-    <tr>
-        <td style="padding-bottom: 24px;">
-            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-                <tr>
-                    <td style="background-color: #fcf0f1; border-left: 4px solid #d63638; padding: 20px; border-radius: 0 4px 4px 0;">
-                        <p style="margin: 0; font-size: 15px; color: #1d2327; line-height: 1.5; font-family: 'SF Mono', Monaco, Consolas, monospace;">
-                            {$error_message}
-                        </p>
-                    </td>
-                </tr>
-            </table>
-        </td>
-    </tr>
-
-    {$details_html}
-
-    <!-- Timestamp -->
-    <tr>
-        <td style="padding-bottom: 32px;">
-            <p style="margin: 0; font-size: 13px; color: #646970;">
-                <strong>Occurred:</strong> {$time}
-            </p>
-        </td>
-    </tr>
-
-    <!-- CTA Button -->
-    <tr>
-        <td>
-            <table role="presentation" cellspacing="0" cellpadding="0" border="0">
-                <tr>
-                    <td style="background-color: #0073aa; border-radius: 4px;">
-                        <a href="{$logs_url}" target="_blank" style="display: inline-block; padding: 14px 28px; font-size: 14px; font-weight: 600; color: #ffffff; text-decoration: none; border-radius: 4px;">
-                            View Sync Logs &rarr;
-                        </a>
-                    </td>
-                </tr>
-            </table>
-        </td>
-    </tr>
-</table>
-HTML;
+		$content  = '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">' . "\n";
+		$content .= '    <!-- Alert Badge -->' . "\n";
+		$content .= '    <tr>' . "\n";
+		$content .= '        <td style="padding-bottom: 24px;">' . "\n";
+		$content .= '            <table role="presentation" cellspacing="0" cellpadding="0" border="0">' . "\n";
+		$content .= '                <tr>' . "\n";
+		$content .= '                    <td style="background-color: #fcf0f1; border: 1px solid #f0b8b8; border-radius: 4px; padding: 8px 16px;">' . "\n";
+		$content .= '                        <span style="color: #d63638; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">' . "\n";
+		$content .= '                            &#9888; Sync Error' . "\n";
+		$content .= '                        </span>' . "\n";
+		$content .= '                    </td>' . "\n";
+		$content .= '                </tr>' . "\n";
+		$content .= '            </table>' . "\n";
+		$content .= '        </td>' . "\n";
+		$content .= '    </tr>' . "\n";
+		$content .= "\n";
+		$content .= '    <!-- Main Message -->' . "\n";
+		$content .= '    <tr>' . "\n";
+		$content .= '        <td style="padding-bottom: 24px;">' . "\n";
+		$content .= '            <h2 style="margin: 0 0 12px 0; font-size: 20px; font-weight: 600; color: #1d2327; line-height: 1.3;">' . "\n";
+		$content .= '                A sync error has occurred' . "\n";
+		$content .= '            </h2>' . "\n";
+		$content .= '            <p style="margin: 0; font-size: 15px; color: #50575e; line-height: 1.6;">' . "\n";
+		$content .= '                The following error was encountered while syncing data between WooCommerce and Zoho Books:' . "\n";
+		$content .= '            </p>' . "\n";
+		$content .= '        </td>' . "\n";
+		$content .= '    </tr>' . "\n";
+		$content .= "\n";
+		$content .= '    <!-- Error Box -->' . "\n";
+		$content .= '    <tr>' . "\n";
+		$content .= '        <td style="padding-bottom: 24px;">' . "\n";
+		$content .= '            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">' . "\n";
+		$content .= '                <tr>' . "\n";
+		$content .= '                    <td style="background-color: #fcf0f1; border-left: 4px solid #d63638; padding: 20px; border-radius: 0 4px 4px 0;">' . "\n";
+		$content .= '                        <p style="margin: 0; font-size: 15px; color: #1d2327; line-height: 1.5; font-family: \'SF Mono\', Monaco, Consolas, monospace;">' . "\n";
+		$content .= '                            ' . esc_html( $error_message ) . "\n";
+		$content .= '                        </p>' . "\n";
+		$content .= '                    </td>' . "\n";
+		$content .= '                </tr>' . "\n";
+		$content .= '            </table>' . "\n";
+		$content .= '        </td>' . "\n";
+		$content .= '    </tr>' . "\n";
+		$content .= "\n";
+		$content .= '    ' . $details_html . "\n";
+		$content .= "\n";
+		$content .= '    <!-- Timestamp -->' . "\n";
+		$content .= '    <tr>' . "\n";
+		$content .= '        <td style="padding-bottom: 32px;">' . "\n";
+		$content .= '            <p style="margin: 0; font-size: 13px; color: #646970;">' . "\n";
+		$content .= '                <strong>Occurred:</strong> ' . esc_html( $time ) . "\n";
+		$content .= '            </p>' . "\n";
+		$content .= '        </td>' . "\n";
+		$content .= '    </tr>' . "\n";
+		$content .= "\n";
+		$content .= '    <!-- CTA Button -->' . "\n";
+		$content .= '    <tr>' . "\n";
+		$content .= '        <td>' . "\n";
+		$content .= '            <table role="presentation" cellspacing="0" cellpadding="0" border="0">' . "\n";
+		$content .= '                <tr>' . "\n";
+		$content .= '                    <td style="background-color: #0073aa; border-radius: 4px;">' . "\n";
+		$content .= '                        <a href="' . esc_url( $logs_url ) . '" target="_blank" style="display: inline-block; padding: 14px 28px; font-size: 14px; font-weight: 600; color: #ffffff; text-decoration: none; border-radius: 4px;">' . "\n";
+		$content .= '                            View Sync Logs &rarr;' . "\n";
+		$content .= '                        </a>' . "\n";
+		$content .= '                    </td>' . "\n";
+		$content .= '                </tr>' . "\n";
+		$content .= '            </table>' . "\n";
+		$content .= '        </td>' . "\n";
+		$content .= '    </tr>' . "\n";
+		$content .= '</table>';
 
 		return $this->get_template( $content, 'error' );
 	}
@@ -227,82 +225,78 @@ HTML;
 
 		$button_html = '';
 		if ( ! empty( $action_url ) && ! empty( $action_label ) ) {
-			$button_html = <<<HTML
-    <!-- CTA Button -->
-    <tr>
-        <td style="padding-top: 8px;">
-            <table role="presentation" cellspacing="0" cellpadding="0" border="0">
-                <tr>
-                    <td style="background-color: #0073aa; border-radius: 4px;">
-                        <a href="{$action_url}" target="_blank" style="display: inline-block; padding: 14px 28px; font-size: 14px; font-weight: 600; color: #ffffff; text-decoration: none; border-radius: 4px;">
-                            {$action_label} &rarr;
-                        </a>
-                    </td>
-                </tr>
-            </table>
-        </td>
-    </tr>
-HTML;
+			$button_html  = '    <!-- CTA Button -->' . "\n";
+			$button_html .= '    <tr>' . "\n";
+			$button_html .= '        <td style="padding-top: 8px;">' . "\n";
+			$button_html .= '            <table role="presentation" cellspacing="0" cellpadding="0" border="0">' . "\n";
+			$button_html .= '                <tr>' . "\n";
+			$button_html .= '                    <td style="background-color: #0073aa; border-radius: 4px;">' . "\n";
+			$button_html .= '                        <a href="' . esc_url( $action_url ) . '" target="_blank" style="display: inline-block; padding: 14px 28px; font-size: 14px; font-weight: 600; color: #ffffff; text-decoration: none; border-radius: 4px;">' . "\n";
+			$button_html .= '                            ' . esc_html( $action_label ) . ' &rarr;' . "\n";
+			$button_html .= '                        </a>' . "\n";
+			$button_html .= '                    </td>' . "\n";
+			$button_html .= '                </tr>' . "\n";
+			$button_html .= '            </table>' . "\n";
+			$button_html .= '        </td>' . "\n";
+			$button_html .= '    </tr>';
 		}
 
-		$content = <<<HTML
-<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-    <!-- Alert Badge -->
-    <tr>
-        <td style="padding-bottom: 24px;">
-            <table role="presentation" cellspacing="0" cellpadding="0" border="0">
-                <tr>
-                    <td style="background-color: #fcf6e5; border: 1px solid #dba617; border-radius: 4px; padding: 8px 16px;">
-                        <span style="color: #996800; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
-                            &#9888; Warning
-                        </span>
-                    </td>
-                </tr>
-            </table>
-        </td>
-    </tr>
-
-    <!-- Main Message -->
-    <tr>
-        <td style="padding-bottom: 24px;">
-            <h2 style="margin: 0 0 12px 0; font-size: 20px; font-weight: 600; color: #1d2327; line-height: 1.3;">
-                Attention Required
-            </h2>
-            <p style="margin: 0; font-size: 15px; color: #50575e; line-height: 1.6;">
-                The following issue was detected and may require your attention:
-            </p>
-        </td>
-    </tr>
-
-    <!-- Warning Box -->
-    <tr>
-        <td style="padding-bottom: 24px;">
-            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-                <tr>
-                    <td style="background-color: #fcf6e5; border-left: 4px solid #dba617; padding: 20px; border-radius: 0 4px 4px 0;">
-                        <p style="margin: 0; font-size: 15px; color: #1d2327; line-height: 1.5;">
-                            {$warning_message}
-                        </p>
-                    </td>
-                </tr>
-            </table>
-        </td>
-    </tr>
-
-    {$details_html}
-
-    <!-- Timestamp -->
-    <tr>
-        <td style="padding-bottom: 32px;">
-            <p style="margin: 0; font-size: 13px; color: #646970;">
-                <strong>Detected:</strong> {$time}
-            </p>
-        </td>
-    </tr>
-
-    {$button_html}
-</table>
-HTML;
+		$content  = '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">' . "\n";
+		$content .= '    <!-- Alert Badge -->' . "\n";
+		$content .= '    <tr>' . "\n";
+		$content .= '        <td style="padding-bottom: 24px;">' . "\n";
+		$content .= '            <table role="presentation" cellspacing="0" cellpadding="0" border="0">' . "\n";
+		$content .= '                <tr>' . "\n";
+		$content .= '                    <td style="background-color: #fcf6e5; border: 1px solid #dba617; border-radius: 4px; padding: 8px 16px;">' . "\n";
+		$content .= '                        <span style="color: #996800; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">' . "\n";
+		$content .= '                            &#9888; Warning' . "\n";
+		$content .= '                        </span>' . "\n";
+		$content .= '                    </td>' . "\n";
+		$content .= '                </tr>' . "\n";
+		$content .= '            </table>' . "\n";
+		$content .= '        </td>' . "\n";
+		$content .= '    </tr>' . "\n";
+		$content .= "\n";
+		$content .= '    <!-- Main Message -->' . "\n";
+		$content .= '    <tr>' . "\n";
+		$content .= '        <td style="padding-bottom: 24px;">' . "\n";
+		$content .= '            <h2 style="margin: 0 0 12px 0; font-size: 20px; font-weight: 600; color: #1d2327; line-height: 1.3;">' . "\n";
+		$content .= '                Attention Required' . "\n";
+		$content .= '            </h2>' . "\n";
+		$content .= '            <p style="margin: 0; font-size: 15px; color: #50575e; line-height: 1.6;">' . "\n";
+		$content .= '                The following issue was detected and may require your attention:' . "\n";
+		$content .= '            </p>' . "\n";
+		$content .= '        </td>' . "\n";
+		$content .= '    </tr>' . "\n";
+		$content .= "\n";
+		$content .= '    <!-- Warning Box -->' . "\n";
+		$content .= '    <tr>' . "\n";
+		$content .= '        <td style="padding-bottom: 24px;">' . "\n";
+		$content .= '            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">' . "\n";
+		$content .= '                <tr>' . "\n";
+		$content .= '                    <td style="background-color: #fcf6e5; border-left: 4px solid #dba617; padding: 20px; border-radius: 0 4px 4px 0;">' . "\n";
+		$content .= '                        <p style="margin: 0; font-size: 15px; color: #1d2327; line-height: 1.5;">' . "\n";
+		$content .= '                            ' . esc_html( $warning_message ) . "\n";
+		$content .= '                        </p>' . "\n";
+		$content .= '                    </td>' . "\n";
+		$content .= '                </tr>' . "\n";
+		$content .= '            </table>' . "\n";
+		$content .= '        </td>' . "\n";
+		$content .= '    </tr>' . "\n";
+		$content .= "\n";
+		$content .= '    ' . $details_html . "\n";
+		$content .= "\n";
+		$content .= '    <!-- Timestamp -->' . "\n";
+		$content .= '    <tr>' . "\n";
+		$content .= '        <td style="padding-bottom: 32px;">' . "\n";
+		$content .= '            <p style="margin: 0; font-size: 13px; color: #646970;">' . "\n";
+		$content .= '                <strong>Detected:</strong> ' . esc_html( $time ) . "\n";
+		$content .= '            </p>' . "\n";
+		$content .= '        </td>' . "\n";
+		$content .= '    </tr>' . "\n";
+		$content .= "\n";
+		$content .= '    ' . $button_html . "\n";
+		$content .= '</table>';
 
 		return $this->get_template( $content, 'warning' );
 	}
@@ -316,7 +310,7 @@ HTML;
 	 * @param string $action_text Optional action button text.
 	 * @return string Complete HTML email.
 	 */
-	public function build_success_email( string $message, array $summary = [], string $action_url = '', string $action_text = '' ): string {
+	public function build_success_email( string $message, array $summary = array(), string $action_url = '', string $action_text = '' ): string {
 		$time = current_time( 'F j, Y \a\t g:i A' );
 
 		$summary_html = '';
@@ -326,63 +320,59 @@ HTML;
 
 		$button_html = '';
 		if ( ! empty( $action_url ) && ! empty( $action_text ) ) {
-			$button_html = <<<HTML
-    <tr>
-        <td style="padding-top: 8px;">
-            <table role="presentation" cellspacing="0" cellpadding="0" border="0">
-                <tr>
-                    <td style="background-color: #00a32a; border-radius: 4px;">
-                        <a href="{$action_url}" target="_blank" style="display: inline-block; padding: 14px 28px; font-size: 14px; font-weight: 600; color: #ffffff; text-decoration: none; border-radius: 4px;">
-                            {$action_text} &rarr;
-                        </a>
-                    </td>
-                </tr>
-            </table>
-        </td>
-    </tr>
-HTML;
+			$button_html  = '    <tr>' . "\n";
+			$button_html .= '        <td style="padding-top: 8px;">' . "\n";
+			$button_html .= '            <table role="presentation" cellspacing="0" cellpadding="0" border="0">' . "\n";
+			$button_html .= '                <tr>' . "\n";
+			$button_html .= '                    <td style="background-color: #00a32a; border-radius: 4px;">' . "\n";
+			$button_html .= '                        <a href="' . esc_url( $action_url ) . '" target="_blank" style="display: inline-block; padding: 14px 28px; font-size: 14px; font-weight: 600; color: #ffffff; text-decoration: none; border-radius: 4px;">' . "\n";
+			$button_html .= '                            ' . esc_html( $action_text ) . ' &rarr;' . "\n";
+			$button_html .= '                        </a>' . "\n";
+			$button_html .= '                    </td>' . "\n";
+			$button_html .= '                </tr>' . "\n";
+			$button_html .= '            </table>' . "\n";
+			$button_html .= '        </td>' . "\n";
+			$button_html .= '    </tr>';
 		}
 
-		$content = <<<HTML
-<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-    <!-- Success Badge -->
-    <tr>
-        <td style="padding-bottom: 24px;">
-            <table role="presentation" cellspacing="0" cellpadding="0" border="0">
-                <tr>
-                    <td style="background-color: #edfaef; border: 1px solid #00a32a; border-radius: 4px; padding: 8px 16px;">
-                        <span style="color: #00a32a; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
-                            &#10003; Success
-                        </span>
-                    </td>
-                </tr>
-            </table>
-        </td>
-    </tr>
-
-    <!-- Main Message -->
-    <tr>
-        <td style="padding-bottom: 24px;">
-            <h2 style="margin: 0 0 12px 0; font-size: 20px; font-weight: 600; color: #1d2327; line-height: 1.3;">
-                {$message}
-            </h2>
-        </td>
-    </tr>
-
-    {$summary_html}
-
-    <!-- Timestamp -->
-    <tr>
-        <td style="padding-bottom: 32px;">
-            <p style="margin: 0; font-size: 13px; color: #646970;">
-                <strong>Completed:</strong> {$time}
-            </p>
-        </td>
-    </tr>
-
-    {$button_html}
-</table>
-HTML;
+		$content  = '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">' . "\n";
+		$content .= '    <!-- Success Badge -->' . "\n";
+		$content .= '    <tr>' . "\n";
+		$content .= '        <td style="padding-bottom: 24px;">' . "\n";
+		$content .= '            <table role="presentation" cellspacing="0" cellpadding="0" border="0">' . "\n";
+		$content .= '                <tr>' . "\n";
+		$content .= '                    <td style="background-color: #edfaef; border: 1px solid #00a32a; border-radius: 4px; padding: 8px 16px;">' . "\n";
+		$content .= '                        <span style="color: #00a32a; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">' . "\n";
+		$content .= '                            &#10003; Success' . "\n";
+		$content .= '                        </span>' . "\n";
+		$content .= '                    </td>' . "\n";
+		$content .= '                </tr>' . "\n";
+		$content .= '            </table>' . "\n";
+		$content .= '        </td>' . "\n";
+		$content .= '    </tr>' . "\n";
+		$content .= "\n";
+		$content .= '    <!-- Main Message -->' . "\n";
+		$content .= '    <tr>' . "\n";
+		$content .= '        <td style="padding-bottom: 24px;">' . "\n";
+		$content .= '            <h2 style="margin: 0 0 12px 0; font-size: 20px; font-weight: 600; color: #1d2327; line-height: 1.3;">' . "\n";
+		$content .= '                ' . esc_html( $message ) . "\n";
+		$content .= '            </h2>' . "\n";
+		$content .= '        </td>' . "\n";
+		$content .= '    </tr>' . "\n";
+		$content .= "\n";
+		$content .= '    ' . $summary_html . "\n";
+		$content .= "\n";
+		$content .= '    <!-- Timestamp -->' . "\n";
+		$content .= '    <tr>' . "\n";
+		$content .= '        <td style="padding-bottom: 32px;">' . "\n";
+		$content .= '            <p style="margin: 0; font-size: 13px; color: #646970;">' . "\n";
+		$content .= '                <strong>Completed:</strong> ' . esc_html( $time ) . "\n";
+		$content .= '            </p>' . "\n";
+		$content .= '        </td>' . "\n";
+		$content .= '    </tr>' . "\n";
+		$content .= "\n";
+		$content .= '    ' . $button_html . "\n";
+		$content .= '</table>';
 
 		return $this->get_template( $content, 'success' );
 	}
@@ -409,31 +399,29 @@ HTML;
 		foreach ( $display_items as $label => $value ) {
 			$escaped_label = esc_html( $label );
 			$escaped_value = esc_html( $value );
-			$rows         .= <<<HTML
-                        <tr>
-                            <td style="padding: 10px 12px; font-size: 13px; color: #646970; border-bottom: 1px solid #e0e0e0; width: 140px; vertical-align: top;">
-                                {$escaped_label}
-                            </td>
-                            <td style="padding: 10px 12px; font-size: 13px; color: #1d2327; border-bottom: 1px solid #e0e0e0; font-family: 'SF Mono', Monaco, Consolas, monospace; word-break: break-all;">
-                                {$escaped_value}
-                            </td>
-                        </tr>
-HTML;
+			$rows         .= '                        <tr>' . "\n";
+			$rows         .= '                            <td style="padding: 10px 12px; font-size: 13px; color: #646970; border-bottom: 1px solid #e0e0e0; width: 140px; vertical-align: top;">' . "\n";
+			$rows         .= '                                ' . $escaped_label . "\n";
+			$rows         .= '                            </td>' . "\n";
+			$rows         .= '                            <td style="padding: 10px 12px; font-size: 13px; color: #1d2327; border-bottom: 1px solid #e0e0e0; font-family: \'SF Mono\', Monaco, Consolas, monospace; word-break: break-all;">' . "\n";
+			$rows         .= '                                ' . $escaped_value . "\n";
+			$rows         .= '                            </td>' . "\n";
+			$rows         .= '                        </tr>' . "\n";
 		}
 
-		return <<<HTML
-    <!-- Details Table -->
-    <tr>
-        <td style="padding-bottom: 24px;">
-            <p style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: #1d2327;">
-                Details
-            </p>
-            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f6f7f7; border-radius: 4px; border: 1px solid #e0e0e0;">
-                {$rows}
-            </table>
-        </td>
-    </tr>
-HTML;
+		$html  = '    <!-- Details Table -->' . "\n";
+		$html .= '    <tr>' . "\n";
+		$html .= '        <td style="padding-bottom: 24px;">' . "\n";
+		$html .= '            <p style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: #1d2327;">' . "\n";
+		$html .= '                Details' . "\n";
+		$html .= '            </p>' . "\n";
+		$html .= '            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f6f7f7; border-radius: 4px; border: 1px solid #e0e0e0;">' . "\n";
+		$html .= '                ' . $rows;
+		$html .= '            </table>' . "\n";
+		$html .= '        </td>' . "\n";
+		$html .= '    </tr>';
+
+		return $html;
 	}
 
 	/**
@@ -449,34 +437,32 @@ HTML;
 		foreach ( $summary as $label => $value ) {
 			$escaped_label = esc_html( $label );
 			$escaped_value = esc_html( $value );
-			$cells        .= <<<HTML
-                    <td style="padding: 16px; text-align: center; background-color: #f6f7f7; border-radius: 4px; width: 33%;">
-                        <p style="margin: 0 0 4px 0; font-size: 24px; font-weight: 600; color: #1d2327;">
-                            {$escaped_value}
-                        </p>
-                        <p style="margin: 0; font-size: 12px; color: #646970; text-transform: uppercase; letter-spacing: 0.5px;">
-                            {$escaped_label}
-                        </p>
-                    </td>
-HTML;
+			$cells        .= '                    <td style="padding: 16px; text-align: center; background-color: #f6f7f7; border-radius: 4px; width: 33%;">' . "\n";
+			$cells        .= '                        <p style="margin: 0 0 4px 0; font-size: 24px; font-weight: 600; color: #1d2327;">' . "\n";
+			$cells        .= '                            ' . $escaped_value . "\n";
+			$cells        .= '                        </p>' . "\n";
+			$cells        .= '                        <p style="margin: 0; font-size: 12px; color: #646970; text-transform: uppercase; letter-spacing: 0.5px;">' . "\n";
+			$cells        .= '                            ' . $escaped_label . "\n";
+			$cells        .= '                        </p>' . "\n";
+			$cells        .= '                    </td>' . "\n";
 			++$count;
 			if ( $count % 3 === 0 && $count < count( $summary ) ) {
 				$cells .= '</tr><tr>';
 			}
 		}
 
-		return <<<HTML
-    <!-- Summary Grid -->
-    <tr>
-        <td style="padding-bottom: 24px;">
-            <table role="presentation" cellspacing="8" cellpadding="0" border="0" width="100%">
-                <tr>
-                    {$cells}
-                </tr>
-            </table>
-        </td>
-    </tr>
-HTML;
+		$html  = '    <!-- Summary Grid -->' . "\n";
+		$html .= '    <tr>' . "\n";
+		$html .= '        <td style="padding-bottom: 24px;">' . "\n";
+		$html .= '            <table role="presentation" cellspacing="8" cellpadding="0" border="0" width="100%">' . "\n";
+		$html .= '                <tr>' . "\n";
+		$html .= '                    ' . $cells;
+		$html .= '                </tr>' . "\n";
+		$html .= '            </table>' . "\n";
+		$html .= '        </td>' . "\n";
+		$html .= '    </tr>';
+
+		return $html;
 	}
 
 	/**
@@ -486,9 +472,9 @@ HTML;
 	 * @return array Formatted label => value pairs.
 	 */
 	private function format_context_for_display( array $context ): array {
-		$display = [];
+		$display = array();
 
-		$label_map = [
+		$label_map = array(
 			'order_id'         => 'Order ID',
 			'order_number'     => 'Order Number',
 			'invoice_id'       => 'Invoice ID',
@@ -505,7 +491,7 @@ HTML;
 			'endpoint'         => 'API Endpoint',
 			'retry_count'      => 'Retry Attempt',
 			'sync_status'      => 'Sync Status',
-		];
+		);
 
 		foreach ( $context as $key => $value ) {
 			// Skip internal/debug keys.
@@ -561,13 +547,11 @@ HTML;
 			$discrepancies_html = $this->build_discrepancies_table( array_slice( $discrepancies, 0, 20 ) );
 			if ( count( $discrepancies ) > 20 ) {
 				$remaining           = count( $discrepancies ) - 20;
-				$discrepancies_html .= <<<HTML
-    <tr>
-        <td style="padding: 16px; text-align: center; font-size: 13px; color: #646970; font-style: italic;">
-            ... and {$remaining} more discrepancies. View full report for details.
-        </td>
-    </tr>
-HTML;
+				$discrepancies_html .= '    <tr>' . "\n";
+				$discrepancies_html .= '        <td style="padding: 16px; text-align: center; font-size: 13px; color: #646970; font-style: italic;">' . "\n";
+				$discrepancies_html .= '            ... and ' . esc_html( $remaining ) . ' more discrepancies. View full report for details.' . "\n";
+				$discrepancies_html .= '        </td>' . "\n";
+				$discrepancies_html .= '    </tr>';
 			}
 		}
 
@@ -586,56 +570,54 @@ HTML;
 			)
 			: __( 'All records matched successfully', 'zbooks-for-woocommerce' );
 
-		$content = <<<HTML
-<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-    <!-- Status Badge -->
-    <tr>
-        <td style="padding-bottom: 24px;">
-            <table role="presentation" cellspacing="0" cellpadding="0" border="0">
-                <tr>
-                    <td style="background-color: {$badge_bg}; border: 1px solid {$badge_border}; border-radius: 4px; padding: 8px 16px;">
-                        {$status_badge}
-                    </td>
-                </tr>
-            </table>
-        </td>
-    </tr>
-
-    <!-- Main Message -->
-    <tr>
-        <td style="padding-bottom: 16px;">
-            <h2 style="margin: 0 0 12px 0; font-size: 20px; font-weight: 600; color: #1d2327; line-height: 1.3;">
-                Reconciliation Report
-            </h2>
-            <p style="margin: 0 0 8px 0; font-size: 15px; color: #50575e; line-height: 1.6;">
-                {$headline}
-            </p>
-            <p style="margin: 0; font-size: 13px; color: #646970;">
-                <strong>Period:</strong> {$period_start} to {$period_end}
-            </p>
-        </td>
-    </tr>
-
-    {$summary_html}
-
-    {$discrepancies_html}
-
-    <!-- CTA Button -->
-    <tr>
-        <td style="padding-top: 24px;">
-            <table role="presentation" cellspacing="0" cellpadding="0" border="0">
-                <tr>
-                    <td style="background-color: #0073aa; border-radius: 4px;">
-                        <a href="{$report_url}" target="_blank" style="display: inline-block; padding: 14px 28px; font-size: 14px; font-weight: 600; color: #ffffff; text-decoration: none; border-radius: 4px;">
-                            View Full Report &rarr;
-                        </a>
-                    </td>
-                </tr>
-            </table>
-        </td>
-    </tr>
-</table>
-HTML;
+		$content  = '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">' . "\n";
+		$content .= '    <!-- Status Badge -->' . "\n";
+		$content .= '    <tr>' . "\n";
+		$content .= '        <td style="padding-bottom: 24px;">' . "\n";
+		$content .= '            <table role="presentation" cellspacing="0" cellpadding="0" border="0">' . "\n";
+		$content .= '                <tr>' . "\n";
+		$content .= '                    <td style="background-color: ' . esc_attr( $badge_bg ) . '; border: 1px solid ' . esc_attr( $badge_border ) . '; border-radius: 4px; padding: 8px 16px;">' . "\n";
+		$content .= '                        ' . $status_badge . "\n";
+		$content .= '                    </td>' . "\n";
+		$content .= '                </tr>' . "\n";
+		$content .= '            </table>' . "\n";
+		$content .= '        </td>' . "\n";
+		$content .= '    </tr>' . "\n";
+		$content .= "\n";
+		$content .= '    <!-- Main Message -->' . "\n";
+		$content .= '    <tr>' . "\n";
+		$content .= '        <td style="padding-bottom: 16px;">' . "\n";
+		$content .= '            <h2 style="margin: 0 0 12px 0; font-size: 20px; font-weight: 600; color: #1d2327; line-height: 1.3;">' . "\n";
+		$content .= '                Reconciliation Report' . "\n";
+		$content .= '            </h2>' . "\n";
+		$content .= '            <p style="margin: 0 0 8px 0; font-size: 15px; color: #50575e; line-height: 1.6;">' . "\n";
+		$content .= '                ' . esc_html( $headline ) . "\n";
+		$content .= '            </p>' . "\n";
+		$content .= '            <p style="margin: 0; font-size: 13px; color: #646970;">' . "\n";
+		$content .= '                <strong>Period:</strong> ' . esc_html( $period_start ) . ' to ' . esc_html( $period_end ) . "\n";
+		$content .= '            </p>' . "\n";
+		$content .= '        </td>' . "\n";
+		$content .= '    </tr>' . "\n";
+		$content .= "\n";
+		$content .= '    ' . $summary_html . "\n";
+		$content .= "\n";
+		$content .= '    ' . $discrepancies_html . "\n";
+		$content .= "\n";
+		$content .= '    <!-- CTA Button -->' . "\n";
+		$content .= '    <tr>' . "\n";
+		$content .= '        <td style="padding-top: 24px;">' . "\n";
+		$content .= '            <table role="presentation" cellspacing="0" cellpadding="0" border="0">' . "\n";
+		$content .= '                <tr>' . "\n";
+		$content .= '                    <td style="background-color: #0073aa; border-radius: 4px;">' . "\n";
+		$content .= '                        <a href="' . esc_url( $report_url ) . '" target="_blank" style="display: inline-block; padding: 14px 28px; font-size: 14px; font-weight: 600; color: #ffffff; text-decoration: none; border-radius: 4px;">' . "\n";
+		$content .= '                            View Full Report &rarr;' . "\n";
+		$content .= '                        </a>' . "\n";
+		$content .= '                    </td>' . "\n";
+		$content .= '                </tr>' . "\n";
+		$content .= '            </table>' . "\n";
+		$content .= '        </td>' . "\n";
+		$content .= '    </tr>' . "\n";
+		$content .= '</table>';
 
 		return $this->get_template( $content, $type );
 	}
@@ -659,51 +641,51 @@ HTML;
 		$matched_color  = '#00a32a';
 		$formatted_diff = function_exists( 'wc_price' ) ? wp_strip_all_tags( wc_price( $amount_diff ) ) : number_format( $amount_diff, 2 );
 
-		return <<<HTML
-    <!-- Summary Grid -->
-    <tr>
-        <td style="padding-bottom: 24px;">
-            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f6f7f7; border-radius: 8px; border: 1px solid #e0e0e0;">
-                <tr>
-                    <td style="padding: 20px;">
-                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-                            <tr>
-                                <td width="33%" style="padding: 8px; text-align: center;">
-                                    <p style="margin: 0 0 4px 0; font-size: 28px; font-weight: 700; color: #1d2327;">{$wc_orders}</p>
-                                    <p style="margin: 0; font-size: 11px; color: #646970; text-transform: uppercase; letter-spacing: 0.5px;">WC Orders</p>
-                                </td>
-                                <td width="33%" style="padding: 8px; text-align: center; border-left: 1px solid #e0e0e0; border-right: 1px solid #e0e0e0;">
-                                    <p style="margin: 0 0 4px 0; font-size: 28px; font-weight: 700; color: #1d2327;">{$zoho_invoices}</p>
-                                    <p style="margin: 0; font-size: 11px; color: #646970; text-transform: uppercase; letter-spacing: 0.5px;">Zoho Invoices</p>
-                                </td>
-                                <td width="33%" style="padding: 8px; text-align: center;">
-                                    <p style="margin: 0 0 4px 0; font-size: 28px; font-weight: 700; color: {$matched_color};">{$matched}</p>
-                                    <p style="margin: 0; font-size: 11px; color: #646970; text-transform: uppercase; letter-spacing: 0.5px;">Matched</p>
-                                </td>
-                            </tr>
-                        </table>
-                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-top: 16px; border-top: 1px solid #e0e0e0; padding-top: 16px;">
-                            <tr>
-                                <td width="33%" style="padding: 8px; text-align: center;">
-                                    <p style="margin: 0 0 4px 0; font-size: 20px; font-weight: 600; color: {$missing_color};">{$missing_in_zoho}</p>
-                                    <p style="margin: 0; font-size: 11px; color: #646970; text-transform: uppercase; letter-spacing: 0.5px;">Missing in Zoho</p>
-                                </td>
-                                <td width="33%" style="padding: 8px; text-align: center; border-left: 1px solid #e0e0e0; border-right: 1px solid #e0e0e0;">
-                                    <p style="margin: 0 0 4px 0; font-size: 20px; font-weight: 600; color: {$mismatch_color};">{$amount_mismatch}</p>
-                                    <p style="margin: 0; font-size: 11px; color: #646970; text-transform: uppercase; letter-spacing: 0.5px;">Amount Mismatch</p>
-                                </td>
-                                <td width="33%" style="padding: 8px; text-align: center;">
-                                    <p style="margin: 0 0 4px 0; font-size: 20px; font-weight: 600; color: #1d2327;">{$formatted_diff}</p>
-                                    <p style="margin: 0; font-size: 11px; color: #646970; text-transform: uppercase; letter-spacing: 0.5px;">Total Difference</p>
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-            </table>
-        </td>
-    </tr>
-HTML;
+		$html  = '    <!-- Summary Grid -->' . "\n";
+		$html .= '    <tr>' . "\n";
+		$html .= '        <td style="padding-bottom: 24px;">' . "\n";
+		$html .= '            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f6f7f7; border-radius: 8px; border: 1px solid #e0e0e0;">' . "\n";
+		$html .= '                <tr>' . "\n";
+		$html .= '                    <td style="padding: 20px;">' . "\n";
+		$html .= '                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">' . "\n";
+		$html .= '                            <tr>' . "\n";
+		$html .= '                                <td width="33%" style="padding: 8px; text-align: center;">' . "\n";
+		$html .= '                                    <p style="margin: 0 0 4px 0; font-size: 28px; font-weight: 700; color: #1d2327;">' . esc_html( $wc_orders ) . '</p>' . "\n";
+		$html .= '                                    <p style="margin: 0; font-size: 11px; color: #646970; text-transform: uppercase; letter-spacing: 0.5px;">WC Orders</p>' . "\n";
+		$html .= '                                </td>' . "\n";
+		$html .= '                                <td width="33%" style="padding: 8px; text-align: center; border-left: 1px solid #e0e0e0; border-right: 1px solid #e0e0e0;">' . "\n";
+		$html .= '                                    <p style="margin: 0 0 4px 0; font-size: 28px; font-weight: 700; color: #1d2327;">' . esc_html( $zoho_invoices ) . '</p>' . "\n";
+		$html .= '                                    <p style="margin: 0; font-size: 11px; color: #646970; text-transform: uppercase; letter-spacing: 0.5px;">Zoho Invoices</p>' . "\n";
+		$html .= '                                </td>' . "\n";
+		$html .= '                                <td width="33%" style="padding: 8px; text-align: center;">' . "\n";
+		$html .= '                                    <p style="margin: 0 0 4px 0; font-size: 28px; font-weight: 700; color: ' . esc_attr( $matched_color ) . ';">' . esc_html( $matched ) . '</p>' . "\n";
+		$html .= '                                    <p style="margin: 0; font-size: 11px; color: #646970; text-transform: uppercase; letter-spacing: 0.5px;">Matched</p>' . "\n";
+		$html .= '                                </td>' . "\n";
+		$html .= '                            </tr>' . "\n";
+		$html .= '                        </table>' . "\n";
+		$html .= '                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-top: 16px; border-top: 1px solid #e0e0e0; padding-top: 16px;">' . "\n";
+		$html .= '                            <tr>' . "\n";
+		$html .= '                                <td width="33%" style="padding: 8px; text-align: center;">' . "\n";
+		$html .= '                                    <p style="margin: 0 0 4px 0; font-size: 20px; font-weight: 600; color: ' . esc_attr( $missing_color ) . ';">' . esc_html( $missing_in_zoho ) . '</p>' . "\n";
+		$html .= '                                    <p style="margin: 0; font-size: 11px; color: #646970; text-transform: uppercase; letter-spacing: 0.5px;">Missing in Zoho</p>' . "\n";
+		$html .= '                                </td>' . "\n";
+		$html .= '                                <td width="33%" style="padding: 8px; text-align: center; border-left: 1px solid #e0e0e0; border-right: 1px solid #e0e0e0;">' . "\n";
+		$html .= '                                    <p style="margin: 0 0 4px 0; font-size: 20px; font-weight: 600; color: ' . esc_attr( $mismatch_color ) . ';">' . esc_html( $amount_mismatch ) . '</p>' . "\n";
+		$html .= '                                    <p style="margin: 0; font-size: 11px; color: #646970; text-transform: uppercase; letter-spacing: 0.5px;">Amount Mismatch</p>' . "\n";
+		$html .= '                                </td>' . "\n";
+		$html .= '                                <td width="33%" style="padding: 8px; text-align: center;">' . "\n";
+		$html .= '                                    <p style="margin: 0 0 4px 0; font-size: 20px; font-weight: 600; color: #1d2327;">' . esc_html( $formatted_diff ) . '</p>' . "\n";
+		$html .= '                                    <p style="margin: 0; font-size: 11px; color: #646970; text-transform: uppercase; letter-spacing: 0.5px;">Total Difference</p>' . "\n";
+		$html .= '                                </td>' . "\n";
+		$html .= '                            </tr>' . "\n";
+		$html .= '                        </table>' . "\n";
+		$html .= '                    </td>' . "\n";
+		$html .= '                </tr>' . "\n";
+		$html .= '            </table>' . "\n";
+		$html .= '        </td>' . "\n";
+		$html .= '    </tr>';
+
+		return $html;
 	}
 
 	/**
@@ -738,37 +720,35 @@ HTML;
 			};
 
 			$order_info = ! empty( $order_number )
-				? "<span style=\"font-size: 12px; color: #646970;\">Order #{$order_number}</span><br>"
+				? '<span style="font-size: 12px; color: #646970;">Order #' . esc_html( $order_number ) . '</span><br>'
 				: '';
 
-			$rows .= <<<HTML
-                <tr>
-                    <td style="padding: 12px 16px; border-bottom: 1px solid #e0e0e0; vertical-align: top; width: 80px;">
-                        <span style="display: inline-block; padding: 4px 8px; background-color: rgba(0,0,0,0.05); border-radius: 3px; font-size: 10px; font-weight: 600; color: {$type_color}; text-transform: uppercase; letter-spacing: 0.5px;">
-                            {$type_label}
-                        </span>
-                    </td>
-                    <td style="padding: 12px 16px; border-bottom: 1px solid #e0e0e0; font-size: 13px; color: #1d2327; line-height: 1.5;">
-                        {$order_info}
-                        {$message}
-                    </td>
-                </tr>
-HTML;
+			$rows .= '                <tr>' . "\n";
+			$rows .= '                    <td style="padding: 12px 16px; border-bottom: 1px solid #e0e0e0; vertical-align: top; width: 80px;">' . "\n";
+			$rows .= '                        <span style="display: inline-block; padding: 4px 8px; background-color: rgba(0,0,0,0.05); border-radius: 3px; font-size: 10px; font-weight: 600; color: ' . esc_attr( $type_color ) . '; text-transform: uppercase; letter-spacing: 0.5px;">' . "\n";
+			$rows .= '                            ' . esc_html( $type_label ) . "\n";
+			$rows .= '                        </span>' . "\n";
+			$rows .= '                    </td>' . "\n";
+			$rows .= '                    <td style="padding: 12px 16px; border-bottom: 1px solid #e0e0e0; font-size: 13px; color: #1d2327; line-height: 1.5;">' . "\n";
+			$rows .= '                        ' . $order_info . "\n";
+			$rows .= '                        ' . $message . "\n";
+			$rows .= '                    </td>' . "\n";
+			$rows .= '                </tr>' . "\n";
 		}
 
-		return <<<HTML
-    <!-- Discrepancies Table -->
-    <tr>
-        <td style="padding-bottom: 8px;">
-            <p style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: #1d2327;">
-                Discrepancies Found
-            </p>
-            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #ffffff; border-radius: 4px; border: 1px solid #e0e0e0;">
-                {$rows}
-            </table>
-        </td>
-    </tr>
-HTML;
+		$html  = '    <!-- Discrepancies Table -->' . "\n";
+		$html .= '    <tr>' . "\n";
+		$html .= '        <td style="padding-bottom: 8px;">' . "\n";
+		$html .= '            <p style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: #1d2327;">' . "\n";
+		$html .= '                Discrepancies Found' . "\n";
+		$html .= '            </p>' . "\n";
+		$html .= '            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #ffffff; border-radius: 4px; border: 1px solid #e0e0e0;">' . "\n";
+		$html .= '                ' . $rows;
+		$html .= '            </table>' . "\n";
+		$html .= '        </td>' . "\n";
+		$html .= '    </tr>';
+
+		return $html;
 	}
 
 	/**
@@ -787,7 +767,7 @@ HTML;
 		$sections_html = '';
 
 		// Process in severity order: errors first, then warnings, success, info.
-		$type_order = [ 'error', 'warning', 'success', 'info' ];
+		$type_order = array( 'error', 'warning', 'success', 'info' );
 
 		foreach ( $type_order as $type ) {
 			if ( empty( $grouped[ $type ] ) ) {
@@ -798,34 +778,34 @@ HTML;
 
 		// Build status badge based on severity.
 		$badge_config = match ( $severity ) {
-			'error'   => [
+			'error'   => array(
 				'bg'     => '#fcf0f1',
 				'border' => '#f0b8b8',
 				'color'  => '#d63638',
 				'icon'   => '&#9888;',
 				'label'  => 'Action Required',
-			],
-			'warning' => [
+			),
+			'warning' => array(
 				'bg'     => '#fcf6e5',
 				'border' => '#dba617',
 				'color'  => '#996800',
 				'icon'   => '&#9888;',
 				'label'  => 'Attention Needed',
-			],
-			'success' => [
+			),
+			'success' => array(
 				'bg'     => '#edfaef',
 				'border' => '#00a32a',
 				'color'  => '#00a32a',
 				'icon'   => '&#10003;',
 				'label'  => 'All Good',
-			],
-			default   => [
+			),
+			default   => array(
 				'bg'     => '#f0f6fc',
 				'border' => '#0073aa',
 				'color'  => '#0073aa',
 				'icon'   => '&#8505;',
 				'label'  => 'Notifications',
-			],
+			),
 		};
 
 		$headline = sprintf(
@@ -839,53 +819,51 @@ HTML;
 			$total_count
 		);
 
-		$content = <<<HTML
-<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-    <!-- Status Badge -->
-    <tr>
-        <td style="padding-bottom: 24px;">
-            <table role="presentation" cellspacing="0" cellpadding="0" border="0">
-                <tr>
-                    <td style="background-color: {$badge_config['bg']}; border: 1px solid {$badge_config['border']}; border-radius: 4px; padding: 8px 16px;">
-                        <span style="color: {$badge_config['color']}; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
-                            {$badge_config['icon']} {$badge_config['label']}
-                        </span>
-                    </td>
-                </tr>
-            </table>
-        </td>
-    </tr>
-
-    <!-- Main Message -->
-    <tr>
-        <td style="padding-bottom: 24px;">
-            <h2 style="margin: 0 0 12px 0; font-size: 20px; font-weight: 600; color: #1d2327; line-height: 1.3;">
-                {$headline}
-            </h2>
-            <p style="margin: 0; font-size: 13px; color: #646970;">
-                <strong>Generated:</strong> {$time}
-            </p>
-        </td>
-    </tr>
-
-    {$sections_html}
-
-    <!-- CTA Button -->
-    <tr>
-        <td style="padding-top: 16px;">
-            <table role="presentation" cellspacing="0" cellpadding="0" border="0">
-                <tr>
-                    <td style="background-color: #0073aa; border-radius: 4px;">
-                        <a href="{$logs_url}" target="_blank" style="display: inline-block; padding: 14px 28px; font-size: 14px; font-weight: 600; color: #ffffff; text-decoration: none; border-radius: 4px;">
-                            View Sync Logs &rarr;
-                        </a>
-                    </td>
-                </tr>
-            </table>
-        </td>
-    </tr>
-</table>
-HTML;
+		$content  = '<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">' . "\n";
+		$content .= '    <!-- Status Badge -->' . "\n";
+		$content .= '    <tr>' . "\n";
+		$content .= '        <td style="padding-bottom: 24px;">' . "\n";
+		$content .= '            <table role="presentation" cellspacing="0" cellpadding="0" border="0">' . "\n";
+		$content .= '                <tr>' . "\n";
+		$content .= '                    <td style="background-color: ' . esc_attr( $badge_config['bg'] ) . '; border: 1px solid ' . esc_attr( $badge_config['border'] ) . '; border-radius: 4px; padding: 8px 16px;">' . "\n";
+		$content .= '                        <span style="color: ' . esc_attr( $badge_config['color'] ) . '; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">' . "\n";
+		$content .= '                            ' . esc_html( $badge_config['icon'] ) . ' ' . esc_html( $badge_config['label'] ) . "\n";
+		$content .= '                        </span>' . "\n";
+		$content .= '                    </td>' . "\n";
+		$content .= '                </tr>' . "\n";
+		$content .= '            </table>' . "\n";
+		$content .= '        </td>' . "\n";
+		$content .= '    </tr>' . "\n";
+		$content .= "\n";
+		$content .= '    <!-- Main Message -->' . "\n";
+		$content .= '    <tr>' . "\n";
+		$content .= '        <td style="padding-bottom: 24px;">' . "\n";
+		$content .= '            <h2 style="margin: 0 0 12px 0; font-size: 20px; font-weight: 600; color: #1d2327; line-height: 1.3;">' . "\n";
+		$content .= '                ' . esc_html( $headline ) . "\n";
+		$content .= '            </h2>' . "\n";
+		$content .= '            <p style="margin: 0; font-size: 13px; color: #646970;">' . "\n";
+		$content .= '                <strong>Generated:</strong> ' . esc_html( $time ) . "\n";
+		$content .= '            </p>' . "\n";
+		$content .= '        </td>' . "\n";
+		$content .= '    </tr>' . "\n";
+		$content .= "\n";
+		$content .= '    ' . $sections_html . "\n";
+		$content .= "\n";
+		$content .= '    <!-- CTA Button -->' . "\n";
+		$content .= '    <tr>' . "\n";
+		$content .= '        <td style="padding-top: 16px;">' . "\n";
+		$content .= '            <table role="presentation" cellspacing="0" cellpadding="0" border="0">' . "\n";
+		$content .= '                <tr>' . "\n";
+		$content .= '                    <td style="background-color: #0073aa; border-radius: 4px;">' . "\n";
+		$content .= '                        <a href="' . esc_url( $logs_url ) . '" target="_blank" style="display: inline-block; padding: 14px 28px; font-size: 14px; font-weight: 600; color: #ffffff; text-decoration: none; border-radius: 4px;">' . "\n";
+		$content .= '                            View Sync Logs &rarr;' . "\n";
+		$content .= '                        </a>' . "\n";
+		$content .= '                    </td>' . "\n";
+		$content .= '                </tr>' . "\n";
+		$content .= '            </table>' . "\n";
+		$content .= '        </td>' . "\n";
+		$content .= '    </tr>' . "\n";
+		$content .= '</table>';
 
 		return $this->get_template( $content, $severity );
 	}
@@ -899,30 +877,30 @@ HTML;
 	 */
 	private function build_digest_section( string $type, array $notifications ): string {
 		$config = match ( $type ) {
-			'error'   => [
+			'error'   => array(
 				'bg'     => '#fcf0f1',
 				'border' => '#d63638',
 				'icon'   => '&#10060;',
 				'title'  => __( 'Errors', 'zbooks-for-woocommerce' ),
-			],
-			'warning' => [
+			),
+			'warning' => array(
 				'bg'     => '#fcf6e5',
 				'border' => '#dba617',
 				'icon'   => '&#9888;',
 				'title'  => __( 'Warnings', 'zbooks-for-woocommerce' ),
-			],
-			'success' => [
+			),
+			'success' => array(
 				'bg'     => '#edfaef',
 				'border' => '#00a32a',
 				'icon'   => '&#10003;',
 				'title'  => __( 'Completed', 'zbooks-for-woocommerce' ),
-			],
-			default   => [
+			),
+			default   => array(
 				'bg'     => '#f0f6fc',
 				'border' => '#0073aa',
 				'icon'   => '&#8505;',
 				'title'  => __( 'Information', 'zbooks-for-woocommerce' ),
-			],
+			),
 		};
 
 		$count      = count( $notifications );
@@ -933,42 +911,40 @@ HTML;
 			$message   = wp_kses_post( $notification['message'] ?? '' );
 			$timestamp = esc_html( $notification['timestamp'] ?? '' );
 
-			$items_html .= <<<HTML
-                <tr>
-                    <td style="padding: 12px 16px; border-bottom: 1px solid rgba(0,0,0,0.05);">
-                        <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1d2327;">
-                            {$title}
-                        </p>
-                        <p style="margin: 0 0 4px 0; font-size: 13px; color: #50575e; line-height: 1.5;">
-                            {$message}
-                        </p>
-                        <p style="margin: 0; font-size: 11px; color: #8c8f94;">
-                            {$timestamp}
-                        </p>
-                    </td>
-                </tr>
-HTML;
+			$items_html .= '                <tr>' . "\n";
+			$items_html .= '                    <td style="padding: 12px 16px; border-bottom: 1px solid rgba(0,0,0,0.05);">' . "\n";
+			$items_html .= '                        <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1d2327;">' . "\n";
+			$items_html .= '                            ' . $title . "\n";
+			$items_html .= '                        </p>' . "\n";
+			$items_html .= '                        <p style="margin: 0 0 4px 0; font-size: 13px; color: #50575e; line-height: 1.5;">' . "\n";
+			$items_html .= '                            ' . $message . "\n";
+			$items_html .= '                        </p>' . "\n";
+			$items_html .= '                        <p style="margin: 0; font-size: 11px; color: #8c8f94;">' . "\n";
+			$items_html .= '                            ' . $timestamp . "\n";
+			$items_html .= '                        </p>' . "\n";
+			$items_html .= '                    </td>' . "\n";
+			$items_html .= '                </tr>' . "\n";
 		}
 
-		return <<<HTML
-    <!-- {$config['title']} Section -->
-    <tr>
-        <td style="padding-bottom: 24px;">
-            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-                <tr>
-                    <td style="background-color: {$config['bg']}; border-left: 4px solid {$config['border']}; padding: 12px 16px; border-radius: 0 4px 4px 0;">
-                        <p style="margin: 0; font-size: 14px; font-weight: 600; color: #1d2327;">
-                            {$config['icon']} {$config['title']} ({$count})
-                        </p>
-                    </td>
-                </tr>
-            </table>
-            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #ffffff; border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 4px 4px;">
-                {$items_html}
-            </table>
-        </td>
-    </tr>
-HTML;
+		$html  = '    <!-- ' . esc_html( $config['title'] ) . ' Section -->' . "\n";
+		$html .= '    <tr>' . "\n";
+		$html .= '        <td style="padding-bottom: 24px;">' . "\n";
+		$html .= '            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">' . "\n";
+		$html .= '                <tr>' . "\n";
+		$html .= '                    <td style="background-color: ' . esc_attr( $config['bg'] ) . '; border-left: 4px solid ' . esc_attr( $config['border'] ) . '; padding: 12px 16px; border-radius: 0 4px 4px 0;">' . "\n";
+		$html .= '                        <p style="margin: 0; font-size: 14px; font-weight: 600; color: #1d2327;">' . "\n";
+		$html .= '                            ' . esc_html( $config['icon'] ) . ' ' . esc_html( $config['title'] ) . ' (' . esc_html( $count ) . ')' . "\n";
+		$html .= '                        </p>' . "\n";
+		$html .= '                    </td>' . "\n";
+		$html .= '                </tr>' . "\n";
+		$html .= '            </table>' . "\n";
+		$html .= '            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #ffffff; border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 4px 4px;">' . "\n";
+		$html .= '                ' . $items_html;
+		$html .= '            </table>' . "\n";
+		$html .= '        </td>' . "\n";
+		$html .= '    </tr>';
+
+		return $html;
 	}
 
 	/**

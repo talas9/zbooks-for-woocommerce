@@ -27,6 +27,12 @@ package-lock.json
 # Composer dev files (composer.json MUST be included if vendor/ exists)
 composer.lock
 
+# Environment files (must not be in distribution)
+.env
+.env.*
+.env.local
+.env.local.example
+
 # Testing
 tests
 phpcs.xml
