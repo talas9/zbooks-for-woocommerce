@@ -14,6 +14,42 @@ import { promisify } from 'util';
 const execAsync = promisify(exec);
 
 /**
+ * Retry helper with exponential backoff for Zoho API calls.
+ * Prevents rate limiting failures.
+ */
+async function retryWithBackoff<T>(
+	fn: () => Promise<T>,
+	maxRetries: number = 3,
+	initialDelayMs: number = 2000
+): Promise<T> {
+	let lastError: any;
+	
+	for (let attempt = 0; attempt <= maxRetries; attempt++) {
+		try {
+			return await fn();
+		} catch (error: any) {
+			lastError = error;
+			
+			// Check if it's an Access Denied / rate limit error
+			const errorStr = JSON.stringify(error);
+			const isRateLimit = errorStr.includes('Access Denied') || 
+			                    errorStr.includes('rate limit') ||
+			                    errorStr.includes('Too Many Requests');
+			
+			if (attempt < maxRetries && isRateLimit) {
+				const delayMs = initialDelayMs * Math.pow(2, attempt); // Exponential backoff
+				console.log(`Retry ${attempt + 1}/${maxRetries} after ${delayMs}ms due to: ${errorStr.substring(0, 100)}`);
+				await new Promise(resolve => setTimeout(resolve, delayMs));
+			} else {
+				break;
+			}
+		}
+	}
+	
+	throw lastError;
+}
+
+/**
  * WP-CLI helper to run commands in the wp-env container.
  * Uses npx wp-env run tests-cli to execute WP-CLI commands in the test environment.
  * Tests run on port 8889 which is the tests environment.
@@ -343,42 +379,48 @@ interface ZohoPaymentResult {
  * Verify invoice exists in Zoho Books and return details.
  */
 async function verifyZohoInvoice(invoiceId: string): Promise<ZohoInvoiceResult> {
-	try {
-		const result = await wpCli(
-			`eval-file wp-content/plugins/zbooks-for-woocommerce/scripts/verify-zoho.php invoice ${invoiceId}`
-		);
-		return JSON.parse(result);
-	} catch (error) {
-		return { success: false, error: String(error) };
-	}
+	return retryWithBackoff(async () => {
+		try {
+			const result = await wpCli(
+				`eval-file wp-content/plugins/zbooks-for-woocommerce/scripts/verify-zoho.php invoice ${invoiceId}`
+			);
+			return JSON.parse(result);
+		} catch (error) {
+			return { success: false, error: String(error) };
+		}
+	}, 3, 2000);
 }
 
 /**
  * Verify contact exists in Zoho Books and return details.
  */
 async function verifyZohoContact(contactId: string): Promise<ZohoContactResult> {
-	try {
-		const result = await wpCli(
-			`eval-file wp-content/plugins/zbooks-for-woocommerce/scripts/verify-zoho.php contact ${contactId}`
-		);
-		return JSON.parse(result);
-	} catch (error) {
-		return { success: false, error: String(error) };
-	}
+	return retryWithBackoff(async () => {
+		try {
+			const result = await wpCli(
+				`eval-file wp-content/plugins/zbooks-for-woocommerce/scripts/verify-zoho.php contact ${contactId}`
+			);
+			return JSON.parse(result);
+		} catch (error) {
+			return { success: false, error: String(error) };
+		}
+	}, 3, 2000);
 }
 
 /**
  * Verify payment exists in Zoho Books and return details.
  */
 async function verifyZohoPayment(paymentId: string): Promise<ZohoPaymentResult> {
-	try {
-		const result = await wpCli(
-			`eval-file wp-content/plugins/zbooks-for-woocommerce/scripts/verify-zoho.php payment ${paymentId}`
-		);
-		return JSON.parse(result);
-	} catch (error) {
-		return { success: false, error: String(error) };
-	}
+	return retryWithBackoff(async () => {
+		try {
+			const result = await wpCli(
+				`eval-file wp-content/plugins/zbooks-for-woocommerce/scripts/verify-zoho.php payment ${paymentId}`
+			);
+			return JSON.parse(result);
+		} catch (error) {
+			return { success: false, error: String(error) };
+		}
+	}, 3, 2000);
 }
 
 /**
@@ -399,18 +441,20 @@ async function verifyZohoInvoiceByOrder(orderId: number): Promise<ZohoInvoiceRes
  * Verify Zoho connection is working.
  */
 async function verifyZohoConnection(): Promise<{ success: boolean; connected: boolean; error?: string }> {
-	try {
-		const result = await wpCli(
-			`eval-file wp-content/plugins/zbooks-for-woocommerce/scripts/verify-zoho.php connection`
-		);
-		console.log('Zoho connection verification raw result:', result);
-		const parsed = JSON.parse(result);
-		console.log('Zoho connection verification parsed:', JSON.stringify(parsed, null, 2));
-		return parsed;
-	} catch (error) {
-		console.error('Zoho connection verification failed:', error);
-		return { success: false, connected: false, error: String(error) };
-	}
+	return retryWithBackoff(async () => {
+		try {
+			const result = await wpCli(
+				`eval-file wp-content/plugins/zbooks-for-woocommerce/scripts/verify-zoho.php connection`
+			);
+			console.log('Zoho connection verification raw result:', result);
+			const parsed = JSON.parse(result);
+			console.log('Zoho connection verification parsed:', JSON.stringify(parsed, null, 2));
+			return parsed;
+		} catch (error) {
+			console.error('Zoho connection verification failed:', error);
+			return { success: false, connected: false, error: String(error) };
+		}
+	}, 3, 2000);
 }
 
 test.describe('Sync Robustness E2E Tests', () => {
