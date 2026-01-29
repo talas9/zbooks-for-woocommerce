@@ -145,7 +145,7 @@ test.describe('Bulk Sync Payment Application', () => {
 		createdOrderIds.push(orderId);
 
 		// Navigate to WooCommerce orders page
-		await page.goto('/wp-admin/edit.php?post_type=shop_order');
+		await page.goto('/wp-admin/admin.php?page=wc-orders');
 		await page.waitForLoadState('networkidle');
 
 		// Find the order row
@@ -161,7 +161,7 @@ test.describe('Bulk Sync Payment Application', () => {
 		await page.locator('#doaction').click();
 
 		// Wait for redirect and success notice
-		await page.waitForURL(/.*edit\.php\?post_type=shop_order.*/, { timeout: 30000 });
+		await page.waitForURL(/.*(page=wc-orders|edit\.php\?post_type=shop_order).*/, { timeout: 30000 });
 		await page.waitForTimeout(3000); // Allow time for sync to complete
 
 		// Verify success notice
@@ -207,7 +207,7 @@ test.describe('Bulk Sync Payment Application', () => {
 		const orderTotalFloat = parseFloat(orderTotal);
 
 		// Navigate to orders page and bulk sync
-		await page.goto('/wp-admin/edit.php?post_type=shop_order');
+		await page.goto('/wp-admin/admin.php?page=wc-orders');
 		await page.waitForLoadState('networkidle');
 
 		const orderRow = page.locator(`tr#post-${orderId}`).or(page.locator(`tr:has-text("#${orderId}")`));
@@ -217,7 +217,7 @@ test.describe('Bulk Sync Payment Application', () => {
 		await page.locator('select#bulk-action-selector-top').selectOption('zbooks_sync');
 		await page.locator('#doaction').click();
 
-		await page.waitForURL(/.*edit\.php\?post_type=shop_order.*/, { timeout: 30000 });
+		await page.waitForURL(/.*(page=wc-orders|edit\.php\?post_type=shop_order).*/, { timeout: 30000 });
 		await page.waitForTimeout(3000);
 
 		// Get Zoho payment ID
@@ -257,7 +257,7 @@ test.describe('Bulk Sync Payment Application', () => {
 		createdOrderIds.push(orderId);
 
 		// Bulk sync the order
-		await page.goto('/wp-admin/edit.php?post_type=shop_order');
+		await page.goto('/wp-admin/admin.php?page=wc-orders');
 		await page.waitForLoadState('networkidle');
 
 		const orderRow = page.locator(`tr#post-${orderId}`).or(page.locator(`tr:has-text("#${orderId}")`));
@@ -267,7 +267,7 @@ test.describe('Bulk Sync Payment Application', () => {
 		await page.locator('select#bulk-action-selector-top').selectOption('zbooks_sync');
 		await page.locator('#doaction').click();
 
-		await page.waitForURL(/.*edit\.php\?post_type=shop_order.*/, { timeout: 30000 });
+		await page.waitForURL(/.*(page=wc-orders|edit\.php\?post_type=shop_order).*/, { timeout: 30000 });
 		await page.waitForTimeout(3000);
 
 		// Get invoice ID
@@ -306,7 +306,7 @@ test.describe('Bulk Sync Payment Application', () => {
 		createdOrderIds.push(orderId);
 
 		// Bulk sync
-		await page.goto('/wp-admin/edit.php?post_type=shop_order');
+		await page.goto('/wp-admin/admin.php?page=wc-orders');
 		await page.waitForLoadState('networkidle');
 
 		const orderRow = page.locator(`tr#post-${orderId}`).or(page.locator(`tr:has-text("#${orderId}")`));
@@ -316,7 +316,7 @@ test.describe('Bulk Sync Payment Application', () => {
 		await page.locator('select#bulk-action-selector-top').selectOption('zbooks_sync');
 		await page.locator('#doaction').click();
 
-		await page.waitForURL(/.*edit\.php\?post_type=shop_order.*/, { timeout: 30000 });
+		await page.waitForURL(/.*(page=wc-orders|edit\.php\?post_type=shop_order).*/, { timeout: 30000 });
 		await page.waitForTimeout(3000);
 
 		// Verify all payment-related meta fields are stored
@@ -377,7 +377,7 @@ test.describe('Bulk Sync Payment Application', () => {
 		'`);
 
 		// Bulk sync
-		await page.goto('/wp-admin/edit.php?post_type=shop_order');
+		await page.goto('/wp-admin/admin.php?page=wc-orders');
 		await page.waitForLoadState('networkidle');
 
 		const orderRow = page.locator(`tr#post-${orderId}`).or(page.locator(`tr:has-text("#${orderId}")`));
@@ -387,7 +387,7 @@ test.describe('Bulk Sync Payment Application', () => {
 		await page.locator('select#bulk-action-selector-top').selectOption('zbooks_sync');
 		await page.locator('#doaction').click();
 
-		await page.waitForURL(/.*edit\.php\?post_type=shop_order.*/, { timeout: 30000 });
+		await page.waitForURL(/.*(page=wc-orders|edit\.php\?post_type=shop_order).*/, { timeout: 30000 });
 		await page.waitForTimeout(3000);
 
 		// For processing order, payment should NOT be applied (invoice should be draft)
@@ -418,7 +418,7 @@ test.describe('Bulk Sync Payment Application', () => {
 		createdOrderIds.push(orderId);
 
 		// First sync
-		await page.goto('/wp-admin/edit.php?post_type=shop_order');
+		await page.goto('/wp-admin/admin.php?page=wc-orders');
 		await page.waitForLoadState('networkidle');
 
 		const orderRow = page.locator(`tr#post-${orderId}`).or(page.locator(`tr:has-text("#${orderId}")`));
@@ -428,14 +428,14 @@ test.describe('Bulk Sync Payment Application', () => {
 		await page.locator('select#bulk-action-selector-top').selectOption('zbooks_sync');
 		await page.locator('#doaction').click();
 
-		await page.waitForURL(/.*edit\.php\?post_type=shop_order.*/, { timeout: 30000 });
+		await page.waitForURL(/.*(page=wc-orders|edit\.php\?post_type=shop_order).*/, { timeout: 30000 });
 		await page.waitForTimeout(3000);
 
 		const firstPaymentId = await getOrderMeta(orderId, '_zbooks_zoho_payment_id');
 		expect(firstPaymentId).toBeTruthy();
 
 		// Re-sync the same order
-		await page.goto('/wp-admin/edit.php?post_type=shop_order');
+		await page.goto('/wp-admin/admin.php?page=wc-orders');
 		await page.waitForLoadState('networkidle');
 
 		const orderRowAgain = page.locator(`tr#post-${orderId}`).or(page.locator(`tr:has-text("#${orderId}")`));
@@ -445,7 +445,7 @@ test.describe('Bulk Sync Payment Application', () => {
 		await page.locator('select#bulk-action-selector-top').selectOption('zbooks_sync');
 		await page.locator('#doaction').click();
 
-		await page.waitForURL(/.*edit\.php\?post_type=shop_order.*/, { timeout: 30000 });
+		await page.waitForURL(/.*(page=wc-orders|edit\.php\?post_type=shop_order).*/, { timeout: 30000 });
 		await page.waitForTimeout(3000);
 
 		const secondPaymentId = await getOrderMeta(orderId, '_zbooks_zoho_payment_id');
