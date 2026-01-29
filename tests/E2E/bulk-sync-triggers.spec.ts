@@ -119,7 +119,7 @@ test.describe('Bulk Sync with Trigger Settings', () => {
             await page.waitForSelector('.zbooks-meta-box', { timeout: 10000 });
             
             // Check sync status
-            const syncStatus = page.locator('.zbooks-meta-box .zbooks-status');
+            const syncStatus = page.locator('.zbooks-meta-box .zbooks-status').first();
             await expect(syncStatus).toBeVisible();
             
             const statusText = await syncStatus.textContent();
