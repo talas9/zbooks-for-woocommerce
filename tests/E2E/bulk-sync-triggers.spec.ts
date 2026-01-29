@@ -6,6 +6,8 @@
  */
 import { test, expect } from '@playwright/test';
 
+test.describe.configure({ mode: 'serial' });
+
 test.describe('Bulk Sync with Trigger Settings', () => {
     test.beforeAll(async ({ browser }) => {
         // This test requires orders to be created BEFORE the plugin is installed
@@ -100,6 +102,9 @@ test.describe('Bulk Sync with Trigger Settings', () => {
         // Wait for redirect and notice (HPOS or classic)
         await page.waitForURL(/.*(page=wc-orders|edit\.php\?post_type=shop_order).*/, { timeout: 30000 });
         
+        // Give Zoho API time to process (avoid rate limiting)
+        await page.waitForTimeout(3000);
+        
         // Step 6: Verify success notice appears
         const successNotice = page.locator('.notice-success');
         await expect(successNotice).toBeVisible({ timeout: 10000 });
@@ -148,6 +153,9 @@ test.describe('Bulk Sync with Trigger Settings', () => {
                 }
             }
         }
+        
+        // Delay between tests to avoid Zoho API rate limiting
+        await page.waitForTimeout(5000);
     });
 
     test('bulk sync handles mixed order statuses correctly', async ({ page }) => {
@@ -211,6 +219,9 @@ test.describe('Bulk Sync with Trigger Settings', () => {
         
         // Wait for completion (HPOS or classic)
         await page.waitForURL(/.*(page=wc-orders|edit\.php\?post_type=shop_order).*/, { timeout: 30000 });
+        
+        // Give Zoho API time to process (avoid rate limiting)
+        await page.waitForTimeout(3000);
         
         // Verify processing order was synced as draft
         if (processingOrders[0]) {
