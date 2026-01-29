@@ -30,14 +30,20 @@ test.describe('Bulk Sync with Trigger Settings', () => {
 
     test('bulk sync respects trigger settings for different order statuses', async ({ page }) => {
         // Step 1: Verify trigger settings are configured
-        await page.goto('/wp-admin/admin.php?page=zbooks-settings&tab=orders');
+        await page.goto('/wp-admin/admin.php?page=zbooks&tab=orders');
         
-        // Check that trigger settings exist
-        await expect(page.locator('h2:has-text("Status Actions")')).toBeVisible();
+        // Wait for page to load
+        await page.waitForLoadState('networkidle');
         
-        // Get current trigger configuration
-        const draftTriggerStatus = await page.locator('select[name="zbooks_sync_triggers[sync_draft]"]').inputValue();
-        const submitTriggerStatus = await page.locator('select[name="zbooks_sync_triggers[sync_submit]"]').inputValue();
+        // Get current trigger configuration (check that selects exist)
+        const draftTriggerSelect = page.locator('select[name="zbooks_sync_triggers[sync_draft]"]');
+        const submitTriggerSelect = page.locator('select[name="zbooks_sync_triggers[sync_submit]"]');
+        
+        await expect(draftTriggerSelect).toBeVisible();
+        await expect(submitTriggerSelect).toBeVisible();
+        
+        const draftTriggerStatus = await draftTriggerSelect.inputValue();
+        const submitTriggerStatus = await submitTriggerSelect.inputValue();
         
         console.log(`Draft trigger: ${draftTriggerStatus}, Submit trigger: ${submitTriggerStatus}`);
         
@@ -67,8 +73,13 @@ test.describe('Bulk Sync with Trigger Settings', () => {
         for (let i = 0; i < ordersToSelect; i++) {
             const row = orderRows.nth(i);
             const checkbox = row.locator('input[type="checkbox"]');
+            
+            // Skip rows without checkboxes (header/footer rows)
+            const checkboxCount = await checkbox.count();
+            if (checkboxCount === 0) continue;
+            
             const orderId = await checkbox.getAttribute('value');
-            const statusBadge = row.locator('.order-status');
+            const statusBadge = row.locator('.order-status').first();
             const status = await statusBadge.textContent();
             
             if (orderId) {
@@ -86,8 +97,8 @@ test.describe('Bulk Sync with Trigger Settings', () => {
         await page.locator('select#bulk-action-selector-top').selectOption('zbooks_sync');
         await page.locator('#doaction').click();
         
-        // Wait for redirect and notice
-        await page.waitForURL(/.*edit\.php\?post_type=shop_order.*/, { timeout: 30000 });
+        // Wait for redirect and notice (HPOS or classic)
+        await page.waitForURL(/.*(page=wc-orders|edit\.php\?post_type=shop_order).*/, { timeout: 30000 });
         
         // Step 6: Verify success notice appears
         const successNotice = page.locator('.notice-success');
@@ -118,7 +129,7 @@ test.describe('Bulk Sync with Trigger Settings', () => {
             expect(statusText).toMatch(/Synced|Draft/);
             
             // Verify invoice link exists
-            const invoiceLink = page.locator('.zbooks-meta-box a[href*="zoho.com"]');
+            const invoiceLink = page.locator('.zbooks-meta-box a[href*="zoho.com"]').first();
             await expect(invoiceLink).toBeVisible();
             
             // Check if invoice status matches expected based on order status
@@ -162,8 +173,13 @@ test.describe('Bulk Sync with Trigger Settings', () => {
         for (let i = 0; i < orderCount; i++) {
             const row = orderRows.nth(i);
             const checkbox = row.locator('input[type="checkbox"]');
+            
+            // Skip rows without checkboxes (header/footer rows)
+            const checkboxCount = await checkbox.count();
+            if (checkboxCount === 0) continue;
+            
             const orderId = await checkbox.getAttribute('value');
-            const statusBadge = row.locator('.order-status');
+            const statusBadge = row.locator('.order-status').first();
             const statusText = await statusBadge.textContent();
             const status = statusText?.trim().toLowerCase().replace('wc-', '') || '';
             
@@ -193,8 +209,8 @@ test.describe('Bulk Sync with Trigger Settings', () => {
         await page.locator('select#bulk-action-selector-top').selectOption('zbooks_sync');
         await page.locator('#doaction').click();
         
-        // Wait for completion
-        await page.waitForURL(/.*edit\.php\?post_type=shop_order.*/, { timeout: 30000 });
+        // Wait for completion (HPOS or classic)
+        await page.waitForURL(/.*(page=wc-orders|edit\.php\?post_type=shop_order).*/, { timeout: 30000 });
         
         // Verify processing order was synced as draft
         if (processingOrders[0]) {
