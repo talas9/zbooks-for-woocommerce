@@ -13,8 +13,8 @@ namespace Zbooks;
 
 use Zbooks\Admin\SettingsPage;
 use Zbooks\Admin\OrderMetaBox;
+use Zbooks\Admin\OrdersListColumn;
 use Zbooks\Admin\AdminNotices;
-use Zbooks\Admin\BulkSyncPage;
 use Zbooks\Admin\SetupWizard;
 use Zbooks\Admin\LogViewer;
 use Zbooks\Admin\ProductsTab;
@@ -160,7 +160,9 @@ final class Plugin {
 			$this->get_service( 'order_meta_repository' ),
 			$this->get_service( 'logger' ),
 			$this->get_service( 'payment_service' ),
-			$this->get_service( 'refund_service' )
+			$this->get_service( 'refund_service' ),
+			null,
+			$this->get_service( 'item_mapping_repository' )
 		);
 
 		$this->services['bulk_sync_service'] = new BulkSyncService(
@@ -233,11 +235,11 @@ final class Plugin {
 			$this->get_service( 'zoho_client' )
 		);
 
-		$this->services['admin_notices'] = new AdminNotices();
-
-		$this->services['bulk_sync_page'] = new BulkSyncPage(
-			$this->get_service( 'bulk_sync_service' )
+		$this->services['orders_list_column'] = new OrdersListColumn(
+			$this->get_service( 'order_meta_repository' )
 		);
+
+		$this->services['admin_notices'] = new AdminNotices();
 
 		$this->services['setup_wizard'] = new SetupWizard(
 			$this->get_service( 'zoho_client' ),
@@ -346,6 +348,7 @@ final class Plugin {
 			);
 		}
 
+		// Enqueue main admin.js (contains shared utilities and lazy-loading system).
 		wp_enqueue_script(
 			'zbooks-admin',
 			ZBOOKS_PLUGIN_URL . 'assets/js/admin.js',
@@ -354,6 +357,7 @@ final class Plugin {
 			true
 		);
 
+		// Localize admin script with global config and data for lazy loading.
 		wp_localize_script(
 			'zbooks-admin',
 			'zbooks',
@@ -362,19 +366,198 @@ final class Plugin {
 				'nonce'                => wp_create_nonce( 'zbooks_ajax_nonce' ),
 				'reconciliation_nonce' => wp_create_nonce( 'zbooks_reconciliation' ),
 				'i18n'                 => [
-					'syncing'                 => __( 'Syncing...', 'zbooks-for-woocommerce' ),
-					'sync_success'            => __( 'Sync successful!', 'zbooks-for-woocommerce' ),
-					'sync_error'              => __( 'Sync failed. Please try again.', 'zbooks-for-woocommerce' ),
-					'confirm_bulk_sync'       => __( 'Are you sure you want to sync the selected orders?', 'zbooks-for-woocommerce' ),
-					'bulk_sync_leave_warning' => __( 'Bulk sync is in progress. Leaving this page will cancel the sync. Are you sure you want to leave?', 'zbooks-for-woocommerce' ),
-					'session_expired'         => __( 'Session expired. Please refresh the page and try again.', 'zbooks-for-woocommerce' ),
-					'permission_denied'       => __( 'Permission denied. You may not have access to this feature.', 'zbooks-for-woocommerce' ),
-					'server_error'            => __( 'Server error. Please check your server logs or try again later.', 'zbooks-for-woocommerce' ),
-					'network_error'           => __( 'Network error. Please check your internet connection.', 'zbooks-for-woocommerce' ),
-					'reconciliation_failed'   => __( 'Reconciliation failed.', 'zbooks-for-woocommerce' ),
-					'failed_to_delete_report' => __( 'Failed to delete report.', 'zbooks-for-woocommerce' ),
-					'failed_to_load_report'   => __( 'Failed to load report.', 'zbooks-for-woocommerce' ),
+					'syncing'                  => __( 'Syncing...', 'zbooks-for-woocommerce' ),
+					'sync_success'             => __( 'Sync successful!', 'zbooks-for-woocommerce' ),
+					'sync_error'               => __( 'Sync failed. Please try again.', 'zbooks-for-woocommerce' ),
+					'confirm_bulk_sync'        => __( 'Are you sure you want to sync the selected orders?', 'zbooks-for-woocommerce' ),
+					'bulk_sync_leave_warning'  => __( 'Bulk sync is in progress. Leaving this page will cancel the sync. Are you sure you want to leave?', 'zbooks-for-woocommerce' ),
+					'session_expired'          => __( 'Session expired. Please refresh the page and try again.', 'zbooks-for-woocommerce' ),
+					'permission_denied'        => __( 'Permission denied. You may not have access to this feature.', 'zbooks-for-woocommerce' ),
+					'server_error'             => __( 'Server error. Please check your server logs or try again later.', 'zbooks-for-woocommerce' ),
+					'network_error'            => __( 'Network error. Please check your internet connection.', 'zbooks-for-woocommerce' ),
+					'reconciliation_failed'    => __( 'Reconciliation failed.', 'zbooks-for-woocommerce' ),
+					'failed_to_delete_report'  => __( 'Failed to delete report.', 'zbooks-for-woocommerce' ),
+					'failed_to_load_report'    => __( 'Failed to load report.', 'zbooks-for-woocommerce' ),
+					'confirm_unlink_product'   => __( 'Unlink this product from Zoho?', 'zbooks-for-woocommerce' ),
+					'confirm_auto_map'         => __( 'Automatically map products to Zoho items by matching SKU?', 'zbooks-for-woocommerce' ),
+					'mapping_leave_warning'    => __( 'Mapping is in progress. Are you sure you want to leave? Unmapped products will not be processed.', 'zbooks-for-woocommerce' ),
+					'select_zoho_item'         => __( 'Please select a Zoho item to link.', 'zbooks-for-woocommerce' ),
+					'creating'                 => __( 'Creating...', 'zbooks-for-woocommerce' ),
+					'created'                  => __( 'Created!', 'zbooks-for-woocommerce' ),
+					'create'                   => __( 'Create', 'zbooks-for-woocommerce' ),
+					'linking'                  => __( 'Linking...', 'zbooks-for-woocommerce' ),
+					'linked'                   => __( 'Linked', 'zbooks-for-woocommerce' ),
+					'link'                     => __( 'Link', 'zbooks-for-woocommerce' ),
+					'unlinking'                => __( 'Unlinking...', 'zbooks-for-woocommerce' ),
+					'unlink'                   => __( 'Unlink', 'zbooks-for-woocommerce' ),
+					'mapped'                   => __( 'Mapped', 'zbooks-for-woocommerce' ),
+					'selected'                 => __( 'selected', 'zbooks-for-woocommerce' ),
+					'items_in_zoho_books'      => __( 'items in Zoho Books?', 'zbooks-for-woocommerce' ),
+					'creating_items_in_zoho'   => __( 'Creating items in Zoho...', 'zbooks-for-woocommerce' ),
+					'create_selected_in_zoho'  => __( 'Create Selected in Zoho', 'zbooks-for-woocommerce' ),
+					'refreshing'               => __( 'Refreshing...', 'zbooks-for-woocommerce' ),
+					'fetching_zoho_items'      => __( 'Fetching Zoho items...', 'zbooks-for-woocommerce' ),
+					'refresh_zoho_items'       => __( 'Refresh Zoho Items', 'zbooks-for-woocommerce' ),
+					'items_refreshed'          => __( 'Items refreshed!', 'zbooks-for-woocommerce' ),
+					'refresh_failed'           => __( 'Refresh failed', 'zbooks-for-woocommerce' ),
+					'no_unmapped_products'     => __( 'No unmapped products found.', 'zbooks-for-woocommerce' ),
+					'mapping'                  => __( 'Mapping...', 'zbooks-for-woocommerce' ),
+					'auto_map_by_sku'          => __( 'Auto-Map by SKU', 'zbooks-for-woocommerce' ),
+					'mapping_complete'         => __( 'Mapping complete!', 'zbooks-for-woocommerce' ),
+					'failed'                   => __( 'Failed', 'zbooks-for-woocommerce' ),
+					'mapping_product'          => __( 'Mapping product', 'zbooks-for-woocommerce' ),
+					'of'                       => __( 'of', 'zbooks-for-woocommerce' ),
 				],
+			]
+		);
+
+		// Localize data for lazy loading system.
+		wp_localize_script(
+			'zbooks-admin',
+			'zbooksData',
+			[
+				'pluginUrl' => ZBOOKS_PLUGIN_URL,
+				'version'   => ZBOOKS_VERSION,
+			]
+		);
+
+		// Conditionally load modules based on current page (for backward compatibility during transition).
+		// These will be lazy-loaded by admin.js in the future, but we keep them for now.
+		// Product mapping module (for products tab and product edit page).
+		// Product edit pages can have screen IDs: 'product', 'edit-product', or post type 'product'.
+		$is_product_page = $screen && (
+			$screen->id === 'toplevel_page_zbooks' ||
+			$screen->id === 'zbooks_page_zbooks-mapping' ||
+			$screen->id === 'product' ||
+			$screen->post_type === 'product'
+		);
+		
+		if ( $is_product_page ) {
+			wp_enqueue_script(
+				'zbooks-product-mapping',
+				ZBOOKS_PLUGIN_URL . 'assets/js/modules/product-mapping.js',
+				[ 'jquery', 'zbooks-admin', 'select2' ],
+				ZBOOKS_VERSION,
+				true
+			);
+		}
+
+		// Order sync module (for orders tab and order pages).
+		// Handle both HPOS and traditional order screens.
+		$is_order_page = $screen && (
+			in_array( $screen->id, [ 'woocommerce_page_wc-orders', 'shop_order', 'edit-shop_order', 'zbooks_page_zbooks-bulk-sync' ], true ) ||
+			$screen->post_type === 'shop_order' ||
+			( isset( $screen->base ) && $screen->base === 'woocommerce_page_wc-orders' )
+		);
+		
+		if ( $is_order_page ) {
+			wp_enqueue_script(
+				'zbooks-order-sync',
+				ZBOOKS_PLUGIN_URL . 'assets/js/modules/order-sync.js',
+				[ 'jquery', 'zbooks-admin' ],
+				ZBOOKS_VERSION,
+				true
+			);
+		}
+
+		// Connection tab module (for connection tab).
+		if ( $screen && $screen->id === 'toplevel_page_zbooks' ) {
+			wp_enqueue_script(
+				'zbooks-connection-tab',
+				ZBOOKS_PLUGIN_URL . 'assets/js/modules/connection-tab.js',
+				[ 'jquery', 'zbooks-admin' ],
+				ZBOOKS_VERSION,
+				true
+			);
+		}
+
+		// Custom fields module (for custom fields tab).
+		if ( $screen && $screen->id === 'toplevel_page_zbooks' ) {
+			wp_enqueue_script(
+				'zbooks-custom-fields',
+				ZBOOKS_PLUGIN_URL . 'assets/js/modules/custom-fields.js',
+				[ 'jquery', 'zbooks-admin' ],
+				ZBOOKS_VERSION,
+				true
+			);
+		}
+
+		// Payments module (for payments tab).
+		if ( $screen && $screen->id === 'toplevel_page_zbooks' ) {
+			wp_enqueue_script(
+				'zbooks-payments',
+				ZBOOKS_PLUGIN_URL . 'assets/js/modules/payments.js',
+				[ 'jquery', 'zbooks-admin' ],
+				ZBOOKS_VERSION,
+				true
+			);
+		}
+
+		// Log viewer module (for log viewer page).
+		if ( $screen && $screen->id === 'zbooks_page_zbooks-logs' ) {
+			wp_enqueue_script(
+				'zbooks-log-viewer',
+				ZBOOKS_PLUGIN_URL . 'assets/js/modules/log-viewer.js',
+				[ 'jquery', 'zbooks-admin' ],
+				ZBOOKS_VERSION,
+				true
+			);
+		}
+
+		// Reconciliation module (for reconciliation page).
+		if ( $screen && $screen->id === 'zbooks_page_zbooks-reconciliation' ) {
+			wp_enqueue_script(
+				'zbooks-reconciliation',
+				ZBOOKS_PLUGIN_URL . 'assets/js/modules/reconciliation.js',
+				[ 'jquery', 'zbooks-admin' ],
+				ZBOOKS_VERSION,
+				true
+			);
+		}
+
+		// Localize product metabox specific data.
+		wp_localize_script(
+			'zbooks-admin',
+			'zbooks_product',
+			[
+				'nonce' => wp_create_nonce( 'zbooks_product_ajax' ),
+				'i18n'  => [
+					'creating'                => __( 'Creating...', 'zbooks-for-woocommerce' ),
+					'create_in_zoho'          => __( 'Create in Zoho', 'zbooks-for-woocommerce' ),
+					'searching'               => __( 'Searching...', 'zbooks-for-woocommerce' ),
+					'search_failed'           => __( 'Search failed. Please try again.', 'zbooks-for-woocommerce' ),
+					'no_items_found'          => __( 'No items found.', 'zbooks-for-woocommerce' ),
+					'select_item_to_link'     => __( 'Select Item to Link', 'zbooks-for-woocommerce' ),
+					'link_selected'           => __( 'Link Selected', 'zbooks-for-woocommerce' ),
+					'cancel'                  => __( 'Cancel', 'zbooks-for-woocommerce' ),
+					'linking'                 => __( 'Linking...', 'zbooks-for-woocommerce' ),
+					'item_linked'             => __( 'Item linked successfully!', 'zbooks-for-woocommerce' ),
+					'link_failed'             => __( 'Failed to link item.', 'zbooks-for-woocommerce' ),
+					'inventory_tracking_error' => __( 'Inventory Tracking Error', 'zbooks-for-woocommerce' ),
+					'inventory_feature_note'  => __( 'This feature requires Zoho Inventory integration with your Zoho Books subscription.', 'zbooks-for-woocommerce' ),
+					'create_without_inventory' => __( 'Create without inventory tracking', 'zbooks-for-woocommerce' ),
+					'item_already_exists'     => __( 'Item Already Exists', 'zbooks-for-woocommerce' ),
+					'search_and_link_prompt'  => __( 'Would you like to search for the existing item and link it to this product?', 'zbooks-for-woocommerce' ),
+					'search_link_existing'    => __( 'Search & Link Existing', 'zbooks-for-woocommerce' ),
+				],
+			]
+		);
+
+		// Localize product mapping specific data.
+		wp_localize_script(
+			'zbooks-admin',
+			'zbooks_mapping',
+			[
+				'nonce' => wp_create_nonce( 'zbooks_mapping' ),
+			]
+		);
+
+		// Localize bank account refresh specific data.
+		wp_localize_script(
+			'zbooks-admin',
+			'zbooks_refresh_accounts',
+			[
+				'nonce' => wp_create_nonce( 'zbooks_refresh_accounts' ),
 			]
 		);
 	}

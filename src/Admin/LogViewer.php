@@ -42,9 +42,28 @@ class LogViewer {
 	 */
 	private function register_hooks(): void {
 		add_action( 'admin_menu', [ $this, 'add_menu_page' ] );
+		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_assets' ] );
 		add_action( 'wp_ajax_zbooks_get_logs', [ $this, 'ajax_get_logs' ] );
 		add_action( 'wp_ajax_zbooks_clear_logs', [ $this, 'ajax_clear_logs' ] );
 		add_action( 'wp_ajax_zbooks_clear_all_logs', [ $this, 'ajax_clear_all_logs' ] );
+	}
+
+	/**
+	 * Enqueue log viewer assets.
+	 *
+	 * @param string $hook Current admin page hook.
+	 */
+	public function enqueue_assets( string $hook ): void {
+		if ( $hook !== 'zbooks_page_zbooks-logs' ) {
+			return;
+		}
+
+		wp_enqueue_style(
+			'zbooks-log-viewer',
+			ZBOOKS_PLUGIN_URL . 'assets/css/modules/log-viewer.css',
+			[],
+			ZBOOKS_VERSION
+		);
 	}
 
 	/**
@@ -79,8 +98,6 @@ class LogViewer {
 			$entries = $this->logger->read_log( $selected_date, 200, $selected_level );
 			$stats   = $this->logger->get_stats( $selected_date );
 		}
-
-		wp_enqueue_style( 'zbooks-admin' );
 		?>
 		<div class="wrap">
 			<h1><?php esc_html_e( 'ZBooks Sync Logs', 'zbooks-for-woocommerce' ); ?></h1>

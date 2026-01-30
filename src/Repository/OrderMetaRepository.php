@@ -326,6 +326,45 @@ class OrderMetaRepository {
 	}
 
 	/**
+	 * Get orders for bulk sync (all orders, not just unsynced).
+	 *
+	 * @param string|null $date_from    Start date (Y-m-d).
+	 * @param string|null $date_to      End date (Y-m-d).
+	 * @param int         $limit        Maximum number of orders.
+	 * @param array       $order_status Order statuses to filter by.
+	 * @return WC_Order[]
+	 */
+	public function get_orders_for_bulk_sync(
+		?string $date_from = null,
+		?string $date_to = null,
+		int $limit = 100,
+		array $order_status = [ 'all' ]
+	): array {
+		$args = [
+			'limit'   => $limit,
+			'type'    => 'shop_order', // Only regular orders, not refunds.
+			'orderby' => 'date',
+			'order'   => 'DESC', // Most recent first.
+		];
+
+		if ( $date_from ) {
+			$args['date_created'] = '>=' . $date_from;
+		}
+
+		if ( $date_to ) {
+			$args['date_created'] = '<=' . $date_to . ' 23:59:59';
+		}
+
+		// Filter by order status if not "all".
+		if ( ! in_array( 'all', $order_status, true ) && ! empty( $order_status ) ) {
+			$args['status'] = $order_status;
+		}
+
+		$query = new \WC_Order_Query( $args );
+		return $query->get_orders();
+	}
+
+	/**
 	 * Get orders pending sync in date range.
 	 *
 	 * @param string|null $date_from Start date (Y-m-d).

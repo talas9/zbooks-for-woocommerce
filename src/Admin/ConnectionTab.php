@@ -49,6 +49,75 @@ class ConnectionTab {
 		add_action( 'wp_ajax_zbooks_authenticate', [ $this, 'ajax_authenticate' ] );
 		add_action( 'wp_ajax_zbooks_save_organization', [ $this, 'ajax_save_organization' ] );
 		add_action( 'wp_ajax_zbooks_test_connection', [ $this, 'ajax_test_connection' ] );
+
+		// Enqueue scripts/styles for connection tab.
+		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_assets' ] );
+	}
+
+	/**
+	 * Enqueue connection tab assets.
+	 * WordPress.org requires proper enqueue instead of inline tags.
+	 *
+	 * @param string $hook Current admin page hook.
+	 */
+	public function enqueue_assets( string $hook ): void {
+		// Only load on settings page, connection tab.
+		if ( $hook !== 'toplevel_page_zbooks' ) {
+			return;
+		}
+
+		// Check if we're on connection tab.
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$tab = $_GET['tab'] ?? 'connection';
+		if ( $tab !== 'connection' ) {
+			return;
+		}
+
+		// Enqueue CSS module.
+		wp_enqueue_style(
+			'zbooks-connection-tab',
+			ZBOOKS_PLUGIN_URL . 'assets/css/modules/connection-tab.css',
+			[],
+			ZBOOKS_VERSION
+		);
+
+		// Enqueue connection tab JS module.
+		wp_enqueue_script(
+			'zbooks-connection-tab',
+			ZBOOKS_PLUGIN_URL . 'assets/js/modules/connection-tab.js',
+			[ 'jquery', 'zbooks-admin' ],
+			ZBOOKS_VERSION,
+			true
+		);
+
+		// Localize script with PHP values (WordPress.org compliant).
+		$is_configured = $this->client->is_configured();
+		wp_localize_script(
+			'zbooks-connection-tab',
+			'ZbooksConnectionConfig',
+			[
+				'isConfigured' => $is_configured,
+				'nonce'        => wp_create_nonce( 'zbooks_ajax_nonce' ),
+				'i18n'         => [
+					'sessionExpired'   => __( 'Session expired. Please refresh the page and try again.', 'zbooks-for-woocommerce' ),
+					'permissionDenied' => __( 'Permission denied.', 'zbooks-for-woocommerce' ),
+					'serverError'      => __( 'Server error. Please try again later.', 'zbooks-for-woocommerce' ),
+					'networkError'     => __( 'Network error. Please check your connection.', 'zbooks-for-woocommerce' ),
+					'checking'         => __( 'Checking...', 'zbooks-for-woocommerce' ),
+					'connected'        => __( 'Connected', 'zbooks-for-woocommerce' ),
+					'failed'           => __( 'Failed', 'zbooks-for-woocommerce' ),
+					'error'            => __( 'Error', 'zbooks-for-woocommerce' ),
+					'yes'              => __( 'Yes', 'zbooks-for-woocommerce' ),
+					'no'               => __( 'No', 'zbooks-for-woocommerce' ),
+					'configured'       => __( 'Configured', 'zbooks-for-woocommerce' ),
+					'notConfigured'    => __( 'Not configured', 'zbooks-for-woocommerce' ),
+					'selected'         => __( 'Selected', 'zbooks-for-woocommerce' ),
+					'notSelected'      => __( 'Not selected', 'zbooks-for-woocommerce' ),
+					'unknownError'     => __( 'Unknown error occurred', 'zbooks-for-woocommerce' ),
+					'requestFailed'    => __( 'Request failed', 'zbooks-for-woocommerce' ),
+				],
+			]
+		);
 	}
 
 	/**
@@ -108,6 +177,10 @@ class ConnectionTab {
 						<span class="dashicons dashicons-admin-network" style="vertical-align: middle;"></span>
 						<?php esc_html_e( 'Change Credentials', 'zbooks-for-woocommerce' ); ?>
 					</button>
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=zbooks-setup' ) ); ?>" class="button" style="margin-left: 10px;">
+						<span class="dashicons dashicons-admin-settings" style="vertical-align: middle;"></span>
+						<?php esc_html_e( 'Run Setup Wizard', 'zbooks-for-woocommerce' ); ?>
+					</a>
 				</div>
 			<?php endif; ?>
 
@@ -216,132 +289,7 @@ class ConnectionTab {
 				</div>
 			<?php endif; ?>
 
-			<style>
-				.zbooks-org-selector {
-					position: relative;
-					max-width: 450px;
-				}
-				.zbooks-org-selected {
-					background: #fff;
-					border: 1px solid #8c8f94;
-					border-radius: 4px;
-					padding: 12px 40px 12px 15px;
-					cursor: pointer;
-					transition: all 0.2s;
-					min-height: 60px;
-					display: flex;
-					align-items: center;
-				}
-				.zbooks-org-selected:hover {
-					border-color: #2271b1;
-				}
-				.zbooks-org-selected:focus {
-					border-color: #2271b1;
-					box-shadow: 0 0 0 1px #2271b1;
-					outline: none;
-				}
-				.zbooks-org-selected::after {
-					content: '';
-					position: absolute;
-					right: 15px;
-					top: 50%;
-					transform: translateY(-50%);
-					border: 5px solid transparent;
-					border-top-color: #50575e;
-					transition: transform 0.2s;
-				}
-				.zbooks-org-selector.is-open .zbooks-org-selected::after {
-					transform: translateY(-50%) rotate(180deg);
-				}
-				.zbooks-org-selected .org-placeholder {
-					color: #757575;
-				}
-				.zbooks-org-dropdown {
-					position: absolute;
-					top: 100%;
-					left: 0;
-					right: 0;
-					background: #fff;
-					border: 1px solid #8c8f94;
-					border-top: none;
-					border-radius: 0 0 4px 4px;
-					max-height: 300px;
-					overflow-y: auto;
-					z-index: 100;
-					display: none;
-					box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-				}
-				.zbooks-org-selector.is-open .zbooks-org-dropdown {
-					display: block;
-				}
-				.zbooks-org-search {
-					padding: 10px;
-					border-bottom: 1px solid #ddd;
-					position: sticky;
-					top: 0;
-					background: #fff;
-				}
-				.zbooks-org-search input {
-					width: 100%;
-					padding: 8px 12px;
-					border: 1px solid #ddd;
-					border-radius: 4px;
-				}
-				.zbooks-org-item {
-					padding: 12px 15px;
-					cursor: pointer;
-					border-bottom: 1px solid #f0f0f1;
-					transition: background 0.15s;
-				}
-				.zbooks-org-item:hover {
-					background: #f0f7fc;
-				}
-				.zbooks-org-item.is-selected {
-					background: #e5f3ff;
-					border-left: 3px solid #2271b1;
-				}
-				.zbooks-org-item:last-child {
-					border-bottom: none;
-				}
-				.zbooks-org-item .org-name {
-					font-weight: 600;
-					font-size: 14px;
-					color: #1d2327;
-					margin-bottom: 4px;
-				}
-				.zbooks-org-item .org-meta {
-					font-size: 12px;
-					color: #666;
-					display: flex;
-					flex-wrap: wrap;
-					gap: 10px;
-				}
-				.zbooks-org-item .org-meta span {
-					display: inline-flex;
-					align-items: center;
-					gap: 3px;
-				}
-				.zbooks-org-item .org-meta .dashicons {
-					font-size: 14px;
-					width: 14px;
-					height: 14px;
-				}
-				.zbooks-org-selected .org-name {
-					font-weight: 600;
-					font-size: 14px;
-					color: #1d2327;
-				}
-				.zbooks-org-selected .org-meta {
-					font-size: 12px;
-					color: #666;
-					margin-top: 2px;
-				}
-				.zbooks-org-empty {
-					padding: 20px;
-					text-align: center;
-					color: #666;
-				}
-			</style>
+			<!-- Styles now loaded from assets/css/modules/connection-tab.css -->
 
 			<div id="zbooks-org-container" style="margin: 20px 0;">
 				<?php
@@ -455,125 +403,7 @@ class ConnectionTab {
 			<!-- Connection Status Section -->
 			<h2><?php esc_html_e( 'Connection Status', 'zbooks-for-woocommerce' ); ?></h2>
 
-			<style>
-				.zbooks-status-grid {
-					display: grid;
-					grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-					gap: 15px;
-					max-width: 800px;
-				}
-				.zbooks-status-card {
-					background: #fff;
-					border: 1px solid #ddd;
-					border-radius: 8px;
-					padding: 16px;
-					text-align: center;
-					transition: all 0.3s ease;
-				}
-				.zbooks-status-card:hover {
-					box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-				}
-				.zbooks-status-card .status-icon {
-					width: 40px;
-					height: 40px;
-					border-radius: 50%;
-					display: flex;
-					align-items: center;
-					justify-content: center;
-					margin: 0 auto 10px;
-					font-size: 20px;
-					transition: all 0.3s ease;
-					overflow: hidden;
-					border: none !important;
-					border-left: none !important;
-				}
-				.zbooks-status-card .status-icon .dashicons {
-					line-height: 1;
-					width: 20px;
-					height: 20px;
-					font-size: 20px;
-					border: none !important;
-				}
-				.zbooks-status-card .status-icon.is-success {
-					background: #d4edda;
-					color: #155724;
-				}
-				.zbooks-status-card .status-icon.is-error {
-					background: #f8d7da;
-					color: #721c24;
-					border: none !important;
-					border-left: none !important;
-				}
-				.zbooks-status-card .status-icon.is-loading {
-					background: #e2e3e5;
-					color: #383d41;
-				}
-				.zbooks-status-card .status-label {
-					font-size: 12px;
-					color: #666;
-					margin-bottom: 4px;
-					text-transform: uppercase;
-					letter-spacing: 0.5px;
-				}
-				.zbooks-status-card .status-value {
-					font-size: 14px;
-					font-weight: 600;
-					color: #23282d;
-				}
-				.zbooks-status-card .status-value.is-success { color: #155724; }
-				.zbooks-status-card .status-value.is-error { color: #721c24; }
-				.zbooks-status-card .status-value.is-loading { color: #666; }
-				@keyframes zbooks-pulse {
-					0%, 100% { opacity: 1; transform: scale(1); }
-					50% { opacity: 0.7; transform: scale(0.95); }
-				}
-				.zbooks-status-card.is-testing .status-icon {
-					animation: zbooks-pulse 1.5s ease-in-out infinite;
-				}
-				@keyframes zbooks-spin {
-					from { transform: rotate(0deg); }
-					to { transform: rotate(360deg); }
-				}
-				.zbooks-status-card.is-testing .status-icon .dashicons {
-					animation: zbooks-spin 1s linear infinite;
-				}
-				/* Error details box */
-				.zbooks-error-details {
-					background: #fff5f5;
-					border: 1px solid #f8d7da;
-					border-left: 4px solid #dc3545;
-					border-radius: 4px;
-					padding: 15px;
-					margin-top: 15px;
-					max-width: 800px;
-					display: none;
-				}
-				.zbooks-error-details.is-visible {
-					display: block;
-				}
-				.zbooks-error-details .error-title {
-					font-weight: 600;
-					color: #721c24;
-					margin: 0 0 8px 0;
-					display: flex;
-					align-items: center;
-					gap: 8px;
-				}
-				.zbooks-error-details .error-title .dashicons {
-					color: #dc3545;
-				}
-				.zbooks-error-details .error-message {
-					color: #721c24;
-					font-family: monospace;
-					font-size: 13px;
-					background: #fff;
-					padding: 10px;
-					border-radius: 4px;
-					margin: 0;
-					word-break: break-word;
-					white-space: pre-wrap;
-				}
-			</style>
+			<!-- Styles now loaded from assets/css/modules/connection-tab.css -->
 
 			<div class="zbooks-status-grid">
 				<!-- API Credentials -->
@@ -641,423 +471,7 @@ class ConnectionTab {
 			</div>
 		</div>
 
-		<script>
-		jQuery(document).ready(function($) {
-			/**
-			 * Parse AJAX error and return user-friendly message.
-			 */
-			function getAjaxErrorMessage(xhr, defaultMsg) {
-				if (xhr.status === 403) {
-					if (xhr.responseText === '-1' || xhr.responseText === '0') {
-						return '<?php echo esc_js( __( 'Session expired. Please refresh the page and try again.', 'zbooks-for-woocommerce' ) ); ?>';
-					}
-					return '<?php echo esc_js( __( 'Permission denied.', 'zbooks-for-woocommerce' ) ); ?>';
-				}
-				if (xhr.status >= 500) {
-					return '<?php echo esc_js( __( 'Server error. Please try again later.', 'zbooks-for-woocommerce' ) ); ?>';
-				}
-				if (xhr.status === 0) {
-					return '<?php echo esc_js( __( 'Network error. Please check your connection.', 'zbooks-for-woocommerce' ) ); ?>';
-				}
-				return defaultMsg + ' (HTTP ' + xhr.status + ')';
-			}
-
-			var $authBtn = $('#zbooks-authenticate-btn');
-			var $saveOrgBtn = $('#zbooks-save-org-btn');
-			var $credentialFields = $('.zbooks-credential-field');
-			var $orgSelect = $('#zbooks_organization_id');
-			var $orgDetails = $('#zbooks-org-details');
-			var $successPanel = $('#zbooks-auth-success-panel');
-			var $credentialsForm = $('#zbooks-credentials-form');
-			var $showCredentialsBtn = $('#zbooks-show-credentials-btn');
-			var $cancelReauthBtn = $('#zbooks-cancel-reauth-btn');
-			var $testConnectionBtn = $('#zbooks-test-connection-btn');
-			var isConfigured = <?php echo $is_configured ? 'true' : 'false'; ?>;
-
-			// Status indicator HTML templates.
-			var statusYes = '<span style="color: #46b450;"><span class="dashicons dashicons-yes"></span> ';
-			var statusNo = '<span style="color: #d63638;"><span class="dashicons dashicons-no"></span> ';
-
-			// Update status card.
-			function updateStatusCard(cardId, isSuccess, text, icon) {
-				var $card = $('#' + cardId);
-				var $icon = $card.find('.status-icon');
-				var $value = $card.find('.status-value');
-
-				$card.removeClass('is-testing');
-				$icon.removeClass('is-success is-error is-loading').addClass(isSuccess ? 'is-success' : 'is-error');
-				$icon.find('.dashicons').attr('class', 'dashicons ' + icon);
-				$value.removeClass('is-success is-error is-loading').addClass(isSuccess ? 'is-success' : 'is-error').text(text);
-			}
-
-			// Update connection status cards.
-			function updateConnectionStatus(apiConfigured, orgSelected) {
-				// API Credentials card.
-				updateStatusCard('zbooks-card-credentials', apiConfigured,
-					apiConfigured ? '<?php echo esc_js( __( 'Configured', 'zbooks-for-woocommerce' ) ); ?>' : '<?php echo esc_js( __( 'Not configured', 'zbooks-for-woocommerce' ) ); ?>',
-					apiConfigured ? 'dashicons-yes-alt' : 'dashicons-warning'
-				);
-
-				// Organization card.
-				updateStatusCard('zbooks-card-organization', orgSelected,
-					orgSelected ? '<?php echo esc_js( __( 'Selected', 'zbooks-for-woocommerce' ) ); ?>' : '<?php echo esc_js( __( 'Not selected', 'zbooks-for-woocommerce' ) ); ?>',
-					orgSelected ? 'dashicons-building' : 'dashicons-warning'
-				);
-
-				// Ready to Sync card.
-				var isReady = apiConfigured && orgSelected;
-				updateStatusCard('zbooks-card-ready', isReady,
-					isReady ? '<?php echo esc_js( __( 'Yes', 'zbooks-for-woocommerce' ) ); ?>' : '<?php echo esc_js( __( 'No', 'zbooks-for-woocommerce' ) ); ?>',
-					isReady ? 'dashicons-yes-alt' : 'dashicons-minus'
-				);
-			}
-
-			// Test connection function.
-			function testConnection() {
-				var $card = $('#zbooks-card-connection');
-				var $icon = $card.find('.status-icon');
-				var $value = $card.find('.status-value');
-				var $errorDetails = $('#zbooks-error-details');
-				var $errorMessage = $('#zbooks-error-message');
-
-				// Hide error details initially.
-				$errorDetails.removeClass('is-visible');
-
-				if (!isConfigured) {
-					$icon.removeClass('is-success is-loading').addClass('is-error');
-					$icon.find('.dashicons').attr('class', 'dashicons dashicons-warning');
-					$value.removeClass('is-success is-loading').addClass('is-error').text('<?php echo esc_js( __( 'Not configured', 'zbooks-for-woocommerce' ) ); ?>');
-					return;
-				}
-
-				// Show loading state.
-				$card.addClass('is-testing');
-				$icon.removeClass('is-success is-error').addClass('is-loading');
-				$icon.find('.dashicons').attr('class', 'dashicons dashicons-update');
-				$value.removeClass('is-success is-error').addClass('is-loading').text('<?php echo esc_js( __( 'Testing...', 'zbooks-for-woocommerce' ) ); ?>');
-				$testConnectionBtn.prop('disabled', true);
-
-				$.ajax({
-					url: ajaxurl,
-					type: 'POST',
-					data: {
-						action: 'zbooks_test_connection',
-						nonce: '<?php echo esc_js( wp_create_nonce( 'zbooks_test_connection' ) ); ?>'
-					},
-					success: function(response) {
-						$card.removeClass('is-testing');
-						$testConnectionBtn.prop('disabled', false);
-
-						if (response.success) {
-							$icon.removeClass('is-loading is-error').addClass('is-success');
-							$icon.find('.dashicons').attr('class', 'dashicons dashicons-cloud');
-							$value.removeClass('is-loading is-error').addClass('is-success').text('<?php echo esc_js( __( 'Connected', 'zbooks-for-woocommerce' ) ); ?>');
-							$errorDetails.removeClass('is-visible');
-						} else {
-							$icon.removeClass('is-loading is-success').addClass('is-error');
-							$icon.find('.dashicons').attr('class', 'dashicons dashicons-warning');
-							$value.removeClass('is-loading is-success').addClass('is-error').text('<?php echo esc_js( __( 'Failed', 'zbooks-for-woocommerce' ) ); ?>');
-
-							// Show error details.
-							var errorMsg = response.data.message || '<?php echo esc_js( __( 'Unknown error occurred', 'zbooks-for-woocommerce' ) ); ?>';
-							$errorMessage.text(errorMsg);
-							$errorDetails.addClass('is-visible');
-						}
-					},
-					error: function(xhr, status, error) {
-						$card.removeClass('is-testing');
-						$testConnectionBtn.prop('disabled', false);
-						$icon.removeClass('is-loading is-success').addClass('is-error');
-						$icon.find('.dashicons').attr('class', 'dashicons dashicons-warning');
-						$value.removeClass('is-loading is-success').addClass('is-error').text('<?php echo esc_js( __( 'Error', 'zbooks-for-woocommerce' ) ); ?>');
-
-						// Show error details.
-						var errorMsg = '<?php echo esc_js( __( 'Request failed', 'zbooks-for-woocommerce' ) ); ?>: ' + (error || status);
-						$errorMessage.text(errorMsg);
-						$errorDetails.addClass('is-visible');
-					}
-				});
-			}
-
-			// Auto-test connection on page load.
-			testConnection();
-
-			// Test connection button click.
-			$testConnectionBtn.on('click', function() {
-				testConnection();
-			});
-
-			// Rich Organization Dropdown.
-			var $orgSelector = $('#zbooks-org-selector');
-			var $orgSelected = $orgSelector.find('.zbooks-org-selected');
-			var $orgDropdown = $orgSelector.find('.zbooks-org-dropdown');
-			var $orgHiddenInput = $('#zbooks_organization_id');
-			var $orgSearchInput = $('#zbooks-org-search-input');
-
-			// Toggle dropdown.
-			$orgSelected.on('click', function(e) {
-				e.stopPropagation();
-				$orgSelector.toggleClass('is-open');
-				if ($orgSelector.hasClass('is-open') && $orgSearchInput.length) {
-					$orgSearchInput.focus();
-				}
-			});
-
-			// Close dropdown on outside click.
-			$(document).on('click', function(e) {
-				if (!$(e.target).closest('.zbooks-org-selector').length) {
-					$orgSelector.removeClass('is-open');
-				}
-			});
-
-			// Search organizations.
-			$orgSearchInput.on('input', function() {
-				var query = $(this).val().toLowerCase();
-				$orgSelector.find('.zbooks-org-item').each(function() {
-					var name = $(this).data('name').toLowerCase();
-					var country = ($(this).data('country') || '').toLowerCase();
-					var id = $(this).data('id').toLowerCase();
-					if (name.indexOf(query) > -1 || country.indexOf(query) > -1 || id.indexOf(query) > -1) {
-						$(this).show();
-					} else {
-						$(this).hide();
-					}
-				});
-			});
-
-			// Select organization.
-			$orgSelector.on('click', '.zbooks-org-item', function() {
-				var $item = $(this);
-				var orgId = $item.data('id');
-				var orgName = $item.data('name');
-				var country = $item.data('country') || '';
-				var currency = $item.data('currency') || '';
-
-				// Update hidden input.
-				$orgHiddenInput.val(orgId);
-
-				// Update selected display.
-				var metaHtml = '';
-				if (country) {
-					metaHtml += '<span><span class="dashicons dashicons-location"></span>' + $('<div>').text(country).html() + '</span>';
-				}
-				if (currency) {
-					metaHtml += '<span><span class="dashicons dashicons-money-alt"></span>' + currency + '</span>';
-				}
-
-				$orgSelected.html(
-					'<div class="org-content">' +
-						'<div class="org-name">' + $('<div>').text(orgName).html() + '</div>' +
-						'<div class="org-meta">' + metaHtml + '</div>' +
-					'</div>'
-				);
-
-				// Update selection state.
-				$orgSelector.find('.zbooks-org-item').removeClass('is-selected');
-				$item.addClass('is-selected');
-
-				// Close dropdown.
-				$orgSelector.removeClass('is-open');
-			});
-
-			// Get selected organization ID.
-			function getSelectedOrgId() {
-				return $orgHiddenInput.val() || '';
-			}
-
-			// Show credentials form when "Change Credentials" is clicked.
-			$showCredentialsBtn.on('click', function() {
-				$successPanel.slideUp(200);
-				$credentialsForm.slideDown(200);
-				// Clear fields for fresh input.
-				$credentialFields.filter('input').val('');
-			});
-
-			// Hide credentials form when "Cancel" is clicked.
-			$cancelReauthBtn.on('click', function() {
-				$credentialsForm.slideUp(200);
-				$successPanel.slideDown(200);
-				$('#zbooks-auth-status').html('');
-			});
-
-			// Authenticate button click.
-			$authBtn.on('click', function() {
-				var $btn = $(this);
-				var $spinner = $btn.siblings('.spinner');
-				var $status = $('#zbooks-auth-status');
-
-				var clientId = $('#zbooks_client_id').val();
-				var clientSecret = $('#zbooks_client_secret').val();
-				var refreshToken = $('#zbooks_refresh_token').val();
-				var datacenter = $('#zbooks_datacenter').val();
-
-				// Require at least the grant code/refresh token for re-authentication.
-				if (!refreshToken) {
-					$status.html('<span style="color: #d63638;"><?php echo esc_js( __( 'Please enter a grant code or refresh token.', 'zbooks-for-woocommerce' ) ); ?></span>');
-					return;
-				}
-
-				$btn.prop('disabled', true);
-				$spinner.addClass('is-active');
-				$status.html('');
-
-				$.ajax({
-					url: ajaxurl,
-					type: 'POST',
-					data: {
-						action: 'zbooks_authenticate',
-						nonce: '<?php echo esc_js( wp_create_nonce( 'zbooks_authenticate' ) ); ?>',
-						client_id: clientId,
-						client_secret: clientSecret,
-						refresh_token: refreshToken,
-						datacenter: datacenter
-					},
-					success: function(response) {
-						$spinner.removeClass('is-active');
-						if (response.success) {
-							$status.html('<span style="color: #46b450;">' + response.data.message + '</span>');
-							isConfigured = true;
-
-							// Rebuild organization dropdown.
-							var $orgList = $orgSelector.find('.zbooks-org-list');
-							$orgList.html('');
-							$orgSelected.html('<span class="org-placeholder"><?php echo esc_js( __( '— Select Organization —', 'zbooks-for-woocommerce' ) ); ?></span>');
-							$orgHiddenInput.val('');
-
-							if (response.data.organizations && response.data.organizations.length) {
-								// Add search box if more than 5 orgs.
-								if (response.data.organizations.length > 5 && !$orgSearchInput.length) {
-									$orgSelector.find('.zbooks-org-dropdown').prepend(
-										'<div class="zbooks-org-search">' +
-											'<input type="text" placeholder="<?php echo esc_js( __( 'Search organizations...', 'zbooks-for-woocommerce' ) ); ?>" id="zbooks-org-search-input">' +
-										'</div>'
-									);
-									$orgSearchInput = $('#zbooks-org-search-input');
-									$orgSearchInput.on('input', function() {
-										var query = $(this).val().toLowerCase();
-										$orgSelector.find('.zbooks-org-item').each(function() {
-											var name = $(this).data('name').toLowerCase();
-											var country = ($(this).data('country') || '').toLowerCase();
-											var id = $(this).data('id').toLowerCase();
-											$(this).toggle(name.indexOf(query) > -1 || country.indexOf(query) > -1 || id.indexOf(query) > -1);
-										});
-									});
-								}
-
-								$.each(response.data.organizations, function(i, org) {
-									var metaHtml = '<span><span class="dashicons dashicons-admin-generic"></span>ID: ' + org.organization_id + '</span>';
-									if (org.country) {
-										metaHtml += '<span><span class="dashicons dashicons-location"></span>' + $('<div>').text(org.country).html() + '</span>';
-									}
-									if (org.currency_code) {
-										metaHtml += '<span><span class="dashicons dashicons-money-alt"></span>' + org.currency_code + '</span>';
-									}
-
-									var $item = $('<div class="zbooks-org-item">')
-										.attr('data-id', org.organization_id)
-										.attr('data-name', org.name)
-										.attr('data-country', org.country || '')
-										.attr('data-currency', org.currency_code || '')
-										.attr('data-currency-symbol', org.currency_symbol || '')
-										.attr('data-fiscal', org.fiscal_year_start_month || '')
-										.html(
-											'<div class="org-name">' + $('<div>').text(org.name).html() + '</div>' +
-											'<div class="org-meta">' + metaHtml + '</div>'
-										);
-									$orgList.append($item);
-								});
-							}
-
-							// Enable dropdown and save button.
-							$orgSelector.removeAttr('style');
-							$saveOrgBtn.prop('disabled', false);
-							$testConnectionBtn.prop('disabled', false);
-
-							// Hide warnings and error messages.
-							$('.zbooks-auth-warning').hide();
-							$('.zbooks-org-error').hide();
-
-							// Show message if no organizations returned.
-							if (!response.data.organizations || !response.data.organizations.length) {
-								var emptyMsg = '<?php echo esc_js( __( 'No organizations found. Please check your Zoho Books account.', 'zbooks-for-woocommerce' ) ); ?>';
-								if (response.data.org_error) {
-									emptyMsg = '<?php echo esc_js( __( 'Failed to load organizations:', 'zbooks-for-woocommerce' ) ); ?> ' + response.data.org_error + '<br><small><?php echo esc_js( __( 'Please reload the page to try again.', 'zbooks-for-woocommerce' ) ); ?></small>';
-								}
-								$orgList.html('<div class="zbooks-org-empty" style="color: #721c24;">' + emptyMsg + '</div>');
-							}
-
-							// Hide form and show success panel after a brief delay.
-							setTimeout(function() {
-								$credentialsForm.slideUp(200);
-								$successPanel.find('p').eq(1).html('<?php echo esc_js( __( 'Your API credentials are configured and valid.', 'zbooks-for-woocommerce' ) ); ?>');
-								$successPanel.slideDown(200);
-							}, 1500);
-
-							// Update connection status cards and test connection.
-							updateConnectionStatus(true, getSelectedOrgId() !== '');
-							testConnection();
-						} else {
-							$status.html('<span style="color: #d63638;">' + response.data.message + '</span>');
-							$btn.prop('disabled', false);
-						}
-					},
-					error: function(xhr) {
-						$spinner.removeClass('is-active');
-						var msg = getAjaxErrorMessage(xhr, '<?php echo esc_js( __( 'Authentication failed.', 'zbooks-for-woocommerce' ) ); ?>');
-						$status.html('<span style="color: #d63638;">' + msg + '</span>');
-						$btn.prop('disabled', false);
-					}
-				});
-			});
-
-			// Save organization button click.
-			$saveOrgBtn.on('click', function() {
-				var $btn = $(this);
-				var $spinner = $btn.next('.spinner');
-				var $status = $('#zbooks-org-status');
-				var orgId = getSelectedOrgId();
-
-				if (!orgId) {
-					$status.html('<span style="color: #d63638;"><?php echo esc_js( __( 'Please select an organization.', 'zbooks-for-woocommerce' ) ); ?></span>');
-					return;
-				}
-
-				$btn.prop('disabled', true);
-				$spinner.addClass('is-active');
-				$status.html('');
-				$('.zbooks-org-saved').hide();
-
-				$.ajax({
-					url: ajaxurl,
-					type: 'POST',
-					data: {
-						action: 'zbooks_save_organization',
-						nonce: '<?php echo esc_js( wp_create_nonce( 'zbooks_save_organization' ) ); ?>',
-						organization_id: orgId
-					},
-					success: function(response) {
-						$spinner.removeClass('is-active');
-						$btn.prop('disabled', false);
-						if (response.success) {
-							$status.html('<span style="color: #46b450;">' + response.data.message + '</span>');
-							$('.zbooks-org-saved').show();
-
-							// Update connection status table (both configured).
-							updateConnectionStatus(true, true);
-						} else {
-							$status.html('<span style="color: #d63638;">' + response.data.message + '</span>');
-						}
-					},
-					error: function(xhr) {
-						$spinner.removeClass('is-active');
-						$btn.prop('disabled', false);
-						var msg = getAjaxErrorMessage(xhr, '<?php echo esc_js( __( 'Failed to save organization.', 'zbooks-for-woocommerce' ) ); ?>');
-						$status.html('<span style="color: #d63638;">' + msg + '</span>');
-					}
-				});
-			});
-		});
-		</script>
+		<!-- JavaScript now output via admin_print_footer_scripts hook -->
 		<?php
 	}
 

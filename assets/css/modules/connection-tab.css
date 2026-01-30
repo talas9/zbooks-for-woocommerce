@@ -1,0 +1,355 @@
+/**
+ * Connection Tab Styles
+ *
+ * @package Zbooks
+ */
+
+/* Organization Selector */
+.zbooks-org-selector {
+	position: relative;
+	max-width: 450px;
+}
+
+.zbooks-org-selected {
+	background: #fff;
+	border: 1px solid #8c8f94;
+	border-radius: 4px;
+	padding: 12px 40px 12px 15px;
+	cursor: pointer;
+	transition: all 0.2s;
+	min-height: 60px;
+	display: flex;
+	align-items: center;
+}
+
+.zbooks-org-selected:hover {
+	border-color: #2271b1;
+}
+
+.zbooks-org-selected:focus {
+	border-color: #2271b1;
+	box-shadow: 0 0 0 1px #2271b1;
+	outline: none;
+}
+
+.zbooks-org-selected::after {
+	content: '';
+	position: absolute;
+	right: 15px;
+	top: 50%;
+	transform: translateY(-50%);
+	border: 5px solid transparent;
+	border-top-color: #50575e;
+	transition: transform 0.2s;
+}
+
+.zbooks-org-selector.is-open .zbooks-org-selected::after {
+	transform: translateY(-50%) rotate(180deg);
+}
+
+.zbooks-org-selected .org-placeholder {
+	color: #757575;
+}
+
+.zbooks-org-dropdown {
+	position: absolute;
+	top: 100%;
+	left: 0;
+	right: 0;
+	background: #fff;
+	border: 1px solid #8c8f94;
+	border-radius: 4px;
+	margin-top: 4px;
+	max-height: 300px;
+	overflow-y: auto;
+	box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+	z-index: 1000;
+	display: none;
+}
+
+.zbooks-org-selector.is-open .zbooks-org-dropdown {
+	display: block;
+}
+
+.zbooks-org-option {
+	padding: 12px 15px;
+	cursor: pointer;
+	transition: background 0.2s;
+	border-bottom: 1px solid #f0f0f1;
+}
+
+.zbooks-org-option:last-child {
+	border-bottom: none;
+}
+
+.zbooks-org-option:hover {
+	background: #f6f7f7;
+}
+
+.zbooks-org-option.is-selected {
+	background: #f0f6fc;
+	color: #0073aa;
+}
+
+.org-name {
+	font-weight: 600;
+	display: block;
+	margin-bottom: 4px;
+}
+
+.org-meta {
+	font-size: 12px;
+	color: #757575;
+}
+
+/* Connection Status Grid */
+.zbooks-status-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+	gap: 15px;
+	max-width: 800px;
+}
+
+.zbooks-status-card {
+	background: #fff;
+	border: 1px solid #ddd;
+	border-radius: 8px;
+	padding: 16px;
+	text-align: center;
+	transition: all 0.3s ease;
+}
+
+.zbooks-status-card:hover {
+	box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.zbooks-status-card .status-icon {
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin: 0 auto 10px;
+	font-size: 20px;
+	transition: all 0.3s ease;
+	overflow: hidden;
+	border: none !important;
+	border-left: none !important;
+}
+
+.zbooks-status-card .status-icon .dashicons {
+	line-height: 1;
+	width: 20px;
+	height: 20px;
+	font-size: 20px;
+	border: none !important;
+}
+
+.zbooks-status-card .status-icon.is-success {
+	background: #d4edda;
+	color: #155724;
+}
+
+.zbooks-status-card .status-icon.is-error {
+	background: #f8d7da;
+	color: #721c24;
+}
+
+.zbooks-status-card .status-icon.is-loading {
+	background: #e7f3ff;
+	color: #0056b3;
+	animation: pulse 1.5s ease-in-out infinite;
+}
+
+.zbooks-status-card .status-label {
+	font-size: 12px;
+	color: #666;
+	margin-bottom: 6px;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	font-weight: 600;
+}
+
+.zbooks-status-card .status-value {
+	font-size: 14px;
+	font-weight: 600;
+	color: #333;
+	transition: all 0.3s ease;
+}
+
+.zbooks-status-card .status-value.is-success {
+	color: #155724;
+}
+
+.zbooks-status-card .status-value.is-error {
+	color: #721c24;
+}
+
+.zbooks-status-card .status-value.is-loading {
+	color: #0056b3;
+}
+
+.zbooks-status-card.is-testing {
+	opacity: 0.7;
+	pointer-events: none;
+}
+
+@keyframes pulse {
+	0%, 100% { opacity: 1; }
+	50% { opacity: 0.5; }
+}
+
+/* Organization Dropdown Additional Styles */
+.zbooks-org-dropdown {
+	border-top: none;
+	border-radius: 0 0 4px 4px;
+	z-index: 100;
+	box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.zbooks-org-search {
+	padding: 10px;
+	border-bottom: 1px solid #ddd;
+	position: sticky;
+	top: 0;
+	background: #fff;
+}
+
+.zbooks-org-search input {
+	width: 100%;
+	padding: 8px 12px;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+}
+
+.zbooks-org-item {
+	padding: 12px 15px;
+	cursor: pointer;
+	border-bottom: 1px solid #f0f0f1;
+	transition: background 0.15s;
+}
+
+.zbooks-org-item:hover {
+	background: #f0f7fc;
+}
+
+.zbooks-org-item.is-selected {
+	background: #e5f3ff;
+	border-left: 3px solid #2271b1;
+}
+
+.zbooks-org-item:last-child {
+	border-bottom: none;
+}
+
+.zbooks-org-item .org-name {
+	font-weight: 600;
+	font-size: 14px;
+	color: #1d2327;
+	margin-bottom: 4px;
+}
+
+.zbooks-org-item .org-meta {
+	font-size: 12px;
+	color: #666;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+}
+
+.zbooks-org-item .org-meta span {
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+}
+
+.zbooks-org-item .org-meta .dashicons {
+	font-size: 14px;
+	width: 14px;
+	height: 14px;
+}
+
+.zbooks-org-selected .org-name {
+	font-weight: 600;
+	font-size: 14px;
+	color: #1d2327;
+}
+
+.zbooks-org-selected .org-meta {
+	font-size: 12px;
+	color: #666;
+	margin-top: 2px;
+}
+
+.zbooks-org-empty {
+	padding: 20px;
+	text-align: center;
+	color: #666;
+}
+
+/* Animation Keyframes */
+@keyframes zbooks-pulse {
+	0%, 100% {
+		opacity: 1;
+		transform: scale(1);
+	}
+	50% {
+		opacity: 0.7;
+		transform: scale(0.95);
+	}
+}
+
+@keyframes zbooks-spin {
+	from { transform: rotate(0deg); }
+	to { transform: rotate(360deg); }
+}
+
+.zbooks-status-card.is-testing .status-icon {
+	animation: zbooks-pulse 1.5s ease-in-out infinite;
+}
+
+.zbooks-status-card.is-testing .status-icon .dashicons {
+	animation: zbooks-spin 1s linear infinite;
+}
+
+/* Error Details Box */
+.zbooks-error-details {
+	background: #fff5f5;
+	border: 1px solid #f8d7da;
+	border-left: 4px solid #dc3545;
+	border-radius: 4px;
+	padding: 15px;
+	margin-top: 15px;
+	max-width: 800px;
+	display: none;
+}
+
+.zbooks-error-details.is-visible {
+	display: block;
+}
+
+.zbooks-error-details .error-title {
+	font-weight: 600;
+	color: #721c24;
+	margin: 0 0 8px 0;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.zbooks-error-details .error-title .dashicons {
+	color: #dc3545;
+}
+
+.zbooks-error-details .error-message {
+	color: #721c24;
+	font-family: monospace;
+	font-size: 13px;
+	background: #fff;
+	padding: 10px;
+	border-radius: 4px;
+	margin: 0;
+	word-break: break-word;
+	white-space: pre-wrap;
+}

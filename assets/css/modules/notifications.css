@@ -1,0 +1,187 @@
+/**
+ * Notifications Tab Styles
+ *
+ * @package Zbooks
+ */
+
+.zbooks-notification-card {
+	background: #fff;
+	border: 1px solid #ddd;
+	border-radius: 8px;
+	padding: 20px;
+	margin-bottom: 20px;
+}
+
+.zbooks-notification-card h3 {
+	margin-top: 0;
+	color: #1d2327;
+}
+
+.zbooks-notification-option {
+	display: none;
+	margin-top: 15px;
+	padding: 15px;
+	background: #f8f9fa;
+	border-radius: 4px;
+}
+
+.zbooks-notification-option.is-visible {
+	display: block;
+}
+
+.zbooks-email-template-form {
+	margin-top: 20px;
+}
+
+.zbooks-template-preview {
+	background: #f8f9fa;
+	border: 1px solid #ddd;
+	padding: 15px;
+	margin-top: 15px;
+	border-radius: 4px;
+}
+
+.zbooks-template-actions {
+	margin-top: 10px;
+}
+
+/* ==========================================================================
+   Notification Types Checkboxes
+   ========================================================================== */
+
+.zbooks-notification-types {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.zbooks-notification-card .zbooks-notification-type {
+	display: flex !important;
+	align-items: flex-start;
+	padding: 12px;
+	background: #f8f9fa;
+	border: 1px solid #e2e4e7;
+	border-radius: 6px;
+	margin: 0;
+	transition: all 0.2s ease;
+}
+
+.zbooks-notification-card .zbooks-notification-type:hover {
+	background: #f0f2f5;
+	border-color: #2271b1;
+}
+
+.zbooks-notification-card .zbooks-notification-type input[type="checkbox"] {
+	width: 18px;
+	height: 18px;
+	margin: 0;
+	margin-right: 12px;
+	margin-top: 2px;
+}
+
+.zbooks-notification-type-content {
+	flex: 1;
+}
+
+.zbooks-notification-type-title {
+	font-weight: 600;
+	font-size: 14px;
+	color: #1d2327;
+	margin: 0 0 4px 0;
+}
+
+.zbooks-notification-type-desc {
+	font-size: 13px;
+	color: #646970;
+	line-height: 1.5;
+	margin: 0;
+}
+
+/* ==========================================================================
+   Test Email Section
+   ========================================================================== */
+
+.zbooks-test-email-section {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.zbooks-test-email-section select {
+	min-width: 150px;
+}
+
+#zbooks_test_email_result {
+	color: #46b450;
+	font-weight: 500;
+}
+
+#zbooks_test_email_result.error {
+	color: #dc3232;
+}
+
+/* ==========================================================================
+   Email Preview
+   ========================================================================== */
+
+.zbooks-email-preview {
+	margin-top: 15px;
+}
+
+.zbooks-email-preview-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 12px;
+}
+
+.zbooks-email-preview-header h4 {
+	margin: 0;
+}
+
+.zbooks-email-preview-frame {
+	width: 100%;
+	height: 500px;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	background: #fff;
+}
+
+/* ==========================================================================
+   Digest Settings
+   ========================================================================== */
+
+.zbooks-digest-interval-row {
+	margin-top: 10px;
+	padding-top: 10px;
+	border-top: 1px solid #f0f0f1;
+}
+
+.zbooks-delivery-mode-options {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.zbooks-delivery-mode-options label {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	cursor: pointer;
+}
+
+/* ==========================================================================
+   Responsive
+   ========================================================================== */
+
+@media screen and (max-width: 782px) {
+	.zbooks-test-email-section {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+
+	.zbooks-email-preview-frame {
+		height: 400px;
+	}
+}

@@ -198,7 +198,10 @@ class SettingsPage {
 		$current_tab = $this->get_current_tab();
 		?>
 		<div class="wrap zbooks-settings">
-			<h1><?php esc_html_e( 'ZBooks for WooCommerce', 'zbooks-for-woocommerce' ); ?></h1>
+			<h1>
+				<?php esc_html_e( 'ZBooks for WooCommerce', 'zbooks-for-woocommerce' ); ?>
+				<span class="zbooks-version-tag">v<?php echo esc_html( ZBOOKS_VERSION ); ?></span>
+			</h1>
 
 			<nav class="nav-tab-wrapper zbooks-tabs">
 				<?php foreach ( $this->get_tabs() as $tab_id => $tab_label ) : ?>

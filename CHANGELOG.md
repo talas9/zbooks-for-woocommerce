@@ -5,6 +5,28 @@ All notable changes to ZBooks for WooCommerce will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.17] - 2026-01-30
+
+### Fixed
+- **Custom Fields API** - Fixed critical bug where GET request query parameters were being ignored in `ZohoClient::raw_request()`, causing custom fields to not be fetched from Zoho Books
+- **Connection test** - Fixed nonce verification mismatch that caused 403 errors when testing connection
+- **Custom fields double initialization** - Added guard flag to prevent JavaScript module from initializing twice
+- **Custom fields refresh** - Added 2-second delay before page reload to show success message with field counts
+
+### Improved
+- **Error handling** - Custom fields API now properly surfaces Zoho API errors to the user instead of silently failing
+- **Code cleanup** - Removed duplicate ajax_test_connection handler from SettingsPage.php
+- **Code cleanup** - Removed migration notice from Advanced tab
+
+### Developer
+- Added comprehensive debug documentation for Zoho API calls in SESSION-2026-01-30-custom-fields-fix.md
+
+## [1.0.16] - 2026-01-30
+
+### Fixed
+- **WordPress.org compliance** - Addressed automated check failures for WordPress.org submission
+- **Admin interface improvements** - Various UI enhancements and bug fixes
+
 ## [1.0.15] - 2026-01-29
 
 ### Fixed

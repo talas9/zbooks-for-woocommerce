@@ -261,6 +261,21 @@ class ReconciliationRepository {
 	}
 
 	/**
+	 * Delete all reports.
+	 *
+	 * @return bool True on success.
+	 */
+	public function delete_all(): bool {
+		global $wpdb;
+
+		$table_name = $this->get_table_name();
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$result     = $wpdb->query( "TRUNCATE TABLE {$table_name}" );
+
+		return $result !== false;
+	}
+
+	/**
 	 * Mark stale "running" reports as failed.
 	 *
 	 * Reports that have been "running" for more than the timeout are considered stale.

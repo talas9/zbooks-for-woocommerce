@@ -75,9 +75,13 @@ class ProductsTab {
 		// AJAX handlers only - menu registration moved to SettingsPage.
 		add_action( 'wp_ajax_zbooks_save_mapping', [ $this, 'ajax_save_mapping' ] );
 		add_action( 'wp_ajax_zbooks_remove_mapping', [ $this, 'ajax_remove_mapping' ] );
+		add_action( 'wp_ajax_zbooks_link_product', [ $this, 'ajax_link_product' ] );
+		add_action( 'wp_ajax_zbooks_unlink_product', [ $this, 'ajax_unlink_product' ] );
 		add_action( 'wp_ajax_zbooks_auto_map_products', [ $this, 'ajax_auto_map' ] );
+		add_action( 'wp_ajax_zbooks_auto_map_single_product', [ $this, 'ajax_auto_map_single_product' ] );
 		add_action( 'wp_ajax_zbooks_fetch_zoho_items', [ $this, 'ajax_fetch_zoho_items' ] );
 		add_action( 'wp_ajax_zbooks_bulk_create_items', [ $this, 'ajax_bulk_create_items' ] );
+		add_action( 'wp_ajax_zbooks_search_zoho_items', [ $this, 'ajax_search_zoho_items' ] );
 	}
 
 	/**
@@ -95,10 +99,30 @@ class ProductsTab {
 		$total_products = $this->count_products( $filter );
 		$total_pages    = ceil( $total_products / $per_page );
 
-		$zoho_items    = $this->get_zoho_items();
-		$mappings      = $this->mapping_repo->get_all();
-		$mapping_count = count( $mappings );
+		$zoho_items = $this->get_zoho_items();
+		$mappings   = $this->mapping_repo->get_all();
+		
+		// Count only mappings for published products (not orphaned mappings).
+		$mapping_count = $this->count_products( 'mapped' );
 
+		// Enqueue Select2 - use CDN version for consistency.
+		// Force re-register to ensure correct version and CDN URL.
+		wp_register_style(
+			'select2',
+			'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css',
+			[],
+			'4.1.0-rc.0'
+		);
+		wp_register_script(
+			'select2',
+			'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js',
+			[ 'jquery' ],
+			'4.1.0-rc.0',
+			true
+		);
+		wp_enqueue_style( 'select2' );
+		wp_enqueue_script( 'select2' );
+		
 		wp_enqueue_style( 'zbooks-admin' );
 		wp_enqueue_script( 'zbooks-admin' );
 		?>
@@ -109,18 +133,18 @@ class ProductsTab {
 				<?php esc_html_e( 'Map WooCommerce products to Zoho Books items. Mapped products will use the Zoho item ID when creating invoices.', 'zbooks-for-woocommerce' ); ?>
 			</p>
 
-			<div class="zbooks-mapping-stats" style="margin: 15px 0; padding: 10px 15px; background: #f0f0f1; display: inline-flex; gap: 20px;">
+			<div class="zbooks-mapping-stats zbooks-product-totals" style="margin: 15px 0; padding: 10px 15px; background: #f0f0f1; display: inline-flex; gap: 20px;">
 				<span>
 					<strong><?php esc_html_e( 'Total Products:', 'zbooks-for-woocommerce' ); ?></strong>
-					<?php echo esc_html( $this->count_products( 'all' ) ); ?>
+					<span class="zbooks-total-products"><?php echo esc_html( $this->count_products( 'all' ) ); ?></span>
 				</span>
 				<span style="color: #00a32a;">
 					<strong><?php esc_html_e( 'Mapped:', 'zbooks-for-woocommerce' ); ?></strong>
-					<?php echo esc_html( $mapping_count ); ?>
+					<span class="zbooks-mapped-products"><?php echo esc_html( $mapping_count ); ?></span>
 				</span>
 				<span style="color: #dba617;">
 					<strong><?php esc_html_e( 'Unmapped:', 'zbooks-for-woocommerce' ); ?></strong>
-					<?php echo esc_html( $this->count_products( 'all' ) - $mapping_count ); ?>
+					<span class="zbooks-unmapped-products"><?php echo esc_html( $this->count_products( 'all' ) - $mapping_count ); ?></span>
 				</span>
 				<span>
 					<strong><?php esc_html_e( 'Zoho Items:', 'zbooks-for-woocommerce' ); ?></strong>
@@ -188,6 +212,33 @@ class ProductsTab {
 							$product_id   = $product->get_id();
 							$zoho_item_id = $mappings[ $product_id ] ?? '';
 							$is_mapped    = ! empty( $zoho_item_id );
+							
+							// Sort items by relevance for this product.
+							$sorted_items = $this->sort_items_by_relevance( $zoho_items, $product );
+							// Limit to top 10 for initial display, but ensure mapped item is included.
+							$display_items = array_slice( $sorted_items, 0, 10 );
+							
+							// If product is mapped but the mapped item isn't in display_items, add it.
+							if ( $is_mapped && ! empty( $zoho_item_id ) ) {
+								$mapped_item_in_display = false;
+								foreach ( $display_items as $item ) {
+									if ( $item['item_id'] === $zoho_item_id ) {
+										$mapped_item_in_display = true;
+										break;
+									}
+								}
+								
+								// If mapped item not in display, find it and add it.
+								if ( ! $mapped_item_in_display ) {
+									foreach ( $zoho_items as $item ) {
+										if ( $item['item_id'] === $zoho_item_id ) {
+											// Add mapped item at the beginning.
+											array_unshift( $display_items, $item );
+											break;
+										}
+									}
+								}
+							}
 							?>
 							<tr data-product-id="<?php echo esc_attr( $product_id ); ?>">
 								<td>
@@ -205,17 +256,25 @@ class ProductsTab {
 								</td>
 								<td><?php echo esc_html( $product->get_sku() ?: '-' ); ?></td>
 								<td>
-									<select class="zbooks-zoho-item-select" data-product-id="<?php echo esc_attr( $product_id ); ?>" style="width: 100%;">
+									<select id="zoho-item-<?php echo esc_attr( $product_id ); ?>"
+											name="zoho_item_id[<?php echo esc_attr( $product_id ); ?>]"
+											class="zbooks-zoho-item-select"
+											data-product-id="<?php echo esc_attr( $product_id ); ?>"
+											data-product-name="<?php echo esc_attr( $product->get_name() ); ?>"
+											data-product-sku="<?php echo esc_attr( $product->get_sku() ?: '' ); ?>"
+											style="width: 100%;">
 										<option value=""><?php esc_html_e( '-- Not Mapped --', 'zbooks-for-woocommerce' ); ?></option>
-										<?php foreach ( $zoho_items as $item ) : ?>
+										<?php foreach ( $display_items as $item ) : ?>
+											<?php
+											// Build option text without extra whitespace.
+											$option_text = trim( $item['name'] );
+											if ( ! empty( $item['sku'] ) ) {
+												$option_text .= ' (' . trim( $item['sku'] ) . ')';
+											}
+											?>
 											<option value="<?php echo esc_attr( $item['item_id'] ); ?>"
 													data-sku="<?php echo esc_attr( $item['sku'] ?? '' ); ?>"
-													<?php selected( $zoho_item_id, $item['item_id'] ); ?>>
-												<?php echo esc_html( $item['name'] ); ?>
-												<?php if ( ! empty( $item['sku'] ) ) : ?>
-													(<?php echo esc_html( $item['sku'] ); ?>)
-												<?php endif; ?>
-											</option>
+													<?php selected( $zoho_item_id, $item['item_id'] ); ?>><?php echo esc_html( $option_text ); ?></option>
 										<?php endforeach; ?>
 									</select>
 								</td>
@@ -225,12 +284,17 @@ class ProductsTab {
 												data-product-id="<?php echo esc_attr( $product_id ); ?>">
 											<?php esc_html_e( 'Create', 'zbooks-for-woocommerce' ); ?>
 										</button>
-									<?php endif; ?>
-									<button type="button" class="button button-small zbooks-save-mapping"
-											data-product-id="<?php echo esc_attr( $product_id ); ?>">
-										<?php esc_html_e( 'Link', 'zbooks-for-woocommerce' ); ?>
-									</button>
-									<?php if ( $is_mapped ) : ?>
+										<button type="button" class="button button-small zbooks-save-mapping"
+												data-product-id="<?php echo esc_attr( $product_id ); ?>">
+											<?php esc_html_e( 'Link', 'zbooks-for-woocommerce' ); ?>
+										</button>
+									<?php else : ?>
+										<button type="button" class="button button-small zbooks-save-mapping"
+												data-product-id="<?php echo esc_attr( $product_id ); ?>"
+												disabled
+												style="opacity: 0.5; cursor: not-allowed;">
+											<?php esc_html_e( 'Linked', 'zbooks-for-woocommerce' ); ?>
+										</button>
 										<button type="button" class="button button-small zbooks-remove-mapping"
 												data-product-id="<?php echo esc_attr( $product_id ); ?>">
 											<?php esc_html_e( 'Unlink', 'zbooks-for-woocommerce' ); ?>
@@ -316,7 +380,12 @@ class ProductsTab {
 		$mapped_ids = array_keys( $mappings );
 
 		if ( $filter === 'mapped' ) {
-			return count( $mapped_ids );
+			// Count only mappings for products that actually exist and are published.
+			if ( empty( $mapped_ids ) ) {
+				return 0;
+			}
+			$args['include'] = $mapped_ids;
+			return count( wc_get_products( $args ) );
 		} elseif ( $filter === 'unmapped' ) {
 			if ( ! empty( $mapped_ids ) ) {
 				$args['exclude'] = $mapped_ids;
@@ -324,6 +393,23 @@ class ProductsTab {
 		}
 
 		return count( wc_get_products( $args ) );
+	}
+
+	/**
+	 * Get product totals for AJAX responses.
+	 *
+	 * @return array
+	 */
+	private function get_product_totals(): array {
+		$total_products = $this->count_products( 'all' );
+		$mapped_count   = $this->count_products( 'mapped' );
+		$unmapped_count = $total_products - $mapped_count;
+
+		return array(
+			'total'    => $total_products,
+			'mapped'   => $mapped_count,
+			'unmapped' => $unmapped_count,
+		);
 	}
 
 	/**
@@ -362,9 +448,17 @@ class ProductsTab {
 		}
 
 		try {
+			// Fetch all item types: sales, inventory, and service items.
+			// By default, Zoho API only returns 'sales' items, so we need to explicitly
+			// request all types to include items with inventory tracking enabled.
 			$response = $this->client->request(
 				function ( $client ) {
-					return $client->items->getList( [ 'per_page' => 200 ] );
+					return $client->items->getList(
+						[
+							'per_page'  => 200,
+							'filter_by' => 'ItemType.All',
+						]
+					);
 				},
 				[
 					'endpoint' => 'items.getList',
@@ -480,8 +574,113 @@ class ProductsTab {
 	}
 
 	/**
-	 * AJAX handler for auto-mapping products by SKU.
-	 */
+		* AJAX handler for linking a product to a Zoho item (without page reload).
+		*/
+	public function ajax_link_product(): void {
+		check_ajax_referer( 'zbooks_mapping', 'nonce' );
+
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'zbooks-for-woocommerce' ) ] );
+		}
+
+		$product_id   = isset( $_POST['product_id'] ) ? absint( wp_unslash( $_POST['product_id'] ) ) : 0;
+		$zoho_item_id = isset( $_POST['item_id'] ) ? sanitize_text_field( wp_unslash( $_POST['item_id'] ) ) : '';
+
+		if ( ! $product_id ) {
+			wp_send_json_error( [ 'message' => __( 'Invalid product ID.', 'zbooks-for-woocommerce' ) ] );
+		}
+
+		if ( empty( $zoho_item_id ) ) {
+			wp_send_json_error( [ 'message' => __( 'Please select a Zoho item.', 'zbooks-for-woocommerce' ) ] );
+		}
+
+		// Get product details.
+		$product = wc_get_product( $product_id );
+		if ( ! $product ) {
+			wp_send_json_error( [ 'message' => __( 'Product not found.', 'zbooks-for-woocommerce' ) ] );
+		}
+
+		// Save the mapping.
+		$result = $this->mapping_repo->set_mapping( $product_id, $zoho_item_id );
+
+		if ( $result ) {
+			// Get the Zoho item details.
+			$zoho_items = $this->get_zoho_items();
+			$item_details = null;
+			foreach ( $zoho_items as $item ) {
+				if ( $item['item_id'] === $zoho_item_id ) {
+					$item_details = $item;
+					break;
+				}
+			}
+
+			$this->logger->info(
+				'Product linked via AJAX',
+				[
+					'product_id'   => $product_id,
+					'zoho_item_id' => $zoho_item_id,
+				]
+			);
+
+			wp_send_json_success(
+				[
+					'message'      => __( 'Product linked successfully.', 'zbooks-for-woocommerce' ),
+					'product_id'   => $product_id,
+					'item_id'      => $zoho_item_id,
+					'item_name'    => $item_details ? $item_details['name'] : '',
+					'item_sku'     => $item_details ? ( $item_details['sku'] ?? '' ) : '',
+					'totals'       => $this->get_product_totals(),
+				]
+			);
+		} else {
+			wp_send_json_error( [ 'message' => __( 'Failed to link product.', 'zbooks-for-woocommerce' ) ] );
+		}
+	}
+
+	/**
+		* AJAX handler for unlinking a product from a Zoho item (without page reload).
+		*/
+	public function ajax_unlink_product(): void {
+		check_ajax_referer( 'zbooks_mapping', 'nonce' );
+
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'zbooks-for-woocommerce' ) ] );
+		}
+
+		$product_id = isset( $_POST['product_id'] ) ? absint( wp_unslash( $_POST['product_id'] ) ) : 0;
+
+		if ( ! $product_id ) {
+			wp_send_json_error( [ 'message' => __( 'Invalid product ID.', 'zbooks-for-woocommerce' ) ] );
+		}
+
+		// Get product details.
+		$product = wc_get_product( $product_id );
+		if ( ! $product ) {
+			wp_send_json_error( [ 'message' => __( 'Product not found.', 'zbooks-for-woocommerce' ) ] );
+		}
+
+		// Remove the mapping.
+		$this->mapping_repo->remove_mapping( $product_id );
+
+		$this->logger->info(
+			'Product unlinked via AJAX',
+			[
+				'product_id' => $product_id,
+			]
+		);
+
+		wp_send_json_success(
+			[
+				'message'    => __( 'Product unlinked successfully.', 'zbooks-for-woocommerce' ),
+				'product_id' => $product_id,
+				'totals'     => $this->get_product_totals(),
+			]
+		);
+	}
+
+	/**
+		* AJAX handler for auto-mapping products by SKU.
+		*/
 	public function ajax_auto_map(): void {
 		check_ajax_referer( 'zbooks_mapping', 'nonce' );
 
@@ -513,6 +712,101 @@ class ProductsTab {
 				'mapped'  => $mapped_count,
 			]
 		);
+	}
+
+	/**
+	 * AJAX handler for auto-mapping a single product by SKU.
+	 */
+	public function ajax_auto_map_single_product(): void {
+		check_ajax_referer( 'zbooks_mapping', 'nonce' );
+
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'zbooks-for-woocommerce' ) ] );
+		}
+
+		$product_id = isset( $_POST['product_id'] ) ? absint( wp_unslash( $_POST['product_id'] ) ) : 0;
+
+		if ( ! $product_id ) {
+			wp_send_json_error( [ 'message' => __( 'Invalid product ID.', 'zbooks-for-woocommerce' ) ] );
+		}
+
+		// Check if product is already mapped.
+		if ( $this->mapping_repo->is_mapped( $product_id ) ) {
+			wp_send_json_error( [ 'message' => __( 'Product is already mapped.', 'zbooks-for-woocommerce' ) ] );
+		}
+
+		// Get the product.
+		$product = wc_get_product( $product_id );
+		if ( ! $product ) {
+			wp_send_json_error( [ 'message' => __( 'Product not found.', 'zbooks-for-woocommerce' ) ] );
+		}
+
+		$sku = $product->get_sku();
+		if ( empty( $sku ) ) {
+			wp_send_json_error( [ 'message' => __( 'Product has no SKU.', 'zbooks-for-woocommerce' ) ] );
+		}
+
+		// Fetch Zoho items.
+		$zoho_items = $this->fetch_zoho_items();
+		if ( empty( $zoho_items ) ) {
+			wp_send_json_error( [ 'message' => __( 'No Zoho items available for mapping.', 'zbooks-for-woocommerce' ) ] );
+		}
+
+		// Find matching Zoho item by SKU.
+		$matched_item = null;
+		$sku_lower    = strtolower( $sku );
+
+		foreach ( $zoho_items as $item ) {
+			$item_sku = $item['sku'] ?? '';
+			if ( ! empty( $item_sku ) && strtolower( $item_sku ) === $sku_lower ) {
+				$matched_item = $item;
+				break;
+			}
+		}
+
+		if ( ! $matched_item ) {
+			wp_send_json_error(
+				[
+					'message' => sprintf(
+						/* translators: %s: product SKU */
+						__( 'No matching Zoho item found for SKU: %s', 'zbooks-for-woocommerce' ),
+						$sku
+					),
+				]
+			);
+		}
+
+		// Save the mapping.
+		$success = $this->mapping_repo->set_mapping( $product_id, $matched_item['item_id'] );
+
+		if ( $success ) {
+			$this->logger->info(
+				'Single product auto-mapped',
+				[
+					'product_id'   => $product_id,
+					'sku'          => $sku,
+					'zoho_item_id' => $matched_item['item_id'],
+				]
+			);
+
+			wp_send_json_success(
+				[
+					'message'      => sprintf(
+						/* translators: %s: product name */
+						__( 'Successfully mapped: %s', 'zbooks-for-woocommerce' ),
+						$product->get_name()
+					),
+					'item_id'      => $matched_item['item_id'],
+					'item_name'    => $matched_item['name'],
+					'item_sku'     => $matched_item['sku'],
+					'product_id'   => $product_id,
+					'product_name' => $product->get_name(),
+					'totals'       => $this->get_product_totals(),
+				]
+			);
+		} else {
+			wp_send_json_error( [ 'message' => __( 'Failed to save mapping.', 'zbooks-for-woocommerce' ) ] );
+		}
 	}
 
 	/**
@@ -704,5 +998,154 @@ class ProductsTab {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Sort Zoho items by relevance to a WooCommerce product.
+	 *
+	 * Prioritizes:
+	 * 1. Exact SKU match
+	 * 2. Name similarity
+	 * 3. Alphabetical order
+	 *
+	 * @param array                $items   Zoho items.
+	 * @param \WC_Product|object   $product WooCommerce product or object with get_name() and get_sku() methods.
+	 * @return array Sorted items.
+	 */
+	private function sort_items_by_relevance( array $items, $product ): array {
+		$product_sku  = strtolower( $product->get_sku() ?: '' );
+		$product_name = strtolower( $product->get_name() );
+
+		usort(
+			$items,
+			function ( $a, $b ) use ( $product_sku, $product_name ) {
+				$a_sku  = strtolower( $a['sku'] ?? '' );
+				$b_sku  = strtolower( $b['sku'] ?? '' );
+				$a_name = strtolower( $a['name'] );
+				$b_name = strtolower( $b['name'] );
+
+				// Priority 1: Exact SKU match.
+				if ( ! empty( $product_sku ) ) {
+					$a_sku_match = $a_sku === $product_sku;
+					$b_sku_match = $b_sku === $product_sku;
+
+					if ( $a_sku_match && ! $b_sku_match ) {
+						return -1;
+					}
+					if ( ! $a_sku_match && $b_sku_match ) {
+						return 1;
+					}
+				}
+
+				// Priority 2: Name similarity (using levenshtein distance).
+				$a_distance = levenshtein( $product_name, $a_name );
+				$b_distance = levenshtein( $product_name, $b_name );
+
+				// Levenshtein can return -1 if string is too long, fallback to simple comparison.
+				if ( $a_distance === -1 ) {
+					$a_distance = similar_text( $product_name, $a_name );
+				}
+				if ( $b_distance === -1 ) {
+					$b_distance = similar_text( $product_name, $b_name );
+				}
+
+				if ( $a_distance !== $b_distance ) {
+					return $a_distance <=> $b_distance;
+				}
+
+				// Priority 3: Alphabetical order.
+				return strcasecmp( $a_name, $b_name );
+			}
+		);
+
+		return $items;
+	}
+
+	/**
+	 * AJAX handler for searching Zoho items.
+	 *
+	 * Used by Select2 for dynamic searching.
+	 */
+	public function ajax_search_zoho_items(): void {
+		check_ajax_referer( 'zbooks_mapping', 'nonce' );
+
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'zbooks-for-woocommerce' ) ] );
+		}
+
+		$search       = isset( $_GET['q'] ) ? sanitize_text_field( wp_unslash( $_GET['q'] ) ) : '';
+		$product_id   = isset( $_GET['product_id'] ) ? absint( wp_unslash( $_GET['product_id'] ) ) : 0;
+		$product_sku  = isset( $_GET['product_sku'] ) ? sanitize_text_field( wp_unslash( $_GET['product_sku'] ) ) : '';
+		$product_name = isset( $_GET['product_name'] ) ? sanitize_text_field( wp_unslash( $_GET['product_name'] ) ) : '';
+		$page         = isset( $_GET['page'] ) ? absint( wp_unslash( $_GET['page'] ) ) : 1;
+
+		$zoho_items = $this->get_zoho_items();
+
+		// Filter by search term.
+		if ( ! empty( $search ) ) {
+			$search_lower = strtolower( $search );
+			$zoho_items   = array_filter(
+				$zoho_items,
+				function ( $item ) use ( $search_lower ) {
+					$name = strtolower( $item['name'] );
+					$sku  = strtolower( $item['sku'] ?? '' );
+					return strpos( $name, $search_lower ) !== false || strpos( $sku, $search_lower ) !== false;
+				}
+			);
+		}
+
+		// Sort by relevance if we have product info.
+		if ( $product_id && ! empty( $product_name ) ) {
+			// Create a mock product object for sorting.
+			$mock_product = new class( $product_name, $product_sku ) {
+				private $name;
+				private $sku;
+
+				public function __construct( $name, $sku ) {
+					$this->name = $name;
+					$this->sku  = $sku;
+				}
+
+				public function get_name() {
+					return $this->name;
+				}
+
+				public function get_sku() {
+					return $this->sku;
+				}
+			};
+
+			$zoho_items = $this->sort_items_by_relevance( $zoho_items, $mock_product );
+		}
+
+		// Paginate results (10 per page).
+		$per_page = 10;
+		$offset   = ( $page - 1 ) * $per_page;
+		$total    = count( $zoho_items );
+		$items    = array_slice( $zoho_items, $offset, $per_page );
+
+		// Format for Select2.
+		$results = array_map(
+			function ( $item ) {
+				$text = $item['name'];
+				if ( ! empty( $item['sku'] ) ) {
+					$text .= ' (' . $item['sku'] . ')';
+				}
+				return [
+					'id'   => $item['item_id'],
+					'text' => $text,
+				];
+			},
+			$items
+		);
+
+		wp_send_json_success(
+			[
+				'results'    => $results,
+				'pagination' => [
+					'more' => ( $offset + $per_page ) < $total,
+				],
+			]
+		);
 	}
 }

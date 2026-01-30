@@ -431,6 +431,11 @@ class ZohoClient {
 			$access_token = $this->token_manager->get_access_token();
 		}
 
+		// For GET requests, append data as query parameters.
+		if ( ! empty( $data ) && strtoupper( $method ) === 'GET' ) {
+			$url = add_query_arg( $data, $url );
+		}
+
 		$args = [
 			'method'  => strtoupper( $method ),
 			'headers' => [
@@ -440,7 +445,8 @@ class ZohoClient {
 			'timeout' => 30,
 		];
 
-		if ( ! empty( $data ) && in_array( $method, [ 'POST', 'PUT', 'PATCH' ], true ) ) {
+		// For POST/PUT/PATCH, send data as JSON body.
+		if ( ! empty( $data ) && in_array( strtoupper( $method ), [ 'POST', 'PUT', 'PATCH' ], true ) ) {
 			$args['body'] = wp_json_encode( $data );
 		}
 

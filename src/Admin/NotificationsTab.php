@@ -33,6 +33,55 @@ class NotificationsTab {
 	public function __construct() {
 		$this->email_service = new EmailTemplateService();
 		$this->register_ajax_handlers();
+		$this->register_hooks();
+	}
+
+	/**
+	 * Register hooks.
+	 */
+	private function register_hooks(): void {
+		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_assets' ] );
+	}
+
+	/**
+	 * Enqueue notifications tab assets.
+	 * WordPress.org requires proper enqueue instead of inline tags.
+	 *
+	 * @param string $hook Current admin page hook.
+	 */
+	public function enqueue_assets( string $hook ): void {
+		if ( $hook !== 'toplevel_page_zbooks' ) {
+			return;
+		}
+
+		// Check if we're on notifications tab.
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$tab = $_GET['tab'] ?? '';
+		if ( $tab !== 'notifications' ) {
+			return;
+		}
+
+		// Enqueue CSS.
+		wp_enqueue_style(
+			'zbooks-notifications-tab',
+			ZBOOKS_PLUGIN_URL . 'assets/css/modules/notifications.css',
+			[],
+			ZBOOKS_VERSION
+		);
+
+		// Add delivery mode toggle inline script (WordPress.org compliant).
+		$inline_script = "
+		jQuery(document).ready(function($) {
+			$('input[name=\"zbooks_notification_settings[delivery_mode]\"]').on('change', function() {
+				var mode = $(this).val();
+				$('.zbooks-notification-option').removeClass('is-visible');
+				if (mode) {
+					$('.zbooks-notification-option[data-mode=\"' + mode + '\"]').addClass('is-visible');
+				}
+			});
+		});
+		";
+		wp_add_inline_script( 'zbooks-admin', $inline_script );
 	}
 
 	/**
@@ -77,112 +126,7 @@ class NotificationsTab {
 	 */
 	public function render_content(): void {
 		?>
-		<style>
-			.zbooks-notification-card {
-				background: #fff;
-				border: 1px solid #c3c4c7;
-				border-radius: 4px;
-				padding: 20px;
-				margin-bottom: 20px;
-			}
-			.zbooks-notification-card h3 {
-				margin-top: 0;
-				padding-bottom: 12px;
-				border-bottom: 1px solid #e0e0e0;
-			}
-			.zbooks-notification-types {
-				display: grid;
-				gap: 16px;
-				margin-top: 16px;
-			}
-			.zbooks-notification-type {
-				display: flex;
-				align-items: flex-start;
-				padding: 16px;
-				background: #f6f7f7;
-				border-radius: 4px;
-				border: 1px solid #e0e0e0;
-			}
-			.zbooks-notification-type:hover {
-				background: #f0f0f1;
-			}
-			.zbooks-notification-type input[type="checkbox"] {
-				margin-top: 3px;
-				margin-right: 12px;
-			}
-			.zbooks-notification-type-content {
-				flex: 1;
-			}
-			.zbooks-notification-type-title {
-				font-weight: 600;
-				color: #1d2327;
-				margin-bottom: 4px;
-			}
-			.zbooks-notification-type-desc {
-				font-size: 13px;
-				color: #646970;
-			}
-			.zbooks-email-preview {
-				margin-top: 20px;
-				border: 1px solid #c3c4c7;
-				border-radius: 4px;
-				overflow: hidden;
-			}
-			.zbooks-email-preview-header {
-				background: #f0f0f1;
-				padding: 12px 16px;
-				border-bottom: 1px solid #c3c4c7;
-				display: flex;
-				justify-content: space-between;
-				align-items: center;
-			}
-			.zbooks-email-preview-header h4 {
-				margin: 0;
-			}
-			.zbooks-email-preview-frame {
-				width: 100%;
-				height: 500px;
-				border: none;
-				background: #f0f0f1;
-			}
-			.zbooks-test-email-section {
-				display: flex;
-				gap: 12px;
-				align-items: center;
-				margin-top: 16px;
-				padding: 16px;
-				background: #f6f7f7;
-				border-radius: 4px;
-			}
-			.zbooks-test-email-section .button {
-				flex-shrink: 0;
-			}
-			.zbooks-test-email-result {
-				padding: 8px 12px;
-				border-radius: 4px;
-				font-size: 13px;
-			}
-			.zbooks-test-email-result.success {
-				background: #d1e7dd;
-				color: #0a3622;
-			}
-			.zbooks-test-email-result.error {
-				background: #f8d7da;
-				color: #58151c;
-			}
-			.zbooks-rate-limit-info {
-				margin-top: 12px;
-				padding: 12px 16px;
-				background: #fcf6e5;
-				border-left: 4px solid #dba617;
-				border-radius: 0 4px 4px 0;
-			}
-			.zbooks-rate-limit-info p {
-				margin: 0;
-				font-size: 13px;
-				color: #996800;
-			}
-		</style>
+		<!-- Styles now loaded from assets/css/modules/notifications.css -->
 
 		<form method="post" action="options.php">
 			<?php
@@ -357,22 +301,7 @@ class NotificationsTab {
 			</p>
 		</div>
 
-		<script>
-		jQuery(document).ready(function($) {
-			$('input[name="zbooks_notification_settings[delivery_mode]"]').on('change', function() {
-				var mode = $(this).val();
-				if (mode === 'digest') {
-					$('#zbooks_digest_interval_row').show();
-					// Auto-switch preview to digest
-					$('#zbooks_preview_type').val('digest').trigger('change');
-				} else {
-					$('#zbooks_digest_interval_row').hide();
-					// Auto-switch preview to individual error
-					$('#zbooks_preview_type').val('error').trigger('change');
-				}
-			});
-		});
-		</script>
+		<!-- JavaScript now output via wp_add_inline_script() -->
 		<?php
 	}
 
@@ -435,89 +364,7 @@ class NotificationsTab {
 	private function render_scripts(): void {
 		$nonce = wp_create_nonce( 'zbooks_notification_nonce' );
 		?>
-		<script>
-		jQuery(document).ready(function($) {
-			var nonce = '<?php echo esc_js( $nonce ); ?>';
-
-			/**
-			 * Parse AJAX error and return user-friendly message.
-			 */
-			function getAjaxErrorMessage(xhr, defaultMsg) {
-				if (xhr.status === 403) {
-					if (xhr.responseText === '-1' || xhr.responseText === '0') {
-						return '<?php echo esc_js( __( 'Session expired. Please refresh the page and try again.', 'zbooks-for-woocommerce' ) ); ?>';
-					}
-					return '<?php echo esc_js( __( 'Permission denied.', 'zbooks-for-woocommerce' ) ); ?>';
-				}
-				if (xhr.status >= 500) {
-					return '<?php echo esc_js( __( 'Server error. Please try again later.', 'zbooks-for-woocommerce' ) ); ?>';
-				}
-				if (xhr.status === 0) {
-					return '<?php echo esc_js( __( 'Network error. Please check your connection.', 'zbooks-for-woocommerce' ) ); ?>';
-				}
-				return defaultMsg + ' (HTTP ' + xhr.status + ')';
-			}
-
-			// Load initial preview
-			loadPreview($('#zbooks_preview_type').val());
-
-			// Preview type change
-			$('#zbooks_preview_type').on('change', function() {
-				loadPreview($(this).val());
-			});
-
-			function loadPreview(type) {
-				$.ajax({
-					url: ajaxurl,
-					type: 'POST',
-					data: {
-						action: 'zbooks_preview_email_template',
-						type: type,
-						nonce: nonce
-					},
-					success: function(response) {
-						if (response.success) {
-							var frame = document.getElementById('zbooks_preview_frame');
-							frame.srcdoc = response.data.html;
-						}
-					}
-				});
-			}
-
-			// Send test email
-			$('#zbooks_send_test_email').on('click', function() {
-				var $btn = $(this);
-				var $result = $('#zbooks_test_email_result');
-				var type = $('#zbooks_test_email_type').val();
-
-				$btn.prop('disabled', true).text('<?php echo esc_js( __( 'Sending...', 'zbooks-for-woocommerce' ) ); ?>');
-				$result.removeClass('success error').text('');
-
-				$.ajax({
-					url: ajaxurl,
-					type: 'POST',
-					data: {
-						action: 'zbooks_send_test_email',
-						type: type,
-						nonce: nonce
-					},
-					success: function(response) {
-						$btn.prop('disabled', false).text('<?php echo esc_js( __( 'Send Test Email', 'zbooks-for-woocommerce' ) ); ?>');
-						if (response.success) {
-							$result.addClass('success zbooks-test-email-result').text(response.data.message);
-						} else {
-							$result.addClass('error zbooks-test-email-result').text(response.data.message);
-						}
-					},
-					error: function(xhr) {
-						var msg = getAjaxErrorMessage(xhr, '<?php echo esc_js( __( 'Request failed.', 'zbooks-for-woocommerce' ) ); ?>');
-						$btn.prop('disabled', false).text('<?php echo esc_js( __( 'Send Test Email', 'zbooks-for-woocommerce' ) ); ?>');
-						$result.addClass('error zbooks-test-email-result').text(msg);
-					}
-				});
-			});
-		});
-		</script>
+		<!-- JavaScript now output via wp_add_inline_script() -->
 		<?php
 	}
 

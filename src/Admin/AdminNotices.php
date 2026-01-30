@@ -67,13 +67,34 @@ class AdminNotices {
 
 	/**
 	 * Display sync result notices.
+	 *
+	 * Security improvements added per WordPress.org guidelines:
+	 * - Added capability checks to prevent unauthorized access
+	 * - Verifies user can edit shop orders and specific order
+	 * - Prevents information disclosure and CSRF transient clearing
+	 * See: https://developer.wordpress.org/plugins/security/nonces/
+	 * See: https://developer.wordpress.org/reference/functions/current_user_can/
 	 */
 	private function display_sync_notices(): void {
+		// Verify user has permission to manage orders.
+		// Required by WordPress.org to prevent unauthorized access to order information.
+		if ( ! current_user_can( 'edit_shop_orders' ) ) {
+			return;
+		}
+
 		// Check for order-specific notices.
-        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only display
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Notice display with capability check
 		$order_id = isset( $_GET['id'] ) ? absint( wp_unslash( $_GET['id'] ) ) : 0;
 
 		if ( ! $order_id ) {
+			return;
+		}
+
+		// Verify user can edit this specific order.
+		// Additional security check to ensure user has permission for this particular order.
+		// Prevents information disclosure where users could see sync status of orders they can't access.
+		$order = wc_get_order( $order_id );
+		if ( ! $order || ! current_user_can( 'edit_post', $order_id ) ) {
 			return;
 		}
 

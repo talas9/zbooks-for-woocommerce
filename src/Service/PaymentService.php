@@ -13,6 +13,7 @@ namespace Zbooks\Service;
 
 use WC_Order;
 use Zbooks\Api\ZohoClient;
+use Zbooks\Helper\SyncMetadataHelper;
 use Zbooks\Logger\SyncLogger;
 use Zbooks\Repository\PaymentMethodMappingRepository;
 
@@ -355,12 +356,13 @@ class PaymentService {
 		if ( ! empty( $payment_method ) ) {
 			$payment['payment_mode']     = $this->map_payment_mode( $wc_method );
 			$payment['reference_number'] = $this->get_payment_reference( $order );
+			$sync_comment                = SyncMetadataHelper::generate_sync_comment( $order, 'payment' );
 			$payment['description']      = sprintf(
 				/* translators: 1: Order number, 2: Payment method */
 				__( 'Payment for Order #%1$s via %2$s', 'zbooks-for-woocommerce' ),
 				$order->get_order_number(),
 				$payment_method
-			);
+			) . "\n\n" . $sync_comment;
 
 			// Add deposit account (bank/cash account) if mapped.
 			$account_id = $this->mapping_repository->get_zoho_account_id( $wc_method );

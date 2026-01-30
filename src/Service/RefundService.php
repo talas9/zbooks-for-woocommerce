@@ -14,6 +14,7 @@ namespace Zbooks\Service;
 use WC_Order;
 use WC_Order_Refund;
 use Zbooks\Api\ZohoClient;
+use Zbooks\Helper\SyncMetadataHelper;
 use Zbooks\Logger\SyncLogger;
 use Zbooks\Repository\FieldMappingRepository;
 use Zbooks\Repository\OrderMetaRepository;
@@ -215,6 +216,7 @@ class RefundService {
 	): array {
 		$refund_amount = abs( (float) $refund->get_total() );
 		$refund_reason = $refund->get_reason() ?: __( 'Refund', 'zbooks-for-woocommerce' );
+		$sync_comment  = SyncMetadataHelper::generate_sync_comment( $order, 'refund' );
 
 		// Build credit note data (let Zoho auto-generate the credit note number).
 		$credit_note_data = [
@@ -233,7 +235,7 @@ class RefundService {
 					'rate'        => $refund_amount,
 				],
 			],
-			'notes'            => $refund_reason,
+			'notes'            => $refund_reason . "\n\n" . $sync_comment,
 		];
 
 		// Add refund line items if available.

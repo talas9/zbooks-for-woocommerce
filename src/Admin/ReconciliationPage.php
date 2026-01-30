@@ -56,8 +56,56 @@ class ReconciliationPage {
 		add_action( 'admin_menu', [ $this, 'add_menu_page' ], 20 );
 		add_action( 'wp_ajax_zbooks_run_reconciliation', [ $this, 'ajax_run_reconciliation' ] );
 		add_action( 'wp_ajax_zbooks_delete_report', [ $this, 'ajax_delete_report' ] );
+		add_action( 'wp_ajax_zbooks_delete_all_reports', [ $this, 'ajax_delete_all_reports' ] );
 		add_action( 'wp_ajax_zbooks_view_report', [ $this, 'ajax_view_report' ] );
 		add_action( 'wp_ajax_zbooks_export_report_csv', [ $this, 'ajax_export_report_csv' ] );
+		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_assets' ] );
+	}
+
+	/**
+	 * Enqueue reconciliation page assets.
+	 * WordPress.org requires proper enqueue instead of inline tags.
+	 *
+	 * @param string $hook Current admin page hook.
+	 */
+	public function enqueue_assets( string $hook ): void {
+		if ( $hook !== 'zbooks_page_zbooks-reconciliation' ) {
+			return;
+		}
+
+		// Enqueue CSS.
+		wp_enqueue_style(
+			'zbooks-reconciliation',
+			ZBOOKS_PLUGIN_URL . 'assets/css/modules/reconciliation.css',
+			[],
+			ZBOOKS_VERSION
+		);
+
+		// Enqueue JavaScript module.
+		wp_enqueue_script(
+			'zbooks-reconciliation',
+			ZBOOKS_PLUGIN_URL . 'assets/js/modules/reconciliation.js',
+			[ 'jquery', 'zbooks-admin' ],
+			ZBOOKS_VERSION,
+			true
+		);
+
+		// Add frequency toggle inline script (WordPress.org compliant).
+		$inline_script = "
+		jQuery(document).ready(function($) {
+			// Toggle frequency options.
+			$('#zbooks-recon-frequency').on('change', function() {
+				var frequency = $(this).val();
+				$('.zbooks-weekly-option, .zbooks-monthly-option').hide();
+				if (frequency === 'weekly') {
+					$('.zbooks-weekly-option').show();
+				} else if (frequency === 'monthly') {
+					$('.zbooks-monthly-option').show();
+				}
+			});
+		});
+		";
+		wp_add_inline_script( 'zbooks-reconciliation', $inline_script );
 	}
 
 	/**
@@ -153,6 +201,16 @@ class ReconciliationPage {
 					$status_issues  = $summary['status_mismatches'] ?? 0;
 					?>
 					<div class="zbooks-summary-cards">
+						<div class="zbooks-card zbooks-card-neutral">
+							<span class="zbooks-card-value"><?php echo esc_html( $summary['total_wc_orders'] ?? 0 ); ?></span>
+							<span class="zbooks-card-label"><?php esc_html_e( 'WC Orders', 'zbooks-for-woocommerce' ); ?></span>
+							<span class="zbooks-card-desc"><?php esc_html_e( 'Orders in period', 'zbooks-for-woocommerce' ); ?></span>
+						</div>
+						<div class="zbooks-card zbooks-card-neutral">
+							<span class="zbooks-card-value"><?php echo esc_html( $summary['total_zoho_invoices'] ?? 0 ); ?></span>
+							<span class="zbooks-card-label"><?php esc_html_e( 'Zoho Invoices', 'zbooks-for-woocommerce' ); ?></span>
+							<span class="zbooks-card-desc"><?php esc_html_e( 'Invoices in period', 'zbooks-for-woocommerce' ); ?></span>
+						</div>
 						<div class="zbooks-card zbooks-card-success">
 							<span class="zbooks-card-value"><?php echo esc_html( $summary['matched_count'] ?? 0 ); ?></span>
 							<span class="zbooks-card-label"><?php esc_html_e( 'Matched', 'zbooks-for-woocommerce' ); ?></span>
@@ -179,7 +237,7 @@ class ReconciliationPage {
 							<span class="zbooks-card-desc"><?php esc_html_e( 'Invoice status differs', 'zbooks-for-woocommerce' ); ?></span>
 						</div>
 						<div class="zbooks-card zbooks-card-neutral">
-							<span class="zbooks-card-value"><?php echo wp_kses_post( wc_price( $summary['amount_difference'] ?? 0 ) ); ?></span>
+							<span class="zbooks-card-value"><?php echo wp_kses_post( wc_price( $summary['amount_difference'] ?? 0, [ 'currency' => get_woocommerce_currency() ] ) ); ?></span>
 							<span class="zbooks-card-label"><?php esc_html_e( 'Total Difference', 'zbooks-for-woocommerce' ); ?></span>
 							<span class="zbooks-card-desc"><?php esc_html_e( 'Sum of all discrepancies', 'zbooks-for-woocommerce' ); ?></span>
 						</div>
@@ -193,12 +251,19 @@ class ReconciliationPage {
 									<tr>
 										<th><?php esc_html_e( 'Type', 'zbooks-for-woocommerce' ); ?></th>
 										<th><?php esc_html_e( 'Order', 'zbooks-for-woocommerce' ); ?></th>
+										<th><?php esc_html_e( 'Order Status', 'zbooks-for-woocommerce' ); ?></th>
+										<th><?php esc_html_e( 'Invoice', 'zbooks-for-woocommerce' ); ?></th>
+										<th><?php esc_html_e( 'Invoice Status', 'zbooks-for-woocommerce' ); ?></th>
+										<th><?php esc_html_e( 'Payment Status', 'zbooks-for-woocommerce' ); ?></th>
 										<th><?php esc_html_e( 'Date', 'zbooks-for-woocommerce' ); ?></th>
 										<th><?php esc_html_e( 'Details', 'zbooks-for-woocommerce' ); ?></th>
 									</tr>
 								</thead>
 								<tbody>
-									<?php foreach ( array_slice( $latest_report->get_discrepancies(), 0, 5 ) as $discrepancy ) : ?>
+									<?php
+									$zoho_org_id = get_option( 'zbooks_organization_id' );
+									foreach ( array_slice( $latest_report->get_discrepancies(), 0, 5 ) as $discrepancy ) :
+										?>
 										<tr>
 											<td>
 												<span class="zbooks-badge zbooks-badge-<?php echo esc_attr( $discrepancy['type'] ); ?>">
@@ -212,6 +277,44 @@ class ReconciliationPage {
 													</a>
 												<?php elseif ( ! empty( $discrepancy['invoice_number'] ) ) : ?>
 													<?php echo esc_html( $discrepancy['invoice_number'] ); ?>
+												<?php else : ?>
+													—
+												<?php endif; ?>
+											</td>
+											<td>
+												<?php if ( ! empty( $discrepancy['order_status'] ) ) : ?>
+													<span class="zbooks-status zbooks-status-<?php echo esc_attr( $discrepancy['order_status'] ); ?>">
+														<?php echo esc_html( ucwords( str_replace( '-', ' ', $discrepancy['order_status'] ) ) ); ?>
+													</span>
+												<?php else : ?>
+													—
+												<?php endif; ?>
+											</td>
+											<td>
+												<?php if ( ! empty( $discrepancy['invoice_id'] ) && ! empty( $zoho_org_id ) ) : ?>
+													<a href="<?php echo esc_url( 'https://books.zoho.com/app/' . $zoho_org_id . '#/invoices/' . $discrepancy['invoice_id'] ); ?>" target="_blank" rel="noopener noreferrer">
+														<?php echo esc_html( $discrepancy['invoice_number'] ?? $discrepancy['invoice_id'] ); ?>
+													</a>
+												<?php elseif ( ! empty( $discrepancy['invoice_number'] ) ) : ?>
+													<?php echo esc_html( $discrepancy['invoice_number'] ); ?>
+												<?php else : ?>
+													—
+												<?php endif; ?>
+											</td>
+											<td>
+												<?php if ( ! empty( $discrepancy['invoice_status'] ) ) : ?>
+													<span class="zbooks-status zbooks-status-<?php echo esc_attr( $discrepancy['invoice_status'] ); ?>">
+														<?php echo esc_html( ucwords( str_replace( '_', ' ', $discrepancy['invoice_status'] ) ) ); ?>
+													</span>
+												<?php else : ?>
+													—
+												<?php endif; ?>
+											</td>
+											<td>
+												<?php if ( ! empty( $discrepancy['payment_status'] ) ) : ?>
+													<span class="zbooks-status zbooks-status-<?php echo esc_attr( $discrepancy['payment_status'] ); ?>">
+														<?php echo esc_html( ucwords( str_replace( '_', ' ', $discrepancy['payment_status'] ) ) ); ?>
+													</span>
 												<?php else : ?>
 													—
 												<?php endif; ?>
@@ -242,7 +345,14 @@ class ReconciliationPage {
 
 			<!-- Report History -->
 			<div class="zbooks-report-history" style="background: #fff; padding: 20px; margin: 20px 0; border: 1px solid #ccd0d4;">
-				<h2><?php esc_html_e( 'Report History', 'zbooks-for-woocommerce' ); ?></h2>
+				<h2 style="display: inline-block; margin-right: 20px;">
+					<?php esc_html_e( 'Report History', 'zbooks-for-woocommerce' ); ?>
+				</h2>
+				<?php if ( ! empty( $reports ) ) : ?>
+					<button type="button" class="button zbooks-delete-all-reports" style="vertical-align: middle;">
+						<?php esc_html_e( 'Delete All Reports', 'zbooks-for-woocommerce' ); ?>
+					</button>
+				<?php endif; ?>
 
 				<?php if ( empty( $reports ) ) : ?>
 					<p class="description"><?php esc_html_e( 'No reconciliation reports yet.', 'zbooks-for-woocommerce' ); ?></p>
@@ -284,7 +394,7 @@ class ReconciliationPage {
 										echo esc_html( $total_disc );
 										?>
 									</td>
-									<td><?php echo wp_kses_post( wc_price( $rpt_summary['amount_difference'] ?? 0 ) ); ?></td>
+									<td><?php echo wp_kses_post( wc_price( $rpt_summary['amount_difference'] ?? 0, [ 'currency' => get_woocommerce_currency() ] ) ); ?></td>
 									<td>
 										<button type="button" class="button button-small zbooks-view-report"
 											data-report-id="<?php echo esc_attr( $report->get_id() ); ?>">
@@ -328,8 +438,6 @@ class ReconciliationPage {
 				<?php endif; ?>
 			</div>
 		</div><!-- .wrap -->
-
-		<?php $this->render_styles_and_scripts(); ?>
 		<?php
 	}
 
@@ -465,214 +573,9 @@ class ReconciliationPage {
 					<?php submit_button( __( 'Save Settings', 'zbooks-for-woocommerce' ), 'primary', 'save_reconciliation_settings' ); ?>
 				</form>
 			</div>
-		</div><!-- .zbooks-reconciliation-tab -->
-
-		<script>
-		jQuery(document).ready(function($) {
-			// Toggle frequency options.
-			$('#zbooks-recon-frequency').on('change', function() {
-				var frequency = $(this).val();
-				$('.zbooks-weekly-option, .zbooks-monthly-option').hide();
-				if (frequency === 'weekly') {
-					$('.zbooks-weekly-option').show();
-				} else if (frequency === 'monthly') {
-					$('.zbooks-monthly-option').show();
-				}
-			});
-		});
-		</script>
-		<?php
-	}
-
-	/**
-	 * Render styles and scripts for the reconciliation page.
-	 */
-	private function render_styles_and_scripts(): void {
-		?>
-		<style>
-			.zbooks-badge {
-				display: inline-block;
-				padding: 2px 8px;
-				border-radius: 3px;
-				font-size: 11px;
-				font-weight: 600;
-				text-transform: uppercase;
-			}
-			.zbooks-badge-missing_in_zoho { background: #ffeaea; color: #dc3545; }
-			.zbooks-badge-missing_in_wc { background: #fff3cd; color: #856404; }
-			.zbooks-badge-amount_mismatch { background: #fff3cd; color: #856404; }
-			.zbooks-badge-payment_mismatch { background: #fff3cd; color: #856404; }
-			.zbooks-badge-refund_mismatch { background: #fff3cd; color: #856404; }
-			.zbooks-badge-status_mismatch { background: #e7f3ff; color: #0056b3; }
-			.zbooks-status { font-weight: 500; }
-			.zbooks-status-completed { color: #28a745; }
-			.zbooks-status-failed { color: #dc3545; }
-			.zbooks-status-running { color: #ffc107; }
-			.zbooks-status-pending { color: #6c757d; }
-
-			/* Summary cards */
-			.zbooks-summary-cards {
-				display: grid;
-				grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-				gap: 16px;
-				margin-top: 20px;
-			}
-			.zbooks-card {
-				background: #fff;
-				padding: 20px 16px;
-				border-radius: 12px;
-				text-align: center;
-				border: 1px solid #e0e0e0;
-				transition: all 0.3s ease;
-				cursor: default;
-			}
-			.zbooks-card:hover {
-				transform: translateY(-4px);
-				box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-			}
-			.zbooks-card-value {
-				display: block;
-				font-size: 32px;
-				font-weight: 700;
-				line-height: 1;
-				margin-bottom: 8px;
-			}
-			.zbooks-card-label {
-				display: block;
-				font-size: 12px;
-				color: #666;
-				text-transform: uppercase;
-				letter-spacing: 0.5px;
-				font-weight: 500;
-			}
-			.zbooks-card-desc {
-				display: block;
-				font-size: 11px;
-				color: #999;
-				margin-top: 6px;
-				font-style: italic;
-			}
-			.zbooks-card-neutral {
-				background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-				border-color: #dee2e6;
-			}
-			.zbooks-card-neutral .zbooks-card-value { color: #495057; }
-			.zbooks-card-success {
-				background: linear-gradient(135deg, #d4edda 0%, #b8e0c4 100%);
-				border-color: #a3d9b1;
-			}
-			.zbooks-card-success .zbooks-card-value { color: #155724; }
-			.zbooks-card-success:hover { border-color: #28a745; }
-			.zbooks-card-danger {
-				background: linear-gradient(135deg, #f8d7da 0%, #f1aeb5 100%);
-				border-color: #f1aeb5;
-			}
-			.zbooks-card-danger .zbooks-card-value { color: #721c24; }
-			.zbooks-card-danger:hover { border-color: #dc3545; }
-			.zbooks-card-warning {
-				background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%);
-				border-color: #ffc107;
-			}
-			.zbooks-card-warning .zbooks-card-value { color: #856404; }
-			.zbooks-card-warning:hover { border-color: #e0a800; }
-			.zbooks-card-info {
-				background: linear-gradient(135deg, #cfe2ff 0%, #9ec5fe 100%);
-				border-color: #9ec5fe;
-			}
-			.zbooks-card-info .zbooks-card-value { color: #084298; }
-			.zbooks-card-info:hover { border-color: #0d6efd; }
-
-			/* Modal styles */
-			.zbooks-modal {
-				display: none;
-				position: fixed;
-				z-index: 100000;
-				left: 0;
-				top: 0;
-				width: 100%;
-				height: 100%;
-				overflow: auto;
-				background-color: rgba(0,0,0,0.5);
-			}
-			.zbooks-modal-content {
-				background-color: #fff;
-				margin: 5% auto;
-				padding: 20px 30px;
-				border: 1px solid #ccd0d4;
-				width: 80%;
-				max-width: 900px;
-				max-height: 80vh;
-				overflow-y: auto;
-				border-radius: 4px;
-				box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-			}
-			.zbooks-modal-close {
-				color: #666;
-				float: right;
-				font-size: 28px;
-				font-weight: bold;
-				cursor: pointer;
-				line-height: 1;
-			}
-			.zbooks-modal-close:hover { color: #000; }
-			.zbooks-modal h2 { margin-top: 0; }
-			.zbooks-modal h3 { margin-top: 20px; border-bottom: 1px solid #eee; padding-bottom: 8px; }
-			.zbooks-modal-summary .summary-grid {
-				display: grid;
-				grid-template-columns: repeat(4, 1fr);
-				gap: 12px;
-				margin-top: 15px;
-			}
-			.zbooks-modal-summary .summary-item {
-				background: #fff;
-				padding: 16px 12px;
-				border-radius: 8px;
-				text-align: center;
-				border: 1px solid #e0e0e0;
-				transition: box-shadow 0.2s, transform 0.2s;
-			}
-			.zbooks-modal-summary .summary-item:hover {
-				box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-				transform: translateY(-1px);
-			}
-			.zbooks-modal-summary .summary-item .value {
-				display: block;
-				font-size: 28px;
-				font-weight: 700;
-				line-height: 1;
-				margin-bottom: 8px;
-			}
-			.zbooks-modal-summary .summary-item .label {
-				display: block;
-				font-size: 11px;
-				color: #666;
-				text-transform: uppercase;
-				letter-spacing: 0.5px;
-			}
-			.zbooks-modal-summary .summary-item .desc {
-				display: block;
-				font-size: 10px;
-				color: #888;
-				margin-top: 6px;
-				font-style: italic;
-			}
-			.zbooks-modal-summary .summary-item.neutral { background: #f8f9fa; border-color: #dee2e6; }
-			.zbooks-modal-summary .summary-item.neutral .value { color: #495057; }
-			.zbooks-modal-summary .summary-item.success { background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); border-color: #b1dfbb; }
-			.zbooks-modal-summary .summary-item.success .value { color: #155724; }
-			.zbooks-modal-summary .summary-item.danger { background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%); border-color: #f1b0b7; }
-			.zbooks-modal-summary .summary-item.danger .value { color: #721c24; }
-			.zbooks-modal-summary .summary-item.warning { background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%); border-color: #ffc107; }
-			.zbooks-modal-summary .summary-item.warning .value { color: #856404; }
-			.zbooks-modal-summary .summary-item.info { background: linear-gradient(135deg, #e7f3ff 0%, #cce5ff 100%); border-color: #b8daff; }
-			.zbooks-modal-summary .summary-item.info .value { color: #004085; }
-			@media (max-width: 768px) {
-				.zbooks-modal-summary .summary-grid { grid-template-columns: repeat(2, 1fr); }
-			}
-			.zbooks-modal-discrepancies { margin-top: 20px; }
-			.zbooks-modal-discrepancies table { margin-top: 10px; }
-		</style>
-		<?php
+	</div><!-- .zbooks-reconciliation-tab -->
+	<!-- JavaScript now output via wp_add_inline_script() in enqueue_assets() (WordPress.org requirement) -->
+	<?php
 	}
 
 	/**
@@ -782,6 +685,23 @@ class ReconciliationPage {
 	}
 
 	/**
+	 * AJAX handler for deleting all reports.
+	 */
+	public function ajax_delete_all_reports(): void {
+		check_ajax_referer( 'zbooks_reconciliation', 'nonce' );
+
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'zbooks-for-woocommerce' ) ] );
+		}
+
+		if ( $this->repository->delete_all() ) {
+			wp_send_json_success( [ 'message' => __( 'All reports deleted successfully.', 'zbooks-for-woocommerce' ) ] );
+		} else {
+			wp_send_json_error( [ 'message' => __( 'Failed to delete all reports.', 'zbooks-for-woocommerce' ) ] );
+		}
+	}
+
+	/**
 	 * AJAX handler for viewing a report.
 	 */
 	public function ajax_view_report(): void {
@@ -809,10 +729,16 @@ class ReconciliationPage {
 		// Build HTML for discrepancies.
 		$discrepancies_html = '';
 		if ( ! empty( $discrepancies ) ) {
+			$zoho_org_id = get_option( 'zbooks_organization_id' );
+
 			$discrepancies_html  = '<table class="widefat striped">';
 			$discrepancies_html .= '<thead><tr>';
 			$discrepancies_html .= '<th>' . esc_html__( 'Type', 'zbooks-for-woocommerce' ) . '</th>';
-			$discrepancies_html .= '<th>' . esc_html__( 'Order/Invoice', 'zbooks-for-woocommerce' ) . '</th>';
+			$discrepancies_html .= '<th>' . esc_html__( 'Order', 'zbooks-for-woocommerce' ) . '</th>';
+			$discrepancies_html .= '<th>' . esc_html__( 'Order Status', 'zbooks-for-woocommerce' ) . '</th>';
+			$discrepancies_html .= '<th>' . esc_html__( 'Invoice', 'zbooks-for-woocommerce' ) . '</th>';
+			$discrepancies_html .= '<th>' . esc_html__( 'Invoice Status', 'zbooks-for-woocommerce' ) . '</th>';
+			$discrepancies_html .= '<th>' . esc_html__( 'Payment Status', 'zbooks-for-woocommerce' ) . '</th>';
 			$discrepancies_html .= '<th>' . esc_html__( 'Date', 'zbooks-for-woocommerce' ) . '</th>';
 			$discrepancies_html .= '<th>' . esc_html__( 'Details', 'zbooks-for-woocommerce' ) . '</th>';
 			$discrepancies_html .= '</tr></thead><tbody>';
@@ -821,20 +747,54 @@ class ReconciliationPage {
 				$type_class = 'zbooks-badge zbooks-badge-' . esc_attr( $discrepancy['type'] );
 				$type_label = ucwords( str_replace( '_', ' ', $discrepancy['type'] ) );
 
-				$reference = '';
+				// Order reference.
+				$order_ref = '—';
 				if ( ! empty( $discrepancy['order_id'] ) ) {
 					$order_url = admin_url( 'post.php?post=' . $discrepancy['order_id'] . '&action=edit' );
-					$reference = '<a href="' . esc_url( $order_url ) . '" target="_blank">#' .
+					$order_ref = '<a href="' . esc_url( $order_url ) . '" target="_blank">#' .
 						esc_html( $discrepancy['order_number'] ?? $discrepancy['order_id'] ) . '</a>';
+				}
+
+				// Invoice reference.
+				$invoice_ref = '—';
+				if ( ! empty( $discrepancy['invoice_id'] ) && ! empty( $zoho_org_id ) ) {
+					$invoice_url = 'https://books.zoho.com/app/' . $zoho_org_id . '#/invoices/' . $discrepancy['invoice_id'];
+					$invoice_ref = '<a href="' . esc_url( $invoice_url ) . '" target="_blank" rel="noopener noreferrer">' .
+						esc_html( $discrepancy['invoice_number'] ?? $discrepancy['invoice_id'] ) . '</a>';
 				} elseif ( ! empty( $discrepancy['invoice_number'] ) ) {
-					$reference = esc_html( $discrepancy['invoice_number'] );
+					$invoice_ref = esc_html( $discrepancy['invoice_number'] );
+				}
+
+				// Order status.
+				$order_status_html = '—';
+				if ( ! empty( $discrepancy['order_status'] ) ) {
+					$order_status_html = '<span class="zbooks-status zbooks-status-' . esc_attr( $discrepancy['order_status'] ) . '">' .
+						esc_html( ucwords( str_replace( '-', ' ', $discrepancy['order_status'] ) ) ) . '</span>';
+				}
+
+				// Invoice status.
+				$invoice_status_html = '—';
+				if ( ! empty( $discrepancy['invoice_status'] ) ) {
+					$invoice_status_html = '<span class="zbooks-status zbooks-status-' . esc_attr( $discrepancy['invoice_status'] ) . '">' .
+						esc_html( ucwords( str_replace( '_', ' ', $discrepancy['invoice_status'] ) ) ) . '</span>';
+				}
+
+				// Payment status.
+				$payment_status_html = '—';
+				if ( ! empty( $discrepancy['payment_status'] ) ) {
+					$payment_status_html = '<span class="zbooks-status zbooks-status-' . esc_attr( $discrepancy['payment_status'] ) . '">' .
+						esc_html( ucwords( str_replace( '_', ' ', $discrepancy['payment_status'] ) ) ) . '</span>';
 				}
 
 				$date = $discrepancy['order_date'] ?? $discrepancy['invoice_date'] ?? '—';
 
 				$discrepancies_html .= '<tr>';
 				$discrepancies_html .= '<td><span class="' . esc_attr( $type_class ) . '">' . esc_html( $type_label ) . '</span></td>';
-				$discrepancies_html .= '<td>' . $reference . '</td>';
+				$discrepancies_html .= '<td>' . $order_ref . '</td>';
+				$discrepancies_html .= '<td>' . $order_status_html . '</td>';
+				$discrepancies_html .= '<td>' . $invoice_ref . '</td>';
+				$discrepancies_html .= '<td>' . $invoice_status_html . '</td>';
+				$discrepancies_html .= '<td>' . $payment_status_html . '</td>';
 				$discrepancies_html .= '<td>' . esc_html( $date ) . '</td>';
 				$discrepancies_html .= '<td>' . wp_kses_post( $discrepancy['message'] ) . '</td>';
 				$discrepancies_html .= '</tr>';

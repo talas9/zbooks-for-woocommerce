@@ -168,6 +168,7 @@ class ItemMappingRepository {
 		}
 
 		if ( empty( $zoho_by_sku ) ) {
+			error_log( 'Zbooks Auto-Map: No Zoho items with SKUs found' );
 			return 0;
 		}
 
@@ -179,6 +180,9 @@ class ItemMappingRepository {
 				'return' => 'objects',
 			]
 		);
+
+		error_log( 'Zbooks Auto-Map: Found ' . count( $products ) . ' WooCommerce products' );
+		error_log( 'Zbooks Auto-Map: Found ' . count( $zoho_by_sku ) . ' Zoho items with SKUs' );
 
 		$new_mappings = [];
 
@@ -194,14 +198,21 @@ class ItemMappingRepository {
 				if ( ! $this->is_mapped( $product_id ) ) {
 					$new_mappings[ $product_id ] = $zoho_by_sku[ $sku_lower ];
 					++$mapped_count;
+					error_log( "Zbooks Auto-Map: Mapping product {$product_id} (SKU: {$sku}) to Zoho item {$zoho_by_sku[ $sku_lower ]}" );
+				} else {
+					error_log( "Zbooks Auto-Map: Product {$product_id} (SKU: {$sku}) already mapped, skipping" );
 				}
 			}
 		}
 
 		if ( ! empty( $new_mappings ) ) {
+			error_log( 'Zbooks Auto-Map: Saving ' . count( $new_mappings ) . ' new mappings' );
 			$this->set_mappings( $new_mappings );
+		} else {
+			error_log( 'Zbooks Auto-Map: No new mappings to save' );
 		}
 
+		error_log( "Zbooks Auto-Map: Completed with {$mapped_count} products mapped" );
 		return $mapped_count;
 	}
 }

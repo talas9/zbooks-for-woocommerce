@@ -282,7 +282,11 @@ class TokenManager {
 			$salt .= SECURE_AUTH_SALT;
 		}
 		if ( empty( $salt ) ) {
-			$salt = 'zbooks-default-key-' . ABSPATH;
+			// Use wp_upload_dir() instead of ABSPATH constant.
+			// WordPress.org requires using WordPress functions for determining file/directory locations.
+			// See: https://developer.wordpress.org/plugins/plugin-basics/determining-plugin-and-content-directories/
+			$upload_dir = wp_upload_dir();
+			$salt       = 'zbooks-default-key-' . $upload_dir['basedir'];
 		}
 
 		return hash( 'sha256', $salt, true );

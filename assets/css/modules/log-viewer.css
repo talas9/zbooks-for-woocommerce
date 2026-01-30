@@ -1,0 +1,106 @@
+/**
+ * Log Viewer Module Styles
+ *
+ * Module-specific styles for the log viewer interface.
+ * Loaded dynamically when the log viewer is activated.
+ *
+ * @package    Zbooks
+ * @author     talas9
+ * @link       https://github.com/talas9/zbooks-for-woocommerce
+ * @since      1.0.0
+ */
+
+/* ==========================================================================
+   Log Viewer (LogViewer.php)
+   ========================================================================== */
+
+.zbooks-log-level {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.zbooks-level-error {
+    background: #d63638;
+    color: #fff;
+}
+
+.zbooks-level-warning {
+    background: #dba617;
+    color: #fff;
+}
+
+.zbooks-level-info {
+    background: #00a32a;
+    color: #fff;
+}
+
+.zbooks-level-debug {
+    background: #72aee6;
+    color: #fff;
+}
+
+.zbooks-log-error td {
+    background: #fcf0f1 !important;
+}
+
+.zbooks-log-warning td {
+    background: #fcf9e8 !important;
+}
+
+.zbooks-log-row {
+    cursor: pointer;
+}
+
+.zbooks-log-row:hover td {
+    background: #f0f6fc !important;
+}
+
+.zbooks-log-message {
+    max-width: 400px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ==========================================================================
+   Log Viewer Modal
+   ========================================================================== */
+
+.zbooks-detail-row {
+    margin-bottom: 15px;
+}
+
+.zbooks-detail-row label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: #1d2327;
+}
+
+.zbooks-detail-row span,
+.zbooks-detail-row div {
+    color: #50575e;
+}
+
+#zbooks-modal-message {
+    background: #f6f7f7;
+    padding: 10px 15px;
+    border-radius: 4px;
+    word-break: break-word;
+}
+
+#zbooks-modal-context {
+    background: #1d2327;
+    color: #50fa7b;
+    padding: 15px;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-size: 12px;
+    line-height: 1.5;
+    margin: 0;
+    max-height: 300px;
+    overflow-y: auto;
+}

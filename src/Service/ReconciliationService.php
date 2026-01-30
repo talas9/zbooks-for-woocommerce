@@ -126,14 +126,32 @@ class ReconciliationService {
 			// Step 1: Fetch all Zoho invoices for the period (optimized - single batch).
 			$zoho_invoices = $this->fetch_zoho_invoices( $start, $end );
 
-			// Step 2: Build lookup map by reference_number (WC order number).
-			$invoice_map = $this->build_invoice_map( $zoho_invoices );
+			// Step 2: Fetch all Zoho payments for the period (optimized - single batch).
+			// This is optional - if it fails, we continue without payment data.
+			$zoho_payments = [];
+			try {
+				$zoho_payments = $this->fetch_zoho_payments( $start, $end );
+			} catch ( \Throwable $e ) {
+				$this->logger->warning(
+					'Failed to fetch payments for reconciliation - continuing without payment data',
+					[
+						'error'   => $e->getMessage(),
+						'file'    => $e->getFile(),
+						'line'    => $e->getLine(),
+						'trace'   => $e->getTraceAsString(),
+					]
+				);
+			}
 
-			// Step 3: Get WooCommerce orders for the period.
+			// Step 3: Build lookup maps.
+			$invoice_map = $this->build_invoice_map( $zoho_invoices );
+			$payment_map = $this->build_payment_map( $zoho_payments );
+
+			// Step 4: Get WooCommerce orders for the period.
 			$wc_orders = $this->get_wc_orders( $start, $end );
 
-			// Step 4: Compare and collect discrepancies.
-			$this->compare_orders( $report, $wc_orders, $invoice_map, $zoho_invoices );
+			// Step 5: Compare and collect discrepancies.
+			$this->compare_orders( $report, $wc_orders, $invoice_map, $zoho_invoices, $payment_map );
 
 			// Mark as completed.
 			$report->set_status( 'completed' );
@@ -245,6 +263,97 @@ class ReconciliationService {
 	}
 
 	/**
+	 * Fetch all Zoho payments for the date range.
+	 *
+	 * @param \DateTimeInterface $start Start date.
+	 * @param \DateTimeInterface $end   End date.
+	 * @return array Array of payments.
+	 * @throws \RuntimeException If API is not configured.
+	 */
+	private function fetch_zoho_payments( \DateTimeInterface $start, \DateTimeInterface $end ): array {
+		if ( ! $this->client->is_configured() ) {
+			throw new \RuntimeException( __( 'Zoho Books API is not configured.', 'zbooks-for-woocommerce' ) );
+		}
+
+		$all_payments = [];
+		$page         = 1;
+		$per_page     = 200;
+		$has_more     = true;
+
+		// Note: Zoho Books API doesn't support date filtering for payments via getList.
+		// We fetch recent payments and filter in PHP.
+		while ( $has_more ) {
+			$response = $this->client->request(
+				function ( $client ) use ( $page, $per_page ) {
+					return $client->customerpayments->getList(
+						[
+							'page'     => $page,
+							'per_page' => $per_page,
+						]
+					);
+				},
+				[
+					'endpoint' => 'customerpayments.getList',
+					'page'     => $page,
+				]
+			);
+
+			// Convert response to array.
+			if ( is_object( $response ) ) {
+				$response = json_decode( wp_json_encode( $response ), true );
+			}
+
+			$payments = $response['customerpayments'] ?? $response ?? [];
+
+			if ( empty( $payments ) ) {
+				$has_more = false;
+			} else {
+				// Filter payments by date range.
+				$start_ts = $start->getTimestamp();
+				$end_ts   = $end->getTimestamp();
+
+				foreach ( $payments as $payment ) {
+					$payment_date = $payment['payment_date'] ?? '';
+					if ( ! empty( $payment_date ) ) {
+						$payment_ts = strtotime( $payment_date );
+						if ( false !== $payment_ts && $payment_ts >= $start_ts && $payment_ts <= $end_ts ) {
+							$all_payments[] = $payment;
+						}
+					}
+				}
+
+				// Check if there are more pages.
+				$page_context = $response['page_context'] ?? [];
+				$has_more     = ! empty( $page_context['has_more_page'] );
+				++$page;
+			}
+
+			// Safety limit to prevent infinite loops.
+			// Limit to 5 pages (1000 payments) for performance.
+			if ( $page > 5 ) {
+				$this->logger->warning(
+					'Reconciliation reached page limit for payments',
+					[
+						'pages_fetched'    => $page - 1,
+						'payments_fetched' => count( $all_payments ),
+					]
+				);
+				break;
+			}
+		}
+
+		$this->logger->debug(
+			'Fetched Zoho payments for reconciliation',
+			[
+				'count' => count( $all_payments ),
+				'pages' => $page - 1,
+			]
+		);
+
+		return $all_payments;
+	}
+
+	/**
 	 * Build a lookup map from invoices keyed by reference number.
 	 *
 	 * @param array $invoices Array of invoice data.
@@ -258,6 +367,33 @@ class ReconciliationService {
 			if ( ! empty( $reference ) ) {
 				// Use reference number as key (this is the WC order number).
 				$map[ $reference ] = $invoice;
+			}
+		}
+
+		return $map;
+	}
+
+	/**
+	 * Build payment lookup map by invoice_id.
+	 *
+	 * @param array $payments Array of payments.
+	 * @return array Map of invoice_id => array of payments.
+	 */
+	private function build_payment_map( array $payments ): array {
+		$map = [];
+
+		foreach ( $payments as $payment ) {
+			// Each payment can be applied to multiple invoices.
+			$invoices = $payment['invoices'] ?? [];
+			foreach ( $invoices as $invoice_payment ) {
+				$invoice_id = $invoice_payment['invoice_id'] ?? '';
+				if ( ! empty( $invoice_id ) ) {
+					if ( ! isset( $map[ $invoice_id ] ) ) {
+						$map[ $invoice_id ] = [];
+					}
+					// Store the full payment data with invoice-specific amount.
+					$map[ $invoice_id ][] = array_merge( $payment, $invoice_payment );
+				}
 			}
 		}
 
@@ -355,7 +491,8 @@ class ReconciliationService {
 		ReconciliationReport $report,
 		array $wc_orders,
 		array $invoice_map,
-		array $all_zoho
+		array $all_zoho,
+		array $payment_map
 	): void {
 		$settings  = $this->get_settings();
 		$tolerance = (float) ( $settings['amount_tolerance'] ?? 0.05 );
@@ -416,15 +553,18 @@ class ReconciliationService {
 							'type'           => 'amount_mismatch',
 							'order_id'       => $order->get_id(),
 							'order_number'   => $order_number,
+							'order_status'   => $order->get_status(),
 							'order_total'    => $order_total,
 							'order_date'     => $order->get_date_created()->format( 'Y-m-d' ),
 							'invoice_id'     => $invoice['invoice_id'] ?? '',
 							'invoice_number' => $invoice['invoice_number'] ?? '',
+							'invoice_status' => $invoice['status'] ?? '',
+							'payment_status' => $this->get_payment_status( $order, $invoice, $payment_map ),
 							'invoice_total'  => $invoice_total,
 							'invoice_date'   => $invoice['date'] ?? '',
 							'difference'     => $difference,
 							'breakdown'      => $breakdown,
-							'message'        => $this->format_breakdown_message( $order_total, $invoice_total, $difference, $breakdown ),
+							'message'        => $this->format_breakdown_message( $order_total, $invoice_total, $difference, $breakdown, $order->get_currency() ),
 						]
 					);
 				} else {
@@ -432,10 +572,10 @@ class ReconciliationService {
 				}
 
 				// Check status alignment.
-				$this->check_status_alignment( $report, $order, $invoice );
+				$this->check_status_alignment( $report, $order, $invoice, $payment_map );
 
 				// Check payment alignment.
-				$this->check_payment_alignment( $report, $order, $invoice, $tolerance );
+				$this->check_payment_alignment( $report, $order, $invoice, $tolerance, $payment_map );
 			}
 		}
 
@@ -449,6 +589,7 @@ class ReconciliationService {
 						'type'             => 'missing_in_wc',
 						'invoice_id'       => $invoice['invoice_id'] ?? '',
 						'invoice_number'   => $invoice['invoice_number'] ?? '',
+						'invoice_status'   => $invoice['status'] ?? '',
 						'reference_number' => $ref,
 						'invoice_total'    => (float) ( $invoice['total'] ?? 0 ),
 						'invoice_date'     => $invoice['date'] ?? '',
@@ -566,19 +707,22 @@ class ReconciliationService {
 	/**
 	 * Format breakdown into a human-readable message.
 	 *
-	 * @param float $wc_total     WC total.
-	 * @param float $zoho_total   Zoho total.
-	 * @param float $difference   Total difference.
-	 * @param array $breakdown    Detailed breakdown.
+	 * @param float  $wc_total     WC total.
+	 * @param float  $zoho_total   Zoho total.
+	 * @param float  $difference   Total difference.
+	 * @param array  $breakdown    Detailed breakdown.
+	 * @param string $currency     Currency code for formatting.
 	 * @return string Formatted message.
 	 */
-	private function format_breakdown_message( float $wc_total, float $zoho_total, float $difference, array $breakdown ): string {
+	private function format_breakdown_message( float $wc_total, float $zoho_total, float $difference, array $breakdown, string $currency ): string {
+		$currency_args = [ 'currency' => $currency ];
+
 		$message = sprintf(
 			/* translators: 1: WC total, 2: Zoho total, 3: difference */
 			__( 'Total mismatch: WC %1$s vs Zoho %2$s (diff: %3$s)', 'zbooks-for-woocommerce' ),
-			wc_price( $wc_total ),
-			wc_price( $zoho_total ),
-			wc_price( $difference )
+			wc_price( $wc_total, $currency_args ),
+			wc_price( $zoho_total, $currency_args ),
+			wc_price( $difference, $currency_args )
 		);
 
 		if ( ! empty( $breakdown ) ) {
@@ -588,8 +732,8 @@ class ReconciliationService {
 				$details[] = sprintf(
 					'%s: WC %s vs Zoho %s',
 					$label,
-					wc_price( $values['wc'] ),
-					wc_price( $values['zoho'] )
+					wc_price( $values['wc'], $currency_args ),
+					wc_price( $values['zoho'], $currency_args )
 				);
 			}
 			$message .= ' | ' . implode( '; ', $details );
@@ -610,11 +754,64 @@ class ReconciliationService {
 		ReconciliationReport $report,
 		\WC_Order $order,
 		array $invoice,
-		float $tolerance
+		float $tolerance,
+		array $payment_map
 	): void {
 		// Get payment amounts.
-		$order_paid   = $order->is_paid() ? (float) $order->get_total() : 0.0;
-		$invoice_paid = (float) ( $invoice['payment_made'] ?? 0 );
+		$order_paid = $order->is_paid() ? (float) $order->get_total() : 0.0;
+
+		// Calculate invoice payment from available fields.
+		// payment_made might not be in list API response, so calculate from total - balance.
+		$invoice_total   = (float) ( $invoice['total'] ?? 0 );
+		$invoice_balance = (float) ( $invoice['balance'] ?? 0 );
+		$invoice_paid    = $invoice_total - $invoice_balance;
+
+		// Check currency alignment - WooCommerce and Zoho should use same currency.
+		$order_currency   = strtoupper( $order->get_currency() );
+		$invoice_currency = strtoupper( $invoice['currency_code'] ?? '' );
+
+		if ( ! empty( $invoice_currency ) && $order_currency !== $invoice_currency ) {
+			// Currency mismatch between WC and Zoho - this is a problem.
+			$report->increment_summary( 'payment_mismatches' );
+			$report->add_discrepancy(
+				[
+					'type'           => 'payment_mismatch',
+					'order_id'       => $order->get_id(),
+					'order_number'   => $order->get_order_number(),
+					'order_status'   => $order->get_status(),
+					'order_paid'     => $order_paid,
+					'order_date'     => $order->get_date_created()->format( 'Y-m-d' ),
+					'invoice_id'     => $invoice['invoice_id'] ?? '',
+					'invoice_number' => $invoice['invoice_number'] ?? '',
+					'invoice_status' => $invoice['status'] ?? '',
+					'payment_status' => $this->get_payment_status( $order, $invoice, $payment_map ),
+					'invoice_paid'   => $invoice_paid,
+					'invoice_date'   => $invoice['date'] ?? '',
+					'message'        => sprintf(
+						/* translators: 1: WC currency, 2: Zoho currency */
+						__( 'Currency mismatch: WC uses %1$s but Zoho invoice uses %2$s', 'zbooks-for-woocommerce' ),
+						$order_currency,
+						$invoice_currency
+					),
+				]
+			);
+			return;
+		}
+
+		// Use gateway exchange rate from Stripe metadata (same logic as payment creation).
+		$exchange_rate = $this->calculate_gateway_exchange_rate( $order );
+
+		if ( $exchange_rate !== null && $exchange_rate > 0 ) {
+			// Gateway uses different currency (e.g., Stripe in AED) - verify conversion.
+			$stripe_net                = (float) $order->get_meta( '_stripe_net' );
+			$stripe_fee                = (float) $order->get_meta( '_stripe_fee' );
+			$total_in_gateway_currency = $stripe_net + $stripe_fee;
+
+			if ( $total_in_gateway_currency > 0 ) {
+				// Convert gateway amount to order currency for comparison.
+				$order_paid = round( $total_in_gateway_currency / $exchange_rate, 2 );
+			}
+		}
 
 		// Check for payment mismatches.
 		if ( $order->is_paid() && abs( $order_paid - $invoice_paid ) > $tolerance ) {
@@ -624,17 +821,20 @@ class ReconciliationService {
 					'type'           => 'payment_mismatch',
 					'order_id'       => $order->get_id(),
 					'order_number'   => $order->get_order_number(),
+					'order_status'   => $order->get_status(),
 					'order_paid'     => $order_paid,
 					'order_date'     => $order->get_date_created()->format( 'Y-m-d' ),
 					'invoice_id'     => $invoice['invoice_id'] ?? '',
 					'invoice_number' => $invoice['invoice_number'] ?? '',
+					'invoice_status' => $invoice['status'] ?? '',
+					'payment_status' => $this->get_payment_status( $order, $invoice, $payment_map ),
 					'invoice_paid'   => $invoice_paid,
 					'invoice_date'   => $invoice['date'] ?? '',
 					'message'        => sprintf(
 						/* translators: 1: WC paid amount, 2: Zoho paid amount */
 						__( 'Payment mismatch: WC received %1$s vs Zoho received %2$s', 'zbooks-for-woocommerce' ),
-						wc_price( $order_paid ),
-						wc_price( $invoice_paid )
+						wc_price( $order_paid, [ 'currency' => $order_currency ] ),
+						wc_price( $invoice_paid, [ 'currency' => $order_currency ] )
 					),
 				]
 			);
@@ -659,17 +859,20 @@ class ReconciliationService {
 					'type'            => 'refund_mismatch',
 					'order_id'        => $order->get_id(),
 					'order_number'    => $order->get_order_number(),
+					'order_status'    => $order->get_status(),
 					'order_date'      => $order->get_date_created()->format( 'Y-m-d' ),
 					'wc_refund_total' => $wc_refund_total,
 					'zoho_credits'    => $zoho_credits,
 					'invoice_id'      => $invoice['invoice_id'] ?? '',
 					'invoice_number'  => $invoice['invoice_number'] ?? '',
+					'invoice_status'  => $invoice['status'] ?? '',
+					'payment_status'  => $this->get_payment_status( $order, $invoice, $payment_map ),
 					'invoice_date'    => $invoice['date'] ?? '',
 					'message'         => sprintf(
 						/* translators: 1: WC refund amount, 2: Zoho credits amount */
 						__( 'Refund mismatch: WC refunded %1$s but Zoho shows %2$s credits', 'zbooks-for-woocommerce' ),
-						wc_price( $wc_refund_total ),
-						wc_price( $zoho_credits )
+						wc_price( $wc_refund_total, [ 'currency' => $order_currency ] ),
+						wc_price( $zoho_credits, [ 'currency' => $order_currency ] )
 					),
 				]
 			);
@@ -677,13 +880,94 @@ class ReconciliationService {
 	}
 
 	/**
+	 * Get payment status for display in reconciliation.
+	 *
+	 * @param \WC_Order $order       Order object.
+	 * @param array     $invoice     Invoice data.
+	 * @param array     $payment_map Map of invoice_id => array of payments.
+	 * @return string Payment status.
+	 */
+	private function get_payment_status( \WC_Order $order, array $invoice, array $payment_map ): string {
+		// Check if order is refunded.
+		$order_status = $order->get_status();
+		if ( $order_status === 'refunded' ) {
+			// Check for credit notes.
+			$credits_applied = (float) ( $invoice['credits_applied'] ?? 0 );
+			if ( $credits_applied > 0 ) {
+				return 'credit_note_applied';
+			}
+			return 'credit_note_pending';
+		}
+
+		// Check for draft payments first.
+		$invoice_id = $invoice['invoice_id'] ?? '';
+		if ( ! empty( $invoice_id ) && isset( $payment_map[ $invoice_id ] ) ) {
+			$payments = $payment_map[ $invoice_id ];
+			foreach ( $payments as $payment ) {
+				// Check if payment has draft status.
+				if ( isset( $payment['payment_mode'] ) && strtolower( $payment['payment_mode'] ) === 'draft' ) {
+					return 'draft';
+				}
+			}
+		}
+
+		// For non-refunded orders, check payment status.
+		$invoice_total   = (float) ( $invoice['total'] ?? 0 );
+		$invoice_balance = (float) ( $invoice['balance'] ?? 0 );
+		$invoice_paid    = $invoice_total - $invoice_balance;
+
+		if ( $invoice_balance <= 0.01 ) {
+			return 'paid';
+		}
+
+		if ( $invoice_paid > 0 ) {
+			return 'partially_paid';
+		}
+
+		return 'unpaid';
+	}
+
+	/**
+	 * Calculate exchange rate from gateway data.
+	 *
+	 * Same logic as PaymentService - uses Stripe metadata to determine
+	 * the exchange rate when gateway currency differs from order currency.
+	 *
+	 * @param \WC_Order $order WooCommerce order.
+	 * @return float|null Exchange rate (gateway_currency per order_currency), or null if cannot calculate.
+	 */
+	private function calculate_gateway_exchange_rate( \WC_Order $order ): ?float {
+		$order_total = (float) $order->get_total();
+		if ( $order_total <= 0 ) {
+			return null;
+		}
+
+		// Get Stripe metadata.
+		$stripe_net = $order->get_meta( '_stripe_net' );
+		$stripe_fee = $order->get_meta( '_stripe_fee' );
+
+		if ( ! empty( $stripe_net ) && is_numeric( $stripe_net ) ) {
+			$net                       = (float) $stripe_net;
+			$fee                       = ! empty( $stripe_fee ) && is_numeric( $stripe_fee ) ? (float) $stripe_fee : 0.0;
+			$total_in_gateway_currency = $net + $fee;
+
+			if ( $total_in_gateway_currency > 0 ) {
+				return $total_in_gateway_currency / $order_total;
+			}
+		}
+
+		return null;
+	}
+
+	/**
 	 * Check status alignment between order and invoice.
 	 *
-	 * @param ReconciliationReport $report  Report to update.
-	 * @param \WC_Order            $order   WooCommerce order.
-	 * @param array                $invoice Zoho invoice data.
+	 * @param ReconciliationReport $report      Report to update.
+	 * @param \WC_Order            $order       WooCommerce order.
+	 * @param array                $invoice     Zoho invoice data.
+	 * @param array                $payment_map Map of invoice_id => array of payments.
 	 */
-	private function check_status_alignment( ReconciliationReport $report, \WC_Order $order, array $invoice ): void {
+	private function check_status_alignment( ReconciliationReport $report, \WC_Order $order, array $invoice, array $payment_map ): void {
 		$order_status   = $order->get_status();
 		$invoice_status = strtolower( $invoice['status'] ?? '' );
 
@@ -709,6 +993,7 @@ class ReconciliationService {
 					'invoice_id'     => $invoice['invoice_id'] ?? '',
 					'invoice_number' => $invoice['invoice_number'] ?? '',
 					'invoice_status' => $invoice_status,
+					'payment_status' => $this->get_payment_status( $order, $invoice, $payment_map ),
 					'invoice_date'   => $invoice['date'] ?? '',
 					'message'        => sprintf(
 						/* translators: 1: Invoice status, 2: Order status */

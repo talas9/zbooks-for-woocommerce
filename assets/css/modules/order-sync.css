@@ -1,0 +1,233 @@
+/**
+ * Order Sync Module Styles
+ *
+ * Module-specific styles for the order synchronization interface.
+ * Loaded dynamically when the order sync tab is activated.
+ *
+ * @package    Zbooks
+ * @author     talas9
+ * @link       https://github.com/talas9/zbooks-for-woocommerce
+ * @since      1.0.0
+ */
+
+/* ==========================================================================
+   Bulk Sync Page - Stats Boxes
+   ========================================================================== */
+
+.zbooks-stats-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin: 20px 0;
+}
+
+.zbooks-stat-box {
+    flex: 1;
+    min-width: 150px;
+    max-width: 200px;
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    padding: 16px;
+    text-align: center;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+}
+
+.zbooks-stat-box:hover {
+    border-color: #2271b1;
+}
+
+.zbooks-stat-number {
+    display: block;
+    font-size: 32px;
+    font-weight: 600;
+    line-height: 1.2;
+    color: #1d2327;
+    margin-bottom: 8px;
+}
+
+.zbooks-stat-label {
+    display: block;
+    font-size: 13px;
+    color: #50575e;
+    margin-top: 4px;
+}
+
+.zbooks-stat-box--total .zbooks-stat-number {
+    color: #2271b1;
+}
+
+.zbooks-stat-box--synced .zbooks-stat-number {
+    color: #00a32a;
+}
+
+.zbooks-stat-box--pending .zbooks-stat-number {
+    color: #dba617;
+}
+
+.zbooks-stat-box--failed .zbooks-stat-number {
+    color: #d63638;
+}
+
+/* ==========================================================================
+   Progress Bar Styles
+   ========================================================================== */
+
+.zbooks-progress-container {
+    margin: 20px 0;
+    padding: 20px;
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+}
+
+.zbooks-progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.zbooks-progress-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1d2327;
+}
+
+.zbooks-progress-count {
+    font-size: 13px;
+    color: #50575e;
+}
+
+.zbooks-progress-bar {
+    height: 20px;
+    background-color: #f0f0f1;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+}
+
+.zbooks-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #2271b1, #135e96);
+    border-radius: 10px;
+    transition: width 0.3s ease;
+    position: relative;
+}
+
+.zbooks-progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.2) 50%,
+        rgba(255, 255, 255, 0) 100%
+    );
+    animation: zbooks-progress-shine 1.5s infinite;
+}
+
+@keyframes zbooks-progress-shine {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+.zbooks-progress-percentage {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 11px;
+    font-weight: 600;
+    color: #1d2327;
+    text-shadow: 0 0 2px #fff;
+}
+
+.zbooks-progress-status {
+    margin-top: 12px;
+    font-size: 13px;
+    color: #50575e;
+}
+
+.zbooks-progress-status.is-processing {
+    color: #2271b1;
+}
+
+.zbooks-progress-status.is-complete {
+    color: #00a32a;
+}
+
+.zbooks-progress-status.is-error {
+    color: #d63638;
+}
+
+/* ==========================================================================
+   Bulk Sync Table & Checkboxes
+   ========================================================================== */
+
+.zbooks-bulk-table {
+    margin-top: 20px;
+}
+
+.zbooks-bulk-table .check-column {
+    width: 40px;
+    padding: 8px 10px;
+}
+
+.zbooks-bulk-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 16px 0;
+    padding: 12px 16px;
+    background: #f6f7f7;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+}
+
+.zbooks-bulk-actions .button {
+    margin: 0;
+}
+
+.zbooks-selected-count {
+    font-size: 13px;
+    color: #50575e;
+}
+
+.zbooks-select-all-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.zbooks-select-all-container label {
+    cursor: pointer;
+    font-size: 13px;
+}
+
+/* ==========================================================================
+   Responsive Adjustments for Order Sync
+   ========================================================================== */
+
+@media screen and (max-width: 782px) {
+    .zbooks-stats-container {
+        flex-direction: column;
+    }
+
+    .zbooks-stat-box {
+        max-width: none;
+    }
+
+    .zbooks-bulk-actions {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

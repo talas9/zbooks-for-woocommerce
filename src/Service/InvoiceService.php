@@ -14,6 +14,7 @@ namespace Zbooks\Service;
 use WC_Order;
 use WC_Order_Item_Product;
 use Zbooks\Api\ZohoClient;
+use Zbooks\Helper\SyncMetadataHelper;
 use Zbooks\Logger\SyncLogger;
 use Zbooks\Model\SyncResult;
 use Zbooks\Model\SyncStatus;
@@ -540,10 +541,13 @@ class InvoiceService {
 			$invoice['currency_code'] = $currency;
 		}
 
-		// Add notes.
+		// Add notes with sync metadata.
 		$customer_note = $order->get_customer_note();
+		$sync_comment  = SyncMetadataHelper::generate_sync_comment( $order, 'invoice' );
 		if ( ! empty( $customer_note ) ) {
-			$invoice['notes'] = $customer_note;
+			$invoice['notes'] = $customer_note . "\n\n" . $sync_comment;
+		} else {
+			$invoice['notes'] = $sync_comment;
 		}
 
 		// Add custom field mappings.
@@ -602,7 +606,9 @@ class InvoiceService {
 
 				// Use mapped Zoho item ID if available.
 				$zoho_item_id = $this->item_mapping->get_zoho_item_id( $product_id );
-				if ( ! empty( $zoho_item_id ) ) {
+				// Note: We use explicit null and empty string checks instead of empty() because
+				// empty() treats the string "0" as empty, which would exclude valid item_id mappings.
+				if ( $zoho_item_id !== null && $zoho_item_id !== '' ) {
 					$line_item['item_id'] = $zoho_item_id;
 					$this->logger->debug(
 						'Using mapped Zoho item',

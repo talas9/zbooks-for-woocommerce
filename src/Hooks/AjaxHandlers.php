@@ -86,14 +86,32 @@ class AjaxHandlers {
 			);
 		}
 
-		$result = $this->orchestrator->sync_order( $order, $as_draft );
+		// Manual sync always uses force=true to actually re-sync (not just return cached result).
+		$result = $this->orchestrator->sync_order( $order, $as_draft, true );
 
 		if ( $result->success ) {
+			// Get repository to fetch display names.
+			$repository = new \Zbooks\Repository\OrderMetaRepository();
+			
+			// Get last attempt timestamp.
+			$last_attempt = $repository->get_last_sync_attempt( $order );
+			
 			wp_send_json_success(
 				[
-					'message'    => __( 'Order synced successfully!', 'zbooks-for-woocommerce' ),
-					'invoice_id' => $result->invoice_id,
-					'status'     => $result->status->value,
+					'message'         => __( 'Order synced successfully!', 'zbooks-for-woocommerce' ),
+					'invoice_id'      => $result->invoice_id,
+					'invoice_number'  => $repository->get_invoice_number( $order ),
+					'invoice_url'     => \Zbooks\Helper\ZohoUrlHelper::invoice( $result->invoice_id ),
+					'contact_id'      => $result->contact_id,
+					'contact_name'    => $repository->get_contact_name( $order ),
+					'contact_url'     => $result->contact_id ? \Zbooks\Helper\ZohoUrlHelper::contact( $result->contact_id ) : null,
+					'status'          => $result->status->value,
+					'status_label'    => $result->status->label(),
+					'status_class'    => $result->status->css_class(),
+					'payment_id'      => $repository->get_payment_id( $order ),
+					'payment_number'  => $repository->get_payment_number( $order ),
+					'invoice_status'  => $repository->get_invoice_status( $order ),
+					'last_attempt'    => $last_attempt ? $last_attempt->format( 'Y-m-d H:i:s' ) : null,
 				]
 			);
 		} else {
@@ -233,10 +251,16 @@ class AjaxHandlers {
 		$result = $this->orchestrator->apply_payment( $order );
 
 		if ( $result['success'] ) {
+			// Get repository to fetch display names and updated data.
+			$repository   = new \Zbooks\Repository\OrderMetaRepository();
+			$last_attempt = $repository->get_last_sync_attempt( $order );
+			
 			wp_send_json_success(
 				[
-					'message'    => __( 'Payment applied successfully!', 'zbooks-for-woocommerce' ),
-					'payment_id' => $result['payment_id'] ?? null,
+					'message'        => __( 'Payment applied successfully!', 'zbooks-for-woocommerce' ),
+					'payment_id'     => $result['payment_id'] ?? null,
+					'payment_number' => $repository->get_payment_number( $order ),
+					'last_attempt'   => $last_attempt ? $last_attempt->format( 'Y-m-d H:i:s' ) : null,
 				]
 			);
 		} else {
@@ -386,8 +410,11 @@ class AjaxHandlers {
 			);
 		}
 
-		$date_from = isset( $_POST['date_from'] ) ? sanitize_text_field( $_POST['date_from'] ) : '';
-		$date_to   = isset( $_POST['date_to'] ) ? sanitize_text_field( $_POST['date_to'] ) : '';
+		$date_from    = isset( $_POST['date_from'] ) ? sanitize_text_field( $_POST['date_from'] ) : '';
+		$date_to      = isset( $_POST['date_to'] ) ? sanitize_text_field( $_POST['date_to'] ) : '';
+		$order_status = isset( $_POST['order_status'] ) && is_array( $_POST['order_status'] )
+			? array_map( 'sanitize_text_field', wp_unslash( $_POST['order_status'] ) )
+			: [ 'all' ];
 
 		if ( empty( $date_from ) || empty( $date_to ) ) {
 			wp_send_json_error(
@@ -400,7 +427,7 @@ class AjaxHandlers {
 		$plugin       = \Zbooks\Plugin::get_instance();
 		$bulk_service = $plugin->get_service( 'bulk_sync_service' );
 
-		$orders = $bulk_service->get_syncable_orders( $date_from, $date_to, 500 );
+		$orders = $bulk_service->get_syncable_orders( $date_from, $date_to, 500, $order_status );
 
 		$order_data = [];
 		foreach ( $orders as $order ) {

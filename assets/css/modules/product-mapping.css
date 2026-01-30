@@ -1,0 +1,155 @@
+/**
+ * Product Mapping Module Styles
+ *
+ * Module-specific styles for the product mapping interface.
+ * Loaded dynamically when the product mapping tab is activated.
+ *
+ * @package    Zbooks
+ * @author     talas9
+ * @link       https://github.com/talas9/zbooks-for-woocommerce
+ * @since      1.0.0
+ */
+
+/* ==========================================================================
+   Product Mapping Styles
+   ========================================================================== */
+
+.zbooks-save-mapping:disabled {
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+    pointer-events: none;
+}
+
+.zbooks-save-mapping:disabled:hover {
+    background-color: #f6f7f7 !important;
+    border-color: #c3c4c7 !important;
+}
+
+/* Auto-map processing state */
+.zbooks-mapping-in-progress {
+    opacity: 0.5;
+    pointer-events: none;
+    position: relative;
+    background-color: #f0f0f1 !important;
+}
+
+.zbooks-mapping-in-progress td {
+    color: #787c82;
+}
+
+/* Spinner for mapping in progress */
+.zbooks-mapping-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #f0f0f1;
+    border-top-color: #2271b1;
+    border-radius: 50%;
+    animation: zbooks-spin 0.6s linear infinite;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+/* ==========================================================================
+   Product Meta Box (ProductMetaBox.php)
+   ========================================================================== */
+
+.zbooks-product-meta-box .zbooks-status {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+}
+
+.zbooks-product-meta-box .zbooks-status-synced {
+    background: #d4edda;
+    color: #155724;
+}
+
+.zbooks-product-meta-box .zbooks-status-none {
+    background: #f0f0f1;
+    color: #50575e;
+}
+
+.zbooks-product-meta-box hr {
+    margin: 12px 0;
+}
+
+.zbooks-product-meta-box .button {
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+
+/* ==========================================================================
+   Field Mapping Page (FieldMappingPage.php)
+   ========================================================================== */
+
+.zbooks-mapping-section {
+    margin: 20px 0;
+}
+
+.zbooks-mapping-row select {
+    width: 100%;
+}
+
+#zbooks-mapping-spinner {
+    float: none;
+    margin-left: 10px;
+}
+
+#zbooks-mapping-spinner.is-active {
+    visibility: visible;
+}
+
+.zbooks-no-mappings td {
+    font-style: italic;
+    color: #666;
+}
+
+/* ==========================================================================
+   Select2 Dropdown Customization for Product Mapping
+   ========================================================================== */
+
+/**
+ * Hide the original select element when Select2 is initialized.
+ * Select2 automatically adds the 'select2-hidden-accessible' class to the
+ * original select element and creates a new visual element to replace it.
+ * This ensures only the Select2 enhanced dropdown is visible.
+ */
+.select2-hidden-accessible {
+    display: none !important;
+}
+
+/* Select2 dropdown hover styles */
+.select2-results__option--highlighted {
+    background-color: #0073aa !important;
+    color: #fff !important;
+}
+
+.select2-results__option:hover {
+    background-color: #f0f0f1;
+    cursor: pointer;
+}
+
+.select2-results__option--selectable {
+    cursor: pointer;
+}
+
+/* ==========================================================================
+   Product Totals Display
+   ========================================================================== */
+
+/* Totals update animation */
+.zbooks-product-totals.updated {
+    animation: zbooks-pulse 0.5s ease-in-out;
+}
+
+@keyframes zbooks-pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+        background-color: #f0f6fc;
+    }
+}

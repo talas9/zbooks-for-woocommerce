@@ -65,7 +65,12 @@ class SyncLogger {
 
 		// Fallback if basedir is empty or null.
 		if ( empty( $basedir ) ) {
-			$basedir = WP_CONTENT_DIR . '/uploads';
+			// Use wp_upload_dir() instead of WP_CONTENT_DIR constant.
+			// WordPress.org requires using WordPress functions for determining file/directory locations.
+			// Plugin files should be stored in the uploads directory.
+			// See: https://developer.wordpress.org/plugins/plugin-basics/determining-plugin-and-content-directories/
+			$upload_dir = wp_upload_dir();
+			$basedir    = $upload_dir['basedir'];
 		}
 
 		$this->log_dir_path = $basedir . '/zbooks-logs';

@@ -1104,9 +1104,17 @@ class SetupWizard {
 		}
 
 		try {
+			// Fetch all item types: sales, inventory, and service items.
+			// By default, Zoho API only returns 'sales' items, so we need to explicitly
+			// request all types to include items with inventory tracking enabled.
 			$response = $this->client->request(
 				function ( $client ) {
-					return $client->items->getList( [ 'per_page' => 200 ] );
+					return $client->items->getList(
+						[
+							'per_page'  => 200,
+							'filter_by' => 'ItemType.All',
+						]
+					);
 				},
 				[
 					'endpoint' => 'items.getList',

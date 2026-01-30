@@ -4,7 +4,7 @@ Tags: woocommerce, zoho, zoho-books, invoice, sync
 Requires at least: 6.9
 Tested up to: 6.9
 Requires PHP: 8.2
-Stable tag: 1.0.15
+Stable tag: 1.0.17
 License: GPL-2.0+
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -141,6 +141,22 @@ Yes, each reconciliation report can be exported to CSV format for further analys
 5. Reconciliation report with discrepancy detection
 
 == Changelog ==
+
+= 1.0.16 =
+* **NEW: Payment Status Detection** - Reconciliation reports now show draft payment status from Zoho Books
+* **NEW: Payment Status Column** - Added "Payment Status" column showing paid, unpaid, draft, credit note applied, or credit note pending status
+* **NEW: Batch Payment Fetching** - Reconciliation efficiently fetches all payments in 2 API calls instead of N+1 per invoice
+* **Improvement: Reconciliation Performance** - Optimized payment fetching with intelligent payment lookup and pagination limits
+* **Improvement: Error Handling** - Payment fetch failures no longer break reconciliation; continues gracefully with detailed logging
+* **Improvement: Test Reliability** - Fixed E2E test credential setup and enhanced error reporting with detailed diagnostics
+* **Fix: ReconciliationService** - Changed error catching from Exception to Throwable to properly catch PHP type errors
+* **Fix: CSS Tests** - Updated E2E tests to check for properly enqueued CSS files (WordPress.org compliance)
+* **Dev: Test Infrastructure Overhaul** - Smart testing strategy with test pyramid (PHP Unit > API Tests > Browser E2E)
+* **Dev: Zoho API Mocking** - Added mock system for fast, reliable tests without credentials
+* **Dev: Enhanced Test Reporter** - Custom reporter with category breakdown, performance insights, and failure summaries
+* **Dev: Parallel Execution** - Increased test workers (8 for API, 4 for browser) for 2-3x faster test runs
+* **Dev: Test Strategy Guide** - Comprehensive documentation for unit/API/browser testing best practices
+* **Dev: WordPress.org Compliance** - Updated .distignore to exclude 100+ forbidden files
 
 = 1.0.15 =
 * **Fix: Bulk sync date filtering** - Corrected date range query to properly filter orders within specified date boundaries

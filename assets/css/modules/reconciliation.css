@@ -1,0 +1,295 @@
+/**
+ * Reconciliation Page Styles
+ * Optimized and deduplicated
+ *
+ * @package Zbooks
+ */
+
+/* ========================================
+   BADGES
+======================================== */
+.zbooks-badge {
+	display: inline-block;
+	padding: 2px 8px;
+	border-radius: 3px;
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	vertical-align: middle;
+	line-height: 1.4;
+}
+
+.zbooks-badge-missing_in_zoho { background: #ffeaea; color: #dc3545; }
+.zbooks-badge-missing_in_wc { background: #fff3cd; color: #856404; }
+.zbooks-badge-amount_mismatch { background: #fff3cd; color: #856404; }
+.zbooks-badge-payment_mismatch { background: #fff3cd; color: #856404; }
+.zbooks-badge-refund_mismatch { background: #fff3cd; color: #856404; }
+.zbooks-badge-status_mismatch { background: #e7f3ff; color: #0056b3; }
+
+/* ========================================
+   STATUS INDICATORS
+======================================== */
+.zbooks-status {
+	display: inline-block;
+	padding: 2px 8px;
+	border-radius: 3px;
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	vertical-align: middle;
+	line-height: 1.4;
+}
+.zbooks-status-completed { background: #d4edda; color: #155724; }
+.zbooks-status-failed { background: #f8d7da; color: #721c24; }
+.zbooks-status-running { background: #fff3cd; color: #856404; }
+.zbooks-status-pending { background: #e2e3e5; color: #383d41; }
+
+/* WooCommerce Order Statuses */
+.zbooks-status-processing { background: #c6e1c6; color: #2e4057; }
+.zbooks-status-on-hold { background: #f8dda7; color: #966919; }
+.zbooks-status-cancelled { background: #eba8a8; color: #761919; }
+.zbooks-status-refunded { background: #c8d7e1; color: #2e4053; }
+
+/* Zoho Invoice Statuses */
+.zbooks-status-paid { background: #d4edda; color: #155724; }
+.zbooks-status-draft { background: #e2e3e5; color: #383d41; }
+.zbooks-status-sent { background: #cfe2ff; color: #052c65; }
+.zbooks-status-unpaid { background: #fff3cd; color: #856404; }
+.zbooks-status-partially_paid { background: #fff3cd; color: #856404; }
+.zbooks-status-overdue { background: #f8d7da; color: #721c24; }
+.zbooks-status-void { background: #e2e3e5; color: #6c757d; }
+
+/* Payment Statuses */
+.zbooks-status-credit_note_applied { background: #d4edda; color: #155724; }
+.zbooks-status-credit_note_pending { background: #fff3cd; color: #856404; }
+.zbooks-status-draft { background: #e2e3e5; color: #383d41; }
+
+/* ========================================
+   SUMMARY CARDS
+======================================== */
+.zbooks-summary-cards {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+	gap: 16px;
+	margin-top: 20px;
+}
+
+.zbooks-card {
+	background: #fff;
+	padding: 20px 16px;
+	border-radius: 12px;
+	text-align: center;
+	border: 1px solid #e0e0e0;
+	transition: all 0.3s ease;
+	cursor: default;
+}
+
+.zbooks-card:hover {
+	transform: translateY(-4px);
+	box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.zbooks-card-value {
+	display: block;
+	font-size: 28px;
+	font-weight: 700;
+	line-height: 1.1;
+	margin-bottom: 8px;
+	word-break: break-word;
+	overflow-wrap: break-word;
+}
+
+.zbooks-card-label {
+	display: block;
+	font-size: 12px;
+	color: #666;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	font-weight: 500;
+}
+
+.zbooks-card-desc {
+	display: block;
+	font-size: 11px;
+	color: #999;
+	margin-top: 6px;
+	font-style: italic;
+}
+
+/* Card Variants */
+.zbooks-card-neutral {
+	background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+	border-color: #dee2e6;
+}
+.zbooks-card-neutral .zbooks-card-value { color: #495057; }
+
+.zbooks-card-success {
+	background: linear-gradient(135deg, #d4edda 0%, #b8e0c4 100%);
+	border-color: #a3d9b1;
+}
+.zbooks-card-success .zbooks-card-value { color: #155724; }
+.zbooks-card-success:hover { border-color: #28a745; }
+
+.zbooks-card-danger {
+	background: linear-gradient(135deg, #f8d7da 0%, #f1aeb5 100%);
+	border-color: #f1aeb5;
+}
+.zbooks-card-danger .zbooks-card-value { color: #721c24; }
+.zbooks-card-danger:hover { border-color: #dc3545; }
+
+.zbooks-card-warning {
+	background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%);
+	border-color: #ffc107;
+}
+.zbooks-card-warning .zbooks-card-value { color: #856404; }
+.zbooks-card-warning:hover { border-color: #e0a800; }
+
+.zbooks-card-info {
+	background: linear-gradient(135deg, #cfe2ff 0%, #9ec5fe 100%);
+	border-color: #9ec5fe;
+}
+.zbooks-card-info .zbooks-card-value { color: #084298; }
+.zbooks-card-info:hover { border-color: #0d6efd; }
+
+/* ========================================
+   MODAL STYLES
+======================================== */
+.zbooks-modal {
+	display: none;
+	position: fixed;
+	z-index: 100000;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	overflow: auto;
+	background-color: rgba(0,0,0,0.5);
+}
+
+.zbooks-modal-content {
+	background-color: #fff;
+	margin: 5% auto;
+	padding: 20px 30px;
+	border: 1px solid #ccd0d4;
+	width: 80%;
+	max-width: 900px;
+	max-height: 80vh;
+	overflow-y: auto;
+	border-radius: 4px;
+	box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+.zbooks-modal-close {
+	color: #666;
+	float: right;
+	font-size: 28px;
+	font-weight: bold;
+	cursor: pointer;
+	line-height: 1;
+}
+.zbooks-modal-close:hover { color: #000; }
+
+.zbooks-modal h2 { 
+	margin-top: 0; 
+}
+
+.zbooks-modal h3 { 
+	margin-top: 20px; 
+	border-bottom: 1px solid #eee; 
+	padding-bottom: 8px; 
+}
+
+/* Modal Summary Grid */
+.zbooks-modal-summary .summary-grid {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 12px;
+	margin-top: 15px;
+}
+
+.zbooks-modal-summary .summary-item {
+	background: #fff;
+	padding: 16px 12px;
+	border-radius: 8px;
+	text-align: center;
+	border: 1px solid #e0e0e0;
+	transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.zbooks-modal-summary .summary-item:hover {
+	box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+	transform: translateY(-1px);
+}
+
+.zbooks-modal-summary .summary-item .value {
+	display: block;
+	font-size: 28px;
+	font-weight: 700;
+	line-height: 1;
+	margin-bottom: 8px;
+}
+
+.zbooks-modal-summary .summary-item .label {
+	display: block;
+	font-size: 11px;
+	color: #666;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.zbooks-modal-summary .summary-item .desc {
+	display: block;
+	font-size: 10px;
+	color: #888;
+	margin-top: 6px;
+	font-style: italic;
+}
+
+/* Modal Summary Item Variants */
+.zbooks-modal-summary .summary-item.neutral { 
+	background: #f8f9fa; 
+	border-color: #dee2e6; 
+}
+.zbooks-modal-summary .summary-item.neutral .value { color: #495057; }
+
+.zbooks-modal-summary .summary-item.success { 
+	background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); 
+	border-color: #b1dfbb; 
+}
+.zbooks-modal-summary .summary-item.success .value { color: #155724; }
+
+.zbooks-modal-summary .summary-item.danger { 
+	background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%); 
+	border-color: #f1b0b7; 
+}
+.zbooks-modal-summary .summary-item.danger .value { color: #721c24; }
+
+.zbooks-modal-summary .summary-item.warning { 
+	background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%); 
+	border-color: #ffc107; 
+}
+.zbooks-modal-summary .summary-item.warning .value { color: #856404; }
+
+.zbooks-modal-summary .summary-item.info { 
+	background: linear-gradient(135deg, #e7f3ff 0%, #cce5ff 100%); 
+	border-color: #b8daff; 
+}
+.zbooks-modal-summary .summary-item.info .value { color: #004085; }
+
+/* Modal Discrepancies */
+.zbooks-modal-discrepancies { 
+	margin-top: 20px; 
+}
+
+.zbooks-modal-discrepancies table { 
+	margin-top: 10px; 
+}
+
+/* ========================================
+   RESPONSIVE
+======================================== */
+@media (max-width: 768px) {
+	.zbooks-modal-summary .summary-grid { 
+		grid-template-columns: repeat(2, 1fr); 
+	}
+}

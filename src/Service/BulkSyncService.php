@@ -61,19 +61,21 @@ class BulkSyncService {
 	}
 
 	/**
-	 * Get orders available for bulk sync.
+	 * Get orders available for bulk sync (all orders, including synced ones).
 	 *
-	 * @param string|null $date_from Start date.
-	 * @param string|null $date_to   End date.
-	 * @param int         $limit     Max orders.
+	 * @param string|null $date_from    Start date.
+	 * @param string|null $date_to      End date.
+	 * @param int         $limit        Max orders.
+	 * @param array       $order_status Order statuses to filter by.
 	 * @return array
 	 */
 	public function get_syncable_orders(
 		?string $date_from = null,
 		?string $date_to = null,
-		int $limit = 100
+		int $limit = 100,
+		array $order_status = [ 'all' ]
 	): array {
-		return $this->repository->get_unsynced_orders( $date_from, $date_to, $limit );
+		return $this->repository->get_orders_for_bulk_sync( $date_from, $date_to, $limit, $order_status );
 	}
 
 	/**

@@ -17,6 +17,7 @@ use Zbooks\Logger\SyncLogger;
 use Zbooks\Model\SyncResult;
 use Zbooks\Model\SyncStatus;
 use Zbooks\Repository\OrderMetaRepository;
+use Zbooks\Repository\ItemMappingRepository;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -76,15 +77,23 @@ class SyncOrchestrator {
 	private OrderNoteService $note_service;
 
 	/**
+	 * Item mapping repository.
+	 *
+	 * @var ItemMappingRepository
+	 */
+	private ItemMappingRepository $item_mapping;
+
+	/**
 	 * Constructor.
 	 *
-	 * @param CustomerService       $customer_service Customer service.
-	 * @param InvoiceService        $invoice_service  Invoice service.
-	 * @param OrderMetaRepository   $repository       Order meta repository.
-	 * @param SyncLogger            $logger           Logger.
-	 * @param PaymentService|null   $payment_service  Payment service.
-	 * @param RefundService|null    $refund_service   Refund service.
-	 * @param OrderNoteService|null $note_service    Order note service.
+	 * @param CustomerService         $customer_service Customer service.
+	 * @param InvoiceService          $invoice_service  Invoice service.
+	 * @param OrderMetaRepository     $repository       Order meta repository.
+	 * @param SyncLogger              $logger           Logger.
+	 * @param PaymentService|null     $payment_service  Payment service.
+	 * @param RefundService|null      $refund_service   Refund service.
+	 * @param OrderNoteService|null   $note_service     Order note service.
+	 * @param ItemMappingRepository|null $item_mapping  Item mapping repository.
 	 */
 	public function __construct(
 		CustomerService $customer_service,
@@ -93,7 +102,8 @@ class SyncOrchestrator {
 		SyncLogger $logger,
 		?PaymentService $payment_service = null,
 		?RefundService $refund_service = null,
-		?OrderNoteService $note_service = null
+		?OrderNoteService $note_service = null,
+		?ItemMappingRepository $item_mapping = null
 	) {
 		$this->customer_service = $customer_service;
 		$this->invoice_service  = $invoice_service;
@@ -102,6 +112,7 @@ class SyncOrchestrator {
 		$this->payment_service  = $payment_service;
 		$this->refund_service   = $refund_service;
 		$this->note_service     = $note_service ?? new OrderNoteService();
+		$this->item_mapping     = $item_mapping ?? new ItemMappingRepository();
 	}
 
 	/**
@@ -166,13 +177,74 @@ class SyncOrchestrator {
 	}
 
 	/**
+	 * Validate that all products in the order have Zoho item mappings.
+	 *
+	 * @param WC_Order $order WooCommerce order.
+	 * @return array{valid: bool, error: string, unmapped_products: array<int, array{id: int, name: string}>}
+	 */
+	private function validate_product_mappings( WC_Order $order ): array {
+		$unmapped_products = [];
+
+		foreach ( $order->get_items() as $item ) {
+			$product = $item->get_product();
+			if ( ! $product ) {
+				continue;
+			}
+
+			$product_id = $product->get_id();
+			$zoho_item_id = $this->item_mapping->get_zoho_item_id( $product_id );
+
+			// Check for both null (no mapping) and empty string (invalid mapping).
+			if ( $zoho_item_id === null || $zoho_item_id === '' ) {
+				$unmapped_products[] = [
+					'id'   => $product_id,
+					'name' => $product->get_name(),
+				];
+			}
+		}
+
+		if ( empty( $unmapped_products ) ) {
+			return [
+				'valid'             => true,
+				'error'             => '',
+				'unmapped_products' => [],
+			];
+		}
+
+		// Build user-friendly error message.
+		$product_list = array_map(
+			function ( $product ) {
+				return sprintf( '%s (ID: %d)', $product['name'], $product['id'] );
+			},
+			$unmapped_products
+		);
+
+		$error_message = sprintf(
+			/* translators: %s: Comma-separated list of product names and IDs */
+			_n(
+				'Cannot sync order: The following product is not linked to a Zoho item: %s. Please link this product via the Products tab in Zoho Books settings.',
+				'Cannot sync order: The following products are not linked to Zoho items: %s. Please link these products via the Products tab in Zoho Books settings.',
+				count( $unmapped_products ),
+				'zbooks-for-woocommerce'
+			),
+			implode( ', ', $product_list )
+		);
+
+		return [
+			'valid'             => false,
+			'error'             => $error_message,
+			'unmapped_products' => $unmapped_products,
+		];
+	}
+
+	/**
 	 * Sync an order to Zoho Books.
 	 *
 	 * @param WC_Order $order    WooCommerce order.
 	 * @param bool     $as_draft Create invoice as draft.
 	 * @return SyncResult
 	 */
-	public function sync_order( WC_Order $order, bool $as_draft = false ): SyncResult {
+	public function sync_order( WC_Order $order, bool $as_draft = false, bool $force = false ): SyncResult {
 		$order_id     = $order->get_id();
 		$order_number = $order->get_order_number();
 
@@ -183,6 +255,7 @@ class SyncOrchestrator {
 				'order_number' => $order_number,
 				'status'       => $order->get_status(),
 				'as_draft'     => $as_draft,
+				'force'        => $force,
 			]
 		);
 
@@ -199,11 +272,11 @@ class SyncOrchestrator {
 		}
 
 		try {
-			// Check if already synced.
+			// Check if already synced (skip if force=true for manual re-sync).
 			$existing_invoice_id = $this->repository->get_invoice_id( $order );
-			if ( $existing_invoice_id !== null ) {
+			if ( $existing_invoice_id !== null && ! $force ) {
 				$this->logger->debug(
-					'Order already synced',
+					'Order already synced (use force=true to re-sync)',
 					[
 						'order_id'     => $order_id,
 						'order_number' => $order_number,
@@ -217,11 +290,49 @@ class SyncOrchestrator {
 					status: $this->repository->get_sync_status( $order ) ?? SyncStatus::SYNCED
 				);
 			}
+			
+			// If force=true and already synced, we'll update the existing invoice.
+			if ( $force && $existing_invoice_id !== null ) {
+				$this->logger->info(
+					'Force re-sync: Updating existing invoice',
+					[
+						'order_id'     => $order_id,
+						'invoice_id'   => $existing_invoice_id,
+					]
+				);
+			}
 
 			// Update status to pending.
 			$this->repository->set_sync_status( $order, SyncStatus::PENDING );
 			$this->repository->set_last_sync_attempt( $order );
-
+	
+			// Validate product mappings before creating invoice.
+			$validation = $this->validate_product_mappings( $order );
+			if ( ! $validation['valid'] ) {
+				$this->logger->error(
+					'Order sync failed: Products not linked to Zoho items',
+					[
+						'order_id'          => $order_id,
+						'unmapped_products' => $validation['unmapped_products'],
+					]
+				);
+	
+				// Update sync meta with failure status.
+				$this->repository->update_sync_meta(
+					order: $order,
+					status: SyncStatus::FAILED,
+					invoice_id: null,
+					contact_id: null,
+					error: $validation['error']
+				);
+	
+				// Add order note.
+				$this->note_service->add_order_note( $order, $validation['error'] );
+	
+				$this->release_sync_lock( $order_id );
+				return SyncResult::failure( $validation['error'] );
+			}
+	
 			// Step 1: Find or create contact.
 			$contact_id = $this->get_or_create_contact( $order );
 
@@ -491,10 +602,38 @@ class SyncOrchestrator {
 					'has_discrepancies' => $has_real_discrepancies,
 				]
 			);
-
+	
+			// Validate product mappings before updating invoice.
+			$validation = $this->validate_product_mappings( $order );
+			if ( ! $validation['valid'] ) {
+				$this->logger->error(
+					'Order resync failed: Products not linked to Zoho items',
+					[
+						'order_id'          => $order_id,
+						'invoice_id'        => $invoice_id,
+						'unmapped_products' => $validation['unmapped_products'],
+					]
+				);
+	
+				// Update sync meta with failure status.
+				$this->repository->update_sync_meta(
+					order: $order,
+					status: SyncStatus::FAILED,
+					invoice_id: $invoice_id,
+					contact_id: $this->repository->get_contact_id( $order ),
+					error: $validation['error']
+				);
+	
+				// Add order note.
+				$this->note_service->add_order_note( $order, $validation['error'] );
+	
+				$this->release_sync_lock( $order_id );
+				return SyncResult::failure( $validation['error'] );
+			}
+	
 			// Get or verify contact (may have changed since last sync).
 			$contact_id = $this->get_or_create_contact( $order );
-
+	
 			// Update the existing invoice.
 			$result = $this->invoice_service->update_invoice( $order, $invoice_id, $contact_id );
 

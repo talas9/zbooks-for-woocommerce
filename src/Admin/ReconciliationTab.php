@@ -34,6 +34,67 @@ class ReconciliationTab {
 	 */
 	public function __construct( ReconciliationService $service ) {
 		$this->service = $service;
+		$this->register_hooks();
+	}
+
+	/**
+	 * Register hooks.
+	 */
+	private function register_hooks(): void {
+		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_assets' ] );
+	}
+
+	/**
+	 * Enqueue reconciliation tab assets.
+	 * WordPress.org requires proper enqueue instead of inline tags.
+	 *
+	 * @param string $hook Current admin page hook.
+	 */
+	public function enqueue_assets( string $hook ): void {
+		if ( $hook !== 'toplevel_page_zbooks' ) {
+			return;
+		}
+
+		// Check if we're on reconciliation tab.
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$tab = $_GET['tab'] ?? '';
+		if ( $tab !== 'reconciliation' ) {
+			return;
+		}
+
+		// Enqueue CSS.
+		wp_enqueue_style(
+			'zbooks-reconciliation-tab',
+			ZBOOKS_PLUGIN_URL . 'assets/css/modules/reconciliation.css',
+			[],
+			ZBOOKS_VERSION
+		);
+
+		// Enqueue JavaScript module.
+		wp_enqueue_script(
+			'zbooks-reconciliation-tab',
+			ZBOOKS_PLUGIN_URL . 'assets/js/modules/reconciliation.js',
+			[ 'jquery', 'zbooks-admin' ],
+			ZBOOKS_VERSION,
+			true
+		);
+
+		// Add frequency toggle inline script (WordPress.org compliant).
+		$inline_script = "
+		jQuery(document).ready(function($) {
+			// Toggle frequency options.
+			$('#zbooks-recon-frequency').on('change', function() {
+				var frequency = $(this).val();
+				$('.zbooks-weekly-option, .zbooks-monthly-option').hide();
+				if (frequency === 'weekly') {
+					$('.zbooks-weekly-option').show();
+				} else if (frequency === 'monthly') {
+					$('.zbooks-monthly-option').show();
+				}
+			});
+		});
+		";
+		wp_add_inline_script( 'zbooks-reconciliation-tab', $inline_script );
 	}
 
 	/**
@@ -171,20 +232,7 @@ class ReconciliationTab {
 			</div>
 		</div><!-- .zbooks-reconciliation-tab -->
 
-		<script>
-		jQuery(document).ready(function($) {
-			// Toggle frequency options.
-			$('#zbooks-recon-frequency').on('change', function() {
-				var frequency = $(this).val();
-				$('.zbooks-weekly-option, .zbooks-monthly-option').hide();
-				if (frequency === 'weekly') {
-					$('.zbooks-weekly-option').show();
-				} else if (frequency === 'monthly') {
-					$('.zbooks-monthly-option').show();
-				}
-			});
-		});
-		</script>
+		<!-- JavaScript now output via wp_add_inline_script() -->
 		<?php
 	}
 

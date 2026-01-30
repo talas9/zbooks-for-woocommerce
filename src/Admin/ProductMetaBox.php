@@ -458,9 +458,18 @@ class ProductMetaBox {
 			// Clear cache.
 			delete_transient( 'zbooks_zoho_item_' . $zoho_item_id );
 
+			// Fetch updated item details for display.
+			$zoho_item = $this->get_zoho_item( $zoho_item_id );
+
 			wp_send_json_success(
 				[
-					'message' => __( 'Item updated in Zoho Books!', 'zbooks-for-woocommerce' ),
+					'message'     => __( 'Item updated in Zoho Books!', 'zbooks-for-woocommerce' ),
+					'item_id'     => $zoho_item_id,
+					'item_url'    => ZohoUrlHelper::item( $zoho_item_id ),
+					'item_name'   => $zoho_item['name'] ?? '',
+					'item_sku'    => $zoho_item['sku'] ?? '',
+					'item_rate'   => isset( $zoho_item['rate'] ) ? wc_price( $zoho_item['rate'] ) : '',
+					'item_status' => isset( $zoho_item['status'] ) ? ucfirst( $zoho_item['status'] ) : '',
 				]
 			);
 		} catch ( \Throwable $e ) {
@@ -719,8 +728,10 @@ class ProductMetaBox {
 				]
 			);
 		} catch ( \Throwable $e ) {
-            // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-			error_log( '[ZBooks for WooCommerce] Search items error: ' . $e->getMessage() );
+		          // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+			error_log( '[ZBooks for WooCommerce] Search items error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine() );
+		          // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+			error_log( '[ZBooks for WooCommerce] Search items stack trace: ' . $e->getTraceAsString() );
 
 			$error_message = $this->extract_api_error( $e );
 			wp_send_json_error( [ 'message' => $error_message ] );
@@ -734,9 +745,15 @@ class ProductMetaBox {
 	 * @return array List of matching items.
 	 */
 	private function search_zoho_items( string $search_term ): array {
+		// Fetch all item types when searching to include inventory-tracked items.
 		$response = $this->client->request(
 			function ( $client ) use ( $search_term ) {
-				return $client->items->getList( [ 'search_text' => $search_term ] );
+				return $client->items->getList(
+					[
+						'search_text' => $search_term,
+						'filter_by'   => 'ItemType.All',
+					]
+				);
 			},
 			[
 				'endpoint' => 'items.getList',
