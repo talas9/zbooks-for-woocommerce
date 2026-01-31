@@ -3,7 +3,7 @@
  * Plugin Name: ZBooks for WooCommerce
  * Plugin URI: https://github.com/talas9/zbooks-for-woocommerce
  * Description: Sync WooCommerce orders to Zoho Books automatically or manually.
- * Version: 1.0.17
+ * Version: 1.0.19
  * Author: talas9
  * Author URI: https://github.com/talas9
  * License: GPL-2.0+
@@ -27,7 +27,7 @@ namespace Zbooks;
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'ZBOOKS_VERSION', '1.0.17' );
+define( 'ZBOOKS_VERSION', '1.0.19' );
 define( 'ZBOOKS_PLUGIN_FILE', __FILE__ );
 define( 'ZBOOKS_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'ZBOOKS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );

@@ -4,7 +4,7 @@ Tags: woocommerce, zoho, zoho-books, invoice, sync
 Requires at least: 6.9
 Tested up to: 6.9
 Requires PHP: 8.2
-Stable tag: 1.0.17
+Stable tag: 1.0.19
 License: GPL-2.0+
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -141,6 +141,30 @@ Yes, each reconciliation report can be exported to CSV format for further analys
 5. Reconciliation report with discrepancy detection
 
 == Changelog ==
+
+= 1.0.19 =
+* **Improvement: Orders tab styling** - Replaced inline styles with CSS classes for consistent styling and maintainability
+* **NEW: Restore Defaults button** - Added one-click button to restore default status mappings in Orders tab
+* **Fix: Table header padding** - Fixed trigger mappings table headers touching left border
+* **Fix: CSS module enqueuing** - product-mapping.css and order-sync.css now properly enqueued on respective pages
+* **Fix: Tab naming mismatch** - Fixed custom_fields tab not loading correct JavaScript module
+* **Fix: Missing notifications module** - Added notifications module to lazy loading map
+* **Fix: Double JS initialization** - Prevented log-viewer, payments, and order-sync modules from initializing twice
+
+= 1.0.18 =
+* **Fix: PayPal fee tracking** - Expanded meta key support for PayPal transaction fees (Standard, Express, Commerce, PPCP, Checkout, IPN)
+* **Fix: Log viewer request details** - API request details now visible in log viewer without requiring WP_DEBUG mode
+* **Improvement: Invoice line item comparison** - Enhanced to match by item_id (if mapped) or name, always comparing quantity and price
+* **Improvement: Product-to-item mapping sync** - Re-syncing detects when products have been mapped to Zoho items since initial sync
+* **Improvement: Custom field logging** - Fields now logged at INFO level with actual values for better debugging
+* **Improvement: Payment fee logging** - Warning shown when gateway fees detected but deposit account not mapped
+
+= 1.0.17 =
+* **Fix: Custom Fields API** - Fixed bug where GET request parameters were ignored, causing custom fields to not fetch from Zoho
+* **Fix: Connection test** - Fixed nonce verification mismatch causing 403 errors
+* **Fix: Custom fields initialization** - Prevented JavaScript module from initializing twice
+* **Improvement: Error handling** - Custom fields API now surfaces Zoho errors to users
+* **Improvement: Code cleanup** - Removed duplicate handlers and migration notices
 
 = 1.0.16 =
 * **NEW: Payment Status Detection** - Reconciliation reports now show draft payment status from Zoho Books

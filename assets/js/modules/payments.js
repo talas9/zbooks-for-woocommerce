@@ -18,16 +18,23 @@
      */
     window.ZbooksPaymentMapping = {
         nonce: '',
+        initialized: false,
 
         /**
          * Initialize the payment mapping module
          */
         init: function() {
+            // Prevent double initialization
+            if (this.initialized) {
+                return;
+            }
+
             // Check if we're on the payment mapping page
             if (!$('.zbooks-account-select').length) {
                 return;
             }
 
+            this.initialized = true;
             this.nonce = typeof zbooks_refresh_accounts !== 'undefined' ? zbooks_refresh_accounts.nonce : '';
             this.bindEvents();
             this.initAccountNames();

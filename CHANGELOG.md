@@ -5,6 +5,31 @@ All notable changes to ZBooks for WooCommerce will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.19] - 2026-01-31
+
+### Added
+- **Restore Defaults button** - One-click button in Orders tab to restore default status mappings without saving
+
+### Fixed
+- **Orders tab styling** - Replaced all inline styles with CSS classes for consistency and maintainability
+- **Table header padding** - Trigger mappings table headers no longer touch left border
+- **CSS module enqueuing** - product-mapping.css and order-sync.css now properly enqueued on their respective pages
+- **Tab naming mismatch** - Fixed custom_fields tab not loading correct JavaScript module (underscore vs hyphen)
+- **Missing notifications module** - Added notifications module mapping for lazy loading
+- **Double JS initialization** - Added initialization guards to log-viewer.js, payments.js, and order-sync.js to prevent double initialization
+
+## [1.0.18] - 2026-01-31
+
+### Fixed
+- **PayPal fee tracking** - Expanded meta key support for PayPal transaction fees including PayPal Standard, Express, Commerce Platform (PPCP), Checkout, and IPN variants
+- **Log viewer request details** - API request details (method, endpoint, URL, status code) now visible in log viewer without requiring WP_DEBUG mode
+
+### Improved
+- **Invoice line item comparison** - Enhanced invoice verification to match items by Zoho item_id (if mapped) or name, always comparing quantity and price
+- **Product-to-item mapping sync** - Re-syncing an invoice now detects when products have been mapped to Zoho items since initial sync and flags discrepancies for update
+- **Custom field logging** - Custom fields now logged at INFO level with actual field values for better debugging visibility
+- **Payment fee logging** - Added warning when gateway fees are detected but deposit account is not mapped, with helpful configuration instructions
+
 ## [1.0.17] - 2026-01-30
 
 ### Fixed
@@ -17,9 +42,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Error handling** - Custom fields API now properly surfaces Zoho API errors to the user instead of silently failing
 - **Code cleanup** - Removed duplicate ajax_test_connection handler from SettingsPage.php
 - **Code cleanup** - Removed migration notice from Advanced tab
-
-### Developer
-- Added comprehensive debug documentation for Zoho API calls in SESSION-2026-01-30-custom-fields-fix.md
 
 ## [1.0.16] - 2026-01-30
 

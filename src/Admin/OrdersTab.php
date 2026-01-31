@@ -34,12 +34,56 @@ class OrdersTab {
 	 */
 	public function __construct( ZohoClient $client ) {
 		$this->client = $client;
+		$this->register_hooks();
+	}
+
+	/**
+	 * Register hooks.
+	 */
+	private function register_hooks(): void {
+		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_assets' ] );
+	}
+
+	/**
+	 * Enqueue orders tab assets.
+	 *
+	 * @param string $hook Current admin page hook.
+	 */
+	public function enqueue_assets( string $hook ): void {
+		if ( $hook !== 'toplevel_page_zbooks' ) {
+			return;
+		}
+
+		// Check if we're on orders tab.
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$tab = $_GET['tab'] ?? 'connection';
+		if ( $tab !== 'orders' ) {
+			return;
+		}
+
+		// Enqueue JavaScript module.
+		wp_enqueue_script(
+			'zbooks-orders-tab',
+			ZBOOKS_PLUGIN_URL . 'assets/js/modules/orders-tab.js',
+			[ 'jquery', 'zbooks-admin' ],
+			ZBOOKS_VERSION,
+			true
+		);
 	}
 
 	/**
 	 * Register settings for this tab.
 	 */
 	public function register_settings(): void {
+		register_setting(
+			'zbooks_settings_orders',
+			'zbooks_auto_sync_enabled',
+			[
+				'type'              => 'boolean',
+				'sanitize_callback' => 'rest_sanitize_boolean',
+				'default'           => false,
+			]
+		);
 		register_setting(
 			'zbooks_settings_orders',
 			'zbooks_sync_triggers',
@@ -76,14 +120,22 @@ class OrdersTab {
 		// Order sync triggers section.
 		add_settings_section(
 			'zbooks_orders_section',
-			__( 'Order Status Triggers', 'zbooks-for-woocommerce' ),
+			__( 'Order Sync Settings', 'zbooks-for-woocommerce' ),
 			[ $this, 'render_orders_section' ],
 			'zbooks-settings-orders'
 		);
 
 		add_settings_field(
+			'zbooks_auto_sync_enabled',
+			__( 'Auto-Sync', 'zbooks-for-woocommerce' ),
+			[ $this, 'render_auto_sync_field' ],
+			'zbooks-settings-orders',
+			'zbooks_orders_section'
+		);
+
+		add_settings_field(
 			'zbooks_sync_triggers',
-			__( 'Status Actions', 'zbooks-for-woocommerce' ),
+			__( 'Status Mappings', 'zbooks-for-woocommerce' ),
 			[ $this, 'render_triggers_field' ],
 			'zbooks-settings-orders',
 			'zbooks_orders_section'
@@ -166,7 +218,30 @@ class OrdersTab {
 	 */
 	public function render_orders_section(): void {
 		?>
-		<p><?php esc_html_e( 'Configure which order statuses trigger automatic sync.', 'zbooks-for-woocommerce' ); ?></p>
+		<p><?php esc_html_e( 'Configure automatic sync and status-to-action mappings for order synchronization.', 'zbooks-for-woocommerce' ); ?></p>
+		<?php
+	}
+
+	/**
+	 * Render auto-sync toggle field.
+	 */
+	public function render_auto_sync_field(): void {
+		$auto_sync_enabled = get_option( 'zbooks_auto_sync_enabled', false );
+		?>
+		<fieldset>
+			<label>
+				<input type="checkbox" name="zbooks_auto_sync_enabled" value="1"
+					id="zbooks_auto_sync_enabled"
+					<?php checked( $auto_sync_enabled ); ?>>
+				<?php esc_html_e( 'Enable automatic sync on order status change', 'zbooks-for-woocommerce' ); ?>
+			</label>
+			<p class="description">
+				<?php esc_html_e( 'When enabled, orders will automatically sync to Zoho Books when their status changes to match a configured mapping below.', 'zbooks-for-woocommerce' ); ?>
+			</p>
+			<p class="description">
+				<?php esc_html_e( 'When disabled, you can still sync orders manually from the order page or using multi-select from the orders list.', 'zbooks-for-woocommerce' ); ?>
+			</p>
+		</fieldset>
 		<?php
 	}
 
@@ -175,18 +250,23 @@ class OrdersTab {
 	 */
 	public function render_triggers_field(): void {
 		$triggers = get_option( 'zbooks_sync_triggers', [] );
-		// If never configured, default to disabled (not auto-enabled).
+		// If never configured, use sensible defaults.
 		if ( empty( $triggers ) ) {
 			$triggers = [
-				'sync_draft'        => '',
-				'sync_submit'       => '',
-				'create_creditnote' => '',
+				'sync_draft'        => 'processing',
+				'sync_submit'       => 'completed',
+				'apply_payment'     => 'completed',
+				'create_creditnote' => 'refunded',
 			];
+		}
+		// Ensure apply_payment key exists for backwards compatibility.
+		if ( ! isset( $triggers['apply_payment'] ) ) {
+			$triggers['apply_payment'] = 'completed';
 		}
 
 		// Get all order statuses for the dropdowns.
 		$all_statuses   = wc_get_order_statuses();
-		$status_options = [ '' => __( '— None —', 'zbooks-for-woocommerce' ) ];
+		$status_options = [ '' => __( '— Not set —', 'zbooks-for-woocommerce' ) ];
 		foreach ( $all_statuses as $status_key => $status_label ) {
 			$status                    = str_replace( 'wc-', '', $status_key );
 			$status_options[ $status ] = $status_label;
@@ -204,6 +284,11 @@ class OrdersTab {
 				'description' => __( 'Invoice is created and marked as sent.', 'zbooks-for-woocommerce' ),
 				'default'     => 'completed',
 			],
+			'apply_payment'     => [
+				'label'       => __( 'Apply payment to invoice', 'zbooks-for-woocommerce' ),
+				'description' => __( 'Records payment in Zoho Books when order is paid.', 'zbooks-for-woocommerce' ),
+				'default'     => 'completed',
+			],
 			'create_creditnote' => [
 				'label'       => __( 'Create credit note and refund', 'zbooks-for-woocommerce' ),
 				'description' => __( 'Creates credit note for the original invoice and records refund.', 'zbooks-for-woocommerce' ),
@@ -211,11 +296,11 @@ class OrdersTab {
 			],
 		];
 		?>
-		<table class="widefat" style="max-width: 600px;">
+		<table class="widefat zbooks-triggers-table">
 			<thead>
 				<tr>
-					<th style="padding: 10px 15px;"><?php esc_html_e( 'Zoho Action', 'zbooks-for-woocommerce' ); ?></th>
-					<th style="padding: 10px 15px;"><?php esc_html_e( 'Trigger on Status', 'zbooks-for-woocommerce' ); ?></th>
+					<th><?php esc_html_e( 'Zoho Action', 'zbooks-for-woocommerce' ); ?></th>
+					<th><?php esc_html_e( 'When Order Status Is', 'zbooks-for-woocommerce' ); ?></th>
 				</tr>
 			</thead>
 			<tbody>
@@ -224,14 +309,14 @@ class OrdersTab {
 					$current_status = $triggers[ $trigger_key ] ?? $trigger_config['default'];
 					?>
 					<tr>
-						<td style="padding: 8px 15px;">
+						<td>
 							<strong><?php echo esc_html( $trigger_config['label'] ); ?></strong>
-							<p class="description" style="margin: 4px 0 0; font-size: 11px;">
+							<p class="zbooks-table-description">
 								<?php echo esc_html( $trigger_config['description'] ); ?>
 							</p>
 						</td>
-						<td style="padding: 8px 15px;">
-							<select name="zbooks_sync_triggers[<?php echo esc_attr( $trigger_key ); ?>]" style="min-width: 150px;">
+						<td>
+							<select name="zbooks_sync_triggers[<?php echo esc_attr( $trigger_key ); ?>]" class="zbooks-trigger-select">
 								<?php foreach ( $status_options as $status_value => $status_label ) : ?>
 									<option value="<?php echo esc_attr( $status_value ); ?>" <?php selected( $current_status, $status_value ); ?>>
 										<?php echo esc_html( $status_label ); ?>
@@ -243,6 +328,23 @@ class OrdersTab {
 				<?php endforeach; ?>
 			</tbody>
 		</table>
+
+		<p class="zbooks-restore-defaults-row">
+			<button type="button" class="button-link zbooks-restore-defaults" data-defaults='{"sync_draft":"processing","sync_submit":"completed","apply_payment":"completed","create_creditnote":"refunded"}'>
+				<?php esc_html_e( 'Restore defaults', 'zbooks-for-woocommerce' ); ?>
+			</button>
+		</p>
+
+		<div class="zbooks-info-box max-width-600">
+			<p>
+				<strong><span class="dashicons dashicons-info"></span> <?php esc_html_e( 'How mappings work:', 'zbooks-for-woocommerce' ); ?></strong>
+			</p>
+			<ul>
+				<li><?php esc_html_e( 'These mappings determine sync behavior for ALL sync methods: automatic, manual, and multi-order sync.', 'zbooks-for-woocommerce' ); ?></li>
+				<li><?php esc_html_e( 'When syncing, the plugin checks the order\'s current status against these mappings to decide what action to take.', 'zbooks-for-woocommerce' ); ?></li>
+				<li><?php esc_html_e( 'If an order status doesn\'t match any mapping, it will be synced as a draft invoice for safety.', 'zbooks-for-woocommerce' ); ?></li>
+			</ul>
+		</div>
 		<?php
 	}
 
@@ -263,64 +365,47 @@ class OrdersTab {
 			'zbooks_invoice_numbering',
 			[
 				'use_reference_number' => true,
-				'mark_as_sent'         => true,
 				'send_invoice_email'   => false,
 			]
 		);
 		$use_reference      = ! empty( $settings['use_reference_number'] );
-		$mark_as_sent       = $settings['mark_as_sent'] ?? true;
 		$send_invoice_email = ! empty( $settings['send_invoice_email'] );
 		?>
 		<fieldset>
-			<h4 style="margin: 0 0 12px 0; font-size: 13px; font-weight: 600;">
+			<h4 class="zbooks-subsection-heading">
 				<?php esc_html_e( 'Invoice Numbering', 'zbooks-for-woocommerce' ); ?>
 			</h4>
-			<label style="display: block; margin-bottom: 10px;">
+			<label class="zbooks-checkbox-label">
 				<input type="checkbox" name="zbooks_invoice_numbering[use_reference_number]" value="1"
 					id="zbooks_use_reference_number"
 					<?php checked( $use_reference ); ?>>
 				<?php esc_html_e( 'Use Zoho auto-numbering series for invoice numbers', 'zbooks-for-woocommerce' ); ?>
-				<strong style="color: #2271b1;"><?php esc_html_e( '(Recommended)', 'zbooks-for-woocommerce' ); ?></strong>
+				<strong class="zbooks-recommended"><?php esc_html_e( '(Recommended)', 'zbooks-for-woocommerce' ); ?></strong>
 			</label>
 			<p class="description">
 				<?php esc_html_e( 'The WooCommerce order number is always stored in the "Reference Number" field for easy lookup in Zoho Books.', 'zbooks-for-woocommerce' ); ?>
 			</p>
-			<p class="description" style="margin-top: 8px;">
+			<p class="description">
 				<?php esc_html_e( 'When enabled (default), Zoho Books will auto-generate sequential invoice numbers (e.g., INV-00001, INV-00002).', 'zbooks-for-woocommerce' ); ?>
 			</p>
-			<p class="description" style="margin-top: 8px;">
+			<p class="description">
 				<?php esc_html_e( 'When disabled, the WooCommerce order number will also be used as the Zoho invoice number.', 'zbooks-for-woocommerce' ); ?>
 			</p>
-			<div class="zbooks-warning-box" id="zbooks_invoice_number_warning" style="display: <?php echo $use_reference ? 'none' : 'block'; ?>; background: #fff8e5; border: 1px solid #f0c36d; border-left-width: 4px; border-radius: 4px; padding: 12px 16px; margin-top: 15px;">
-				<p style="margin: 0 0 8px; color: #826200;">
-					<strong><span class="dashicons dashicons-warning" style="color: #dba617;"></span> <?php esc_html_e( 'Tax Audit Warning', 'zbooks-for-woocommerce' ); ?></strong>
+			<div class="zbooks-warning-box" id="zbooks_invoice_number_warning" style="display: <?php echo $use_reference ? 'none' : 'block'; ?>;">
+				<p class="warning-title">
+					<strong><span class="dashicons dashicons-warning"></span> <?php esc_html_e( 'Tax Audit Warning', 'zbooks-for-woocommerce' ); ?></strong>
 				</p>
-				<p style="margin: 0; color: #826200;">
+				<p class="warning-content">
 					<?php esc_html_e( 'Using order numbers as invoice numbers may create gaps in your invoice sequence (e.g., if orders are cancelled or deleted). This can cause issues during tax audits in some jurisdictions where sequential invoice numbering is legally required.', 'zbooks-for-woocommerce' ); ?>
 				</p>
 			</div>
 
-			<hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
+			<hr class="zbooks-section-divider">
 
-			<h4 style="margin: 0 0 12px 0; font-size: 13px; font-weight: 600;">
-				<?php esc_html_e( 'Invoice Status', 'zbooks-for-woocommerce' ); ?>
-			</h4>
-			<label style="display: block; margin-bottom: 10px;">
-				<input type="checkbox" name="zbooks_invoice_numbering[mark_as_sent]" value="1"
-					id="zbooks_mark_as_sent"
-					<?php checked( $mark_as_sent ); ?>>
-				<?php esc_html_e( 'Mark invoices as "Sent" in Zoho Books', 'zbooks-for-woocommerce' ); ?>
-			</label>
-			<p class="description">
-				<?php esc_html_e( 'When enabled, invoices are marked as "Sent" after creation. When disabled, invoices remain as "Draft".', 'zbooks-for-woocommerce' ); ?>
-			</p>
-
-			<hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
-
-			<h4 style="margin: 0 0 12px 0; font-size: 13px; font-weight: 600;">
+			<h4 class="zbooks-subsection-heading">
 				<?php esc_html_e( 'Invoice Delivery', 'zbooks-for-woocommerce' ); ?>
 			</h4>
-			<label style="display: block; margin-bottom: 10px;">
+			<label class="zbooks-checkbox-label">
 				<input type="checkbox" name="zbooks_invoice_numbering[send_invoice_email]" value="1"
 					id="zbooks_send_invoice_email"
 					<?php checked( $send_invoice_email ); ?>>
@@ -329,7 +414,7 @@ class OrdersTab {
 			<p class="description">
 				<?php esc_html_e( 'When enabled, Zoho Books will automatically email the invoice to the customer when created.', 'zbooks-for-woocommerce' ); ?>
 			</p>
-			<p class="description" style="margin-top: 8px;">
+			<p class="description">
 				<strong><?php esc_html_e( 'Default: Disabled', 'zbooks-for-woocommerce' ); ?></strong> —
 				<?php esc_html_e( 'Most stores handle customer notifications through WooCommerce. Enable only if you want Zoho Books to send its own invoice emails.', 'zbooks-for-woocommerce' ); ?>
 			</p>
@@ -358,7 +443,7 @@ class OrdersTab {
 		);
 		$income_accounts = $this->get_income_accounts();
 		?>
-		<select name="zbooks_shipping_settings[account_id]" style="min-width: 300px;">
+		<select name="zbooks_shipping_settings[account_id]" class="zbooks-wide-select">
 			<option value=""><?php esc_html_e( 'Use default (Shipping Charge)', 'zbooks-for-woocommerce' ); ?></option>
 			<?php foreach ( $income_accounts as $account ) : ?>
 				<option value="<?php echo esc_attr( $account['account_id'] ); ?>"
@@ -371,7 +456,7 @@ class OrdersTab {
 			<?php esc_html_e( 'Select the income account to record shipping charges. Leave empty to use Zoho\'s default "Shipping Charge" account.', 'zbooks-for-woocommerce' ); ?>
 		</p>
 		<?php if ( empty( $income_accounts ) && $this->client->is_configured() ) : ?>
-			<p class="description" style="color: #d63638;">
+			<p class="description is-error">
 				<?php esc_html_e( 'Could not load accounts from Zoho Books. Save settings and refresh the page.', 'zbooks-for-woocommerce' ); ?>
 			</p>
 		<?php elseif ( ! $this->client->is_configured() ) : ?>
@@ -404,33 +489,33 @@ class OrdersTab {
 		$backoff_on_locked = $settings['backoff_on_locked'] ?? true;
 		?>
 		<fieldset>
-			<label style="display: block; margin-bottom: 10px;">
+			<label class="zbooks-checkbox-label">
 				<input type="checkbox" name="zbooks_sync_behavior[backoff_on_locked]" value="1"
 					id="zbooks_backoff_on_locked"
 					<?php checked( $backoff_on_locked ); ?>>
 				<?php esc_html_e( 'Stop sync completely when invoice is locked', 'zbooks-for-woocommerce' ); ?>
-				<strong style="color: #2271b1;"><?php esc_html_e( '(Recommended)', 'zbooks-for-woocommerce' ); ?></strong>
+				<strong class="zbooks-recommended"><?php esc_html_e( '(Recommended)', 'zbooks-for-woocommerce' ); ?></strong>
 			</label>
 			<p class="description">
 				<?php esc_html_e( 'A "locked" invoice is one that has been marked as Sent, Paid, or Void in Zoho Books.', 'zbooks-for-woocommerce' ); ?>
 			</p>
 
-			<div class="zbooks-info-box" style="margin-top: 15px; background: #f0f6fc; border: 1px solid #c3c4c7; border-left: 4px solid #2271b1; padding: 12px 16px; border-radius: 0 4px 4px 0;">
-				<p style="margin: 0 0 10px;">
+			<div class="zbooks-info-box">
+				<p>
 					<strong><?php esc_html_e( 'When enabled (default):', 'zbooks-for-woocommerce' ); ?></strong>
 				</p>
-				<ul style="margin: 0 0 0 20px; list-style: disc;">
+				<ul>
 					<li><?php esc_html_e( 'If the invoice is locked and has discrepancies with the WooCommerce order, the entire sync stops.', 'zbooks-for-woocommerce' ); ?></li>
 					<li><?php esc_html_e( 'Payment will NOT be applied to the invoice or added to the customer profile.', 'zbooks-for-woocommerce' ); ?></li>
 					<li><?php esc_html_e( 'A clear error message is logged explaining the locked invoice cannot be modified.', 'zbooks-for-woocommerce' ); ?></li>
 				</ul>
 			</div>
 
-			<div class="zbooks-info-box" style="margin-top: 15px; background: #fcf6e5; border: 1px solid #dba617; border-left: 4px solid #dba617; padding: 12px 16px; border-radius: 0 4px 4px 0;">
-				<p style="margin: 0 0 10px;">
+			<div class="zbooks-alert-box">
+				<p>
 					<strong><?php esc_html_e( 'When disabled:', 'zbooks-for-woocommerce' ); ?></strong>
 				</p>
-				<ul style="margin: 0 0 0 20px; list-style: disc;">
+				<ul>
 					<li><?php esc_html_e( 'The invoice update is skipped, but the sync continues.', 'zbooks-for-woocommerce' ); ?></li>
 					<li><?php esc_html_e( 'Payment will be applied to the existing invoice (even if it has discrepancies).', 'zbooks-for-woocommerce' ); ?></li>
 					<li><?php esc_html_e( 'Useful if you intentionally edited the invoice in Zoho but still want payments recorded.', 'zbooks-for-woocommerce' ); ?></li>
@@ -449,7 +534,7 @@ class OrdersTab {
 			<p>
 				<strong><?php esc_html_e( 'How currency is handled:', 'zbooks-for-woocommerce' ); ?></strong>
 			</p>
-			<ul style="list-style: disc; margin-left: 20px;">
+			<ul>
 				<li><?php esc_html_e( 'Currency is automatically taken from each WooCommerce order.', 'zbooks-for-woocommerce' ); ?></li>
 				<li><?php esc_html_e( 'When a new contact is created, it is assigned the currency from the first order.', 'zbooks-for-woocommerce' ); ?></li>
 				<li><?php esc_html_e( 'Once a contact has a currency assigned, it cannot be changed (Zoho Books limitation).', 'zbooks-for-woocommerce' ); ?></li>
@@ -540,7 +625,7 @@ class OrdersTab {
 	 */
 	public function sanitize_triggers( array $input ): array {
 		// Valid trigger types.
-		$valid_triggers = [ 'sync_draft', 'sync_submit', 'create_creditnote' ];
+		$valid_triggers = [ 'sync_draft', 'sync_submit', 'apply_payment', 'create_creditnote' ];
 
 		// Get valid order statuses.
 		$valid_statuses   = array_keys( wc_get_order_statuses() );
@@ -576,7 +661,6 @@ class OrdersTab {
 	public function sanitize_invoice_numbering( array $input ): array {
 		return [
 			'use_reference_number' => ! empty( $input['use_reference_number'] ),
-			'mark_as_sent'         => ! empty( $input['mark_as_sent'] ),
 			'send_invoice_email'   => ! empty( $input['send_invoice_email'] ),
 		];
 	}

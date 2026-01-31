@@ -19,17 +19,24 @@
     window.ZbooksLogViewer = {
         $modal: null,
         currentEntry: null,
+        initialized: false,
 
         /**
          * Initialize the log viewer module
          */
         init: function() {
+            // Prevent double initialization
+            if (this.initialized) {
+                return;
+            }
+
             // Check if we're on the log viewer page
             this.$modal = $('#zbooks-log-modal');
             if (!this.$modal.length) {
                 return;
             }
 
+            this.initialized = true;
             this.bindEvents();
         },
 
@@ -67,6 +74,120 @@
             $(document).on('click', '.zbooks-copy-json', function() {
                 self.copyJsonToClipboard();
             });
+
+            // Refresh logs button
+            $(document).on('click', '.zbooks-refresh-logs', function(e) {
+                e.preventDefault();
+                self.refreshLogs();
+            });
+
+            // Clear old logs button
+            $(document).on('click', '.zbooks-clear-old-logs', function(e) {
+                e.preventDefault();
+                self.clearOldLogs();
+            });
+
+            // Clear all logs button
+            $(document).on('click', '.zbooks-clear-all-logs', function(e) {
+                e.preventDefault();
+                self.clearAllLogs();
+            });
+        },
+
+        /**
+         * Get configuration
+         */
+        getConfig: function() {
+            return typeof zbooksLogViewer !== 'undefined' ? zbooksLogViewer : {
+                ajaxUrl: typeof ajaxurl !== 'undefined' ? ajaxurl : '',
+                nonces: {},
+                i18n: {}
+            };
+        },
+
+        /**
+         * Refresh the logs page
+         */
+        refreshLogs: function() {
+            window.location.reload();
+        },
+
+        /**
+         * Clear old logs
+         */
+        clearOldLogs: function() {
+            var self = this;
+            var config = this.getConfig();
+
+            if (!confirm(config.i18n.confirm_clear || 'Are you sure you want to clear old logs?')) {
+                return;
+            }
+
+            var $button = $('.zbooks-clear-old-logs');
+            var originalText = $button.text();
+            $button.prop('disabled', true).text(config.i18n.clearing || 'Clearing...');
+
+            $.ajax({
+                url: config.ajaxUrl,
+                type: 'POST',
+                data: {
+                    action: 'zbooks_clear_logs',
+                    nonce: config.nonces.clear_logs || ''
+                },
+                success: function(response) {
+                    if (response.success) {
+                        alert(response.data.message);
+                        self.refreshLogs();
+                    } else {
+                        alert(response.data.message || 'Failed to clear logs');
+                    }
+                },
+                error: function() {
+                    alert('Network error');
+                },
+                complete: function() {
+                    $button.prop('disabled', false).text(originalText);
+                }
+            });
+        },
+
+        /**
+         * Clear all logs
+         */
+        clearAllLogs: function() {
+            var self = this;
+            var config = this.getConfig();
+
+            if (!confirm(config.i18n.confirm_clear_all || 'Are you sure you want to clear ALL logs? This cannot be undone.')) {
+                return;
+            }
+
+            var $button = $('.zbooks-clear-all-logs');
+            var originalText = $button.text();
+            $button.prop('disabled', true).text(config.i18n.clearing || 'Clearing...');
+
+            $.ajax({
+                url: config.ajaxUrl,
+                type: 'POST',
+                data: {
+                    action: 'zbooks_clear_all_logs',
+                    nonce: config.nonces.clear_all_logs || ''
+                },
+                success: function(response) {
+                    if (response.success) {
+                        alert(response.data.message);
+                        self.refreshLogs();
+                    } else {
+                        alert(response.data.message || 'Failed to clear logs');
+                    }
+                },
+                error: function() {
+                    alert('Network error');
+                },
+                complete: function() {
+                    $button.prop('disabled', false).text(originalText);
+                }
+            });
         },
 
         /**
@@ -84,6 +205,34 @@
                 entry.level + '</span>'
             );
             $('#zbooks-modal-message').text(entry.message);
+
+            // Check for request info in context.
+            var hasRequestInfo = entry.context && (
+                entry.context.method ||
+                entry.context.endpoint ||
+                entry.context.request_url
+            );
+
+            if (hasRequestInfo) {
+                var requestInfo = '';
+                if (entry.context.method) {
+                    requestInfo += '<strong>' + entry.context.method + '</strong> ';
+                }
+                if (entry.context.endpoint) {
+                    requestInfo += '<code>' + entry.context.endpoint + '</code>';
+                }
+                if (entry.context.request_url) {
+                    requestInfo += '<br><small style="color: #666;">' + entry.context.request_url + '</small>';
+                }
+                if (entry.context.status_code) {
+                    var statusColor = entry.context.status_code >= 400 ? '#d63638' : '#00a32a';
+                    requestInfo += '<br><span style="color: ' + statusColor + ';">Status: ' + entry.context.status_code + '</span>';
+                }
+                $('#zbooks-modal-request').html(requestInfo);
+                $('#zbooks-modal-request-row').show();
+            } else {
+                $('#zbooks-modal-request-row').hide();
+            }
 
             if (entry.context && Object.keys(entry.context).length > 0) {
                 $('#zbooks-modal-context').text(JSON.stringify(entry.context, null, 2));

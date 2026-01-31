@@ -967,15 +967,29 @@
                 'orders': 'order-sync',
                 'connection': 'connection-tab',
                 'payments': 'payments',
-                'custom-fields': 'custom-fields',
+                'custom_fields': 'custom-fields',
                 'reconciliation': 'reconciliation',
+                'notifications': 'notifications',
                 'logs': 'log-viewer'
+            };
+
+            // Additional modules to load for specific tabs
+            var additionalModules = {
+                'orders': ['orders-tab']
             };
 
             var moduleName = moduleMap[tab];
             if (moduleName) {
                 this.loadModule(moduleName);
                 this.loadStyle(moduleName);
+            }
+
+            // Load any additional modules for this tab
+            if (additionalModules[tab]) {
+                var self = this;
+                additionalModules[tab].forEach(function(extraModule) {
+                    self.loadModule(extraModule);
+                });
             }
         },
 
@@ -1007,6 +1021,12 @@
             }
             if (typeof window.ZbooksReconciliation !== 'undefined' && typeof window.ZbooksReconciliation.init === 'function') {
                 window.ZbooksReconciliation.init();
+            }
+            if (typeof window.ZbooksNotifications !== 'undefined' && typeof window.ZbooksNotifications.init === 'function') {
+                window.ZbooksNotifications.init();
+            }
+            if (typeof window.ZbooksOrdersTab !== 'undefined' && typeof window.ZbooksOrdersTab.init === 'function') {
+                window.ZbooksOrdersTab.init();
             }
         }
     };

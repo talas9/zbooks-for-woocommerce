@@ -433,6 +433,12 @@ final class Plugin {
 		);
 		
 		if ( $is_product_page ) {
+			wp_enqueue_style(
+				'zbooks-product-mapping',
+				ZBOOKS_PLUGIN_URL . 'assets/css/modules/product-mapping.css',
+				[ 'zbooks-admin' ],
+				ZBOOKS_VERSION
+			);
 			wp_enqueue_script(
 				'zbooks-product-mapping',
 				ZBOOKS_PLUGIN_URL . 'assets/js/modules/product-mapping.js',
@@ -451,6 +457,12 @@ final class Plugin {
 		);
 		
 		if ( $is_order_page ) {
+			wp_enqueue_style(
+				'zbooks-order-sync',
+				ZBOOKS_PLUGIN_URL . 'assets/css/modules/order-sync.css',
+				[ 'zbooks-admin' ],
+				ZBOOKS_VERSION
+			);
 			wp_enqueue_script(
 				'zbooks-order-sync',
 				ZBOOKS_PLUGIN_URL . 'assets/js/modules/order-sync.js',

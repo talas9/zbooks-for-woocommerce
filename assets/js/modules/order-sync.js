@@ -26,7 +26,8 @@
      * Handles order synchronization with Zoho Books
      */
     window.ZbooksOrderSync = {
-        
+        initialized: false,
+
         /**
          * Bulk sync state
          */
@@ -43,15 +44,17 @@
          * Initialize the module
          */
         init: function() {
-            console.log('[ZBooks] Order sync module initializing');
-            
+            // Prevent double initialization
+            if (this.initialized) {
+                return;
+            }
+            this.initialized = true;
+
             // Clean up any stale loading states from previous page loads
             $('.zbooks-sync-btn, .zbooks-apply-payment-btn').removeClass('zbooks-btn-loading').prop('disabled', false);
-            console.log('[ZBooks] Cleared any stale loading states');
-            
+
             this.bindEvents();
             this.initSelectAll();
-            console.log('[ZBooks] Order sync module initialized');
         },
 
         /**
@@ -97,27 +100,21 @@
          */
         handleManualSync: function(e) {
             e.preventDefault();
-            console.log('[ZBooks] Manual sync button clicked');
 
             var $button = $(e.currentTarget);
             var orderId = $button.data('order-id');
-            var asDraft = $button.data('draft') === true || $button.data('draft') === 'true';
-
-            console.log('[ZBooks] Order ID:', orderId, 'Draft:', asDraft, 'Has loading class:', $button.hasClass('zbooks-btn-loading'));
 
             // Check for loading state first (prevent double-click)
             if ($button.hasClass('zbooks-btn-loading')) {
-                console.warn('[ZBooks] Sync cancelled - already loading');
                 return;
             }
 
             // Check for valid order ID
             if (!orderId) {
-                console.error('[ZBooks] Sync cancelled - no order ID found in button data');
                 return;
             }
 
-            this.syncOrder(orderId, asDraft, $button);
+            this.syncOrder(orderId, $button);
         },
 
         /**
@@ -137,18 +134,14 @@
         },
 
         /**
-         * Sync a single order
+         * Sync a single order (behavior determined by server-side mappings)
          */
-        syncOrder: function(orderId, asDraft, $button) {
+        syncOrder: function(orderId, $button) {
             var self = this;
             var $container = $button.closest('.zbooks-meta-box');
             var $result = $container.find('.zbooks-sync-result');
             var config = window.ZbooksCommon ? window.ZbooksCommon.config : {};
             var i18n = config.i18n || {};
-
-            console.log('[ZBooks] Starting sync for order:', orderId, 'Draft:', asDraft);
-            console.log('[ZBooks] AJAX URL:', config.ajaxUrl || ajaxurl);
-            console.log('[ZBooks] Container found:', $container.length, 'Result element:', $result.length);
 
             // Set loading state
             $button.addClass('zbooks-btn-loading').prop('disabled', true);
@@ -160,27 +153,23 @@
                 data: {
                     action: 'zbooks_manual_sync',
                     order_id: orderId,
-                    as_draft: asDraft ? 'true' : 'false',
                     nonce: config.nonce || ''
                 },
                 success: function(response) {
-                    console.log('[ZBooks] Sync AJAX success:', response);
                     if (response.success) {
                         $result.html('<span class="dashicons dashicons-yes" style="color:green;"></span> ' + (response.data.message || i18n.sync_success || 'Sync successful!'));
-                        
+
                         // Update the meta box with new data (no page reload needed)
                         self.updateMetaBoxDisplay($container, response.data, false);
                     } else {
                         var errorMsg = response.data ? response.data.message : 'Unknown error';
-                        console.error('[ZBooks] Sync failed:', errorMsg, response);
                         $result.html('<span class="dashicons dashicons-warning" style="color:red;"></span> ' + errorMsg);
-                        
+
                         // Update status to failed
                         self.updateMetaBoxDisplay($container, response.data || {message: errorMsg}, true);
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error('[ZBooks] Sync AJAX error:', {status: status, error: error, responseText: xhr.responseText, statusCode: xhr.status});
                     
                     var errorMsg = 'Network error: ' + error;
                     if (xhr.status === 403) {
@@ -206,8 +195,6 @@
          */
         updateMetaBoxDisplay: function($container, data, isError) {
             try {
-                console.log('[ZBooks] Updating meta box display with:', data, 'Error:', isError);
-                
                 if (isError) {
                     // Handle error state
                     var $statusSpan = $container.find('.zbooks-status');
@@ -216,10 +203,6 @@
                             .attr('class', 'zbooks-status zbooks-status-failed')
                             .text('Failed');
                     }
-                    
-                    // Show error message if not already shown
-                    var errorMsg = data.message || 'Sync failed';
-                    console.error('[ZBooks] Sync error:', errorMsg);
                     return;
                 }
                 
@@ -231,7 +214,6 @@
                     $statusSpan
                         .attr('class', 'zbooks-status ' + data.status_class)
                         .text(data.status_label);
-                    console.log('[ZBooks] Status updated to:', data.status_label);
                 }
                 
                 // Update or add invoice info
@@ -246,7 +228,6 @@
                     } else {
                         $container.find('p:first').after('<p>' + invoiceHtml + '</p>');
                     }
-                    console.log('[ZBooks] Invoice updated:', data.invoice_id);
                 }
                 
                 // Update or add contact info
@@ -264,7 +245,6 @@
                             $invoicePara.after('<p>' + contactHtml + '</p>');
                         }
                     }
-                    console.log('[ZBooks] Contact updated:', data.contact_id);
                 }
                 
                 // Update invoice status if present
@@ -275,7 +255,6 @@
                     } else {
                         $container.append('<p><strong>Invoice Status:</strong> <span>' + data.invoice_status + '</span></p>');
                     }
-                    console.log('[ZBooks] Invoice status updated:', data.invoice_status);
                 }
                 
                 // Update payment info if present
@@ -287,7 +266,6 @@
                     } else {
                         $container.append('<p>' + paymentHtml + '</p>');
                     }
-                    console.log('[ZBooks] Payment updated:', data.payment_id);
                 }
                 
                 // Update "Last attempt:" timestamp
@@ -295,20 +273,16 @@
                     var $lastAttempt = $container.find('p:contains("Last attempt:")');
                     if ($lastAttempt.length) {
                         $lastAttempt.html('<strong>Last attempt:</strong> ' + data.last_attempt);
-                        console.log('[ZBooks] Last attempt updated:', data.last_attempt);
                     } else {
                         // Add it before the <hr> if it doesn't exist
                         var $hr = $container.find('hr');
                         if ($hr.length) {
                             $hr.before('<p><strong>Last attempt:</strong> ' + data.last_attempt + '</p>');
-                            console.log('[ZBooks] Last attempt added:', data.last_attempt);
                         }
                     }
                 }
-                
-                console.log('[ZBooks] Meta box updated successfully');
             } catch (error) {
-                console.error('[ZBooks] Error updating meta box display:', error);
+                // Silently handle display update errors
             }
         },
 
@@ -370,7 +344,6 @@
                 var selectedAction = action === 'zbooks_sync' ? action : (action2 === 'zbooks_sync' ? action2 : null);
                 
                 if (selectedAction === 'zbooks_sync') {
-                    console.log('[ZBooks] Intercepting bulk sync action');
                     e.preventDefault();
                     
                     // Get selected order IDs
@@ -383,8 +356,7 @@
                         alert('Please select at least one order to sync.');
                         return false;
                     }
-                    
-                    console.log('[ZBooks] Selected order IDs:', orderIds);
+
                     self.startBulkActionSync(orderIds);
                     return false;
                 }
@@ -396,8 +368,6 @@
          */
         startBulkActionSync: function(orderIds) {
             var self = this;
-            
-            console.log('[ZBooks] Starting bulk action sync for', orderIds.length, 'orders');
             
             // Create progress modal
             var modalHtml = '<div id="zbooks-bulk-action-modal" style="' +
@@ -449,13 +419,11 @@
             var state = this.bulkActionState;
             
             if (!state.isProcessing) {
-                console.log('[ZBooks] Bulk action sync cancelled');
                 return;
             }
-            
+
             if (state.queue.length === 0) {
                 // Complete
-                console.log('[ZBooks] Bulk action sync complete');
                 this.completeBulkActionSync();
                 return;
             }
@@ -477,14 +445,13 @@
                 '</div>'
             );
             
-            // Sync the order
+            // Sync the order (behavior determined by server-side mappings)
             $.ajax({
                 url: ajaxurl,
                 type: 'POST',
                 data: {
                     action: 'zbooks_manual_sync',
                     order_id: orderId,
-                    as_draft: false,
                     nonce: self.nonce || (window.ZbooksCommon && window.ZbooksCommon.config ? window.ZbooksCommon.config.nonce : '')
                 },
                 success: function(response) {
@@ -587,7 +554,6 @@
             try {
                 var $badge = $('.zbooks-status-badge[data-order-id="' + orderId + '"]');
                 if (!$badge.length) {
-                    console.log('[ZBooks] Zoho status badge not found for order:', orderId);
                     return;
                 }
                 
@@ -613,10 +579,8 @@
                     // Add/update error tooltip if error exists
                     $badge.attr('title', 'Error: ' + data.error);
                 }
-                
-                console.log('[ZBooks] Updated Zoho status badge for order', orderId, 'to:', statusConfig.label);
             } catch (error) {
-                console.error('[ZBooks] Error updating Zoho status badge:', error);
+                // Silently handle badge update errors
             }
         },
         
@@ -764,7 +728,6 @@
 
             var dateFrom = $form.find('#zbooks_date_from').val();
             var dateTo = $form.find('#zbooks_date_to').val();
-            var asDraft = $form.find('input[name="as_draft"]:checked').val() === 'true';
             var config = window.ZbooksCommon ? window.ZbooksCommon.config : {};
 
             if (!dateFrom || !dateTo) {
@@ -800,8 +763,7 @@
                             processed: 0,
                             succeeded: 0,
                             failed: 0,
-                            total: orderIds.length,
-                            asDraft: asDraft
+                            total: orderIds.length
                         };
 
                         // Warn user if they try to navigate away
@@ -855,8 +817,7 @@
                 if (typeof self.updateStatsBoxes === 'function') {
                     self.updateStatsBoxes();
                 }
-                
-                console.log('[ZBooks] Bulk sync completed - stats updated without reload');
+
                 return;
             }
 
@@ -868,7 +829,6 @@
                 data: {
                     action: 'zbooks_manual_sync',
                     order_id: orderId,
-                    as_draft: state.asDraft ? 'true' : 'false',
                     nonce: config.nonce || ''
                 },
                 success: function(response) {
@@ -949,8 +909,6 @@
 
             var postId = state.queue.shift();
             var $row = $('.zbooks-item-checkbox[value="' + postId + '"]').closest('tr');
-            
-            console.log('[ZBooks] Bulk sync processing order:', postId);
 
             // Show syncing status immediately
             var $status = $row.find('.zbooks-status, .order-status');
@@ -966,23 +924,19 @@
                 data: {
                     action: 'zbooks_manual_sync',
                     order_id: postId,
-                    as_draft: 'false',
                     nonce: config.nonce || ''
                 },
                 success: function(response) {
-                    console.log('[ZBooks] Bulk sync response for order', postId, ':', response);
                     if (response.success) {
                         state.succeeded++;
                         self.updateRowStatus($row, response.data);
                     } else {
                         state.failed++;
-                        console.error('[ZBooks] Bulk sync failed for order', postId, ':', response.data);
                         self.updateRowStatus($row, {status: 'failed', message: response.data ? response.data.message : 'Failed'});
                     }
                 },
-                error: function(xhr, status, error) {
+                error: function() {
                     state.failed++;
-                    console.error('[ZBooks] Bulk sync AJAX error for order', postId, ':', {status: status, error: error, xhr: xhr});
                     self.updateRowStatus($row, {status: 'failed', message: 'Network error'});
                 },
                 complete: function() {
@@ -1001,9 +955,8 @@
         updateRowStatus: function($row, data) {
             try {
                 var $status = $row.find('.zbooks-status, .order-status');
-                
+
                 if (!$status.length) {
-                    console.warn('[ZBooks] Status element not found in row');
                     return;
                 }
                 
@@ -1021,8 +974,6 @@
                 }
                 
                 // Handle full data object
-                console.log('[ZBooks] Updating row with data:', data);
-                
                 // Update status badge
                 $status.removeClass('zbooks-status-syncing zbooks-status-pending zbooks-status-failed zbooks-status-synced');
                 if (data.status_class) {
@@ -1051,10 +1002,8 @@
                         $contactCell.html('<a href="' + data.contact_url + '" target="_blank">' + data.contact_name + '</a>');
                     }
                 }
-                
-                console.log('[ZBooks] Row updated successfully');
             } catch (error) {
-                console.error('[ZBooks] Error updating row status:', error);
+                // Silently handle row status update errors
             }
         },
 
