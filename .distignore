@@ -10,10 +10,17 @@
 # WordPress.org assets (screenshots, banners - deployed separately)
 .wordpress-org
 
-# Development files
+# Development files (all hidden files starting with .)
 .editorconfig
 .distignore
 .cursorignore
+.cursorindexignore
+.cursor
+.phpunit.cache
+.specstory
+.wp-env.json
+.wp-env.override.json
+.wp-env.override.json.example
 
 # Claude/AI
 .claude
@@ -44,12 +51,13 @@ playwright
 playwright.config.ts
 playwright-report
 test-results
-.wp-env.json
-.wp-env.override.json
+run_all_tests.sh
 
-# Build/CI scripts
+# Build/CI scripts (WordPress.org doesn't allow shell scripts)
 bin
+scripts
 *.sh
+*.bat
 
 # IDE and OS files
 .DS_Store
@@ -59,12 +67,49 @@ bin
 .vscode
 *.sublime-*
 
+# Vendor development files (WordPress.org requires removal of dev tools)
+# See: https://developer.wordpress.org/plugins/wordpress-org/detailed-plugin-guidelines/
+vendor/**/.vscode
+vendor/**/.github
+vendor/**/tests
+vendor/**/test
+vendor/**/Tests
+vendor/**/Test
+vendor/**/docs
+vendor/**/doc
+vendor/**/examples
+vendor/**/example
+vendor/**/.gitattributes
+vendor/**/.gitignore
+vendor/**/.editorconfig
+vendor/**/.php_cs
+vendor/**/.php-cs-fixer.dist.php
+vendor/**/.phpstorm.meta.php
+vendor/**/.readthedocs.yml
+vendor/**/.doctrine-project.json
+vendor/**/.gitbook.yaml
+vendor/**/.psalm
+vendor/**/phpunit.xml
+vendor/**/phpunit.xml.dist
+vendor/**/phpcs.xml
+vendor/**/phpcs.xml.dist
+vendor/**/.travis.yml
+vendor/**/.scrutinizer.yml
+vendor/**/CONTRIBUTING.md
+vendor/**/CHANGELOG.md
+vendor/**/UPGRADE.md
+vendor/**/*.sh
+vendor/**/*.bat
+
 # Documentation (except readme.txt which is required)
 *.md
 !readme.md
+!README.md
 docs
 
-# Other
-dist
+# Project-specific files
+plugin_notes
+restored
 temp
+dist
 *.log
