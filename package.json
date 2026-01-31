@@ -1,6 +1,6 @@
 {
     "name": "zbooks-for-woocommerce",
-    "version": "1.0.15",
+    "version": "1.0.19",
     "description": "Sync WooCommerce orders to Zoho Books",
     "scripts": {
         "env:start": "wp-env start",
