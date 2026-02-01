@@ -248,6 +248,27 @@ class RefundService {
 		$custom_fields = $this->field_mapping->build_custom_fields( $order, 'creditnote', $refund );
 		if ( ! empty( $custom_fields ) ) {
 			$credit_note_data['custom_fields'] = $custom_fields;
+			$this->logger->info(
+				'Adding custom fields to credit note',
+				[
+					'order_id'      => $order->get_id(),
+					'refund_id'     => $refund->get_id(),
+					'custom_fields' => $custom_fields,
+				]
+			);
+		} else {
+			// Check if mappings are configured but no values extracted.
+			$configured_mappings = $this->field_mapping->get_creditnote_mappings();
+			if ( ! empty( $configured_mappings ) ) {
+				$this->logger->debug(
+					'Credit note has custom field mappings configured but no values extracted',
+					[
+						'order_id'      => $order->get_id(),
+						'refund_id'     => $refund->get_id(),
+						'mapping_count' => count( $configured_mappings ),
+					]
+				);
+			}
 		}
 
 		try {

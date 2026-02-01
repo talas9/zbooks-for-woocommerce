@@ -53,6 +53,8 @@ class AjaxHandlers {
 
 	/**
 	 * Handle manual sync AJAX request.
+	 *
+	 * Uses status mappings to determine sync behavior unless explicitly overridden.
 	 */
 	public function handle_manual_sync(): void {
 		check_ajax_referer( 'zbooks_ajax_nonce', 'nonce' );
@@ -66,7 +68,6 @@ class AjaxHandlers {
 		}
 
 		$order_id = isset( $_POST['order_id'] ) ? absint( $_POST['order_id'] ) : 0;
-		$as_draft = isset( $_POST['as_draft'] ) && $_POST['as_draft'] === 'true';
 
 		if ( ! $order_id ) {
 			wp_send_json_error(
@@ -86,41 +87,104 @@ class AjaxHandlers {
 			);
 		}
 
+		// Determine sync behavior based on status mappings.
+		$sync_config = $this->get_sync_config_for_order( $order );
+		$as_draft    = $sync_config['as_draft'];
+
 		// Manual sync always uses force=true to actually re-sync (not just return cached result).
 		$result = $this->orchestrator->sync_order( $order, $as_draft, true );
 
-		if ( $result->success ) {
-			// Get repository to fetch display names.
-			$repository = new \Zbooks\Repository\OrderMetaRepository();
-			
-			// Get last attempt timestamp.
-			$last_attempt = $repository->get_last_sync_attempt( $order );
-			
-			wp_send_json_success(
-				[
-					'message'         => __( 'Order synced successfully!', 'zbooks-for-woocommerce' ),
-					'invoice_id'      => $result->invoice_id,
-					'invoice_number'  => $repository->get_invoice_number( $order ),
-					'invoice_url'     => \Zbooks\Helper\ZohoUrlHelper::invoice( $result->invoice_id ),
-					'contact_id'      => $result->contact_id,
-					'contact_name'    => $repository->get_contact_name( $order ),
-					'contact_url'     => $result->contact_id ? \Zbooks\Helper\ZohoUrlHelper::contact( $result->contact_id ) : null,
-					'status'          => $result->status->value,
-					'status_label'    => $result->status->label(),
-					'status_class'    => $result->status->css_class(),
-					'payment_id'      => $repository->get_payment_id( $order ),
-					'payment_number'  => $repository->get_payment_number( $order ),
-					'invoice_status'  => $repository->get_invoice_status( $order ),
-					'last_attempt'    => $last_attempt ? $last_attempt->format( 'Y-m-d H:i:s' ) : null,
-				]
-			);
-		} else {
+		if ( ! $result->success ) {
 			wp_send_json_error(
 				[
 					'message' => $result->error ?? __( 'Sync failed.', 'zbooks-for-woocommerce' ),
 				]
 			);
+			return;
 		}
+
+		// Apply payment if order status matches apply_payment mapping and order is paid.
+		$payment_result = null;
+		if ( $sync_config['should_apply_payment'] && ! $as_draft && $order->is_paid() ) {
+			$payment_result = $this->orchestrator->apply_payment( $order );
+		}
+
+		// Get repository to fetch display names.
+		$repository = new \Zbooks\Repository\OrderMetaRepository();
+
+		// Get last attempt timestamp.
+		$last_attempt = $repository->get_last_sync_attempt( $order );
+
+		$response = [
+			'message'         => __( 'Order synced successfully!', 'zbooks-for-woocommerce' ),
+			'invoice_id'      => $result->invoice_id,
+			'invoice_number'  => $repository->get_invoice_number( $order ),
+			'invoice_url'     => \Zbooks\Helper\ZohoUrlHelper::invoice( $result->invoice_id ),
+			'contact_id'      => $result->contact_id,
+			'contact_name'    => $repository->get_contact_name( $order ),
+			'contact_url'     => $result->contact_id ? \Zbooks\Helper\ZohoUrlHelper::contact( $result->contact_id ) : null,
+			'status'          => $result->status->value,
+			'status_label'    => $result->status->label(),
+			'status_class'    => $result->status->css_class(),
+			'payment_id'      => $repository->get_payment_id( $order ),
+			'payment_number'  => $repository->get_payment_number( $order ),
+			'invoice_status'  => $repository->get_invoice_status( $order ),
+			'last_attempt'    => $last_attempt ? $last_attempt->format( 'Y-m-d H:i:s' ) : null,
+		];
+
+		// Add payment result info if payment was attempted.
+		if ( $payment_result !== null ) {
+			if ( $payment_result['success'] ) {
+				$response['message']        = __( 'Order synced and payment applied!', 'zbooks-for-woocommerce' );
+				$response['payment_id']     = $payment_result['payment_id'] ?? $repository->get_payment_id( $order );
+				$response['payment_number'] = $repository->get_payment_number( $order );
+			} else {
+				$response['payment_warning'] = $payment_result['error'] ?? __( 'Payment could not be applied.', 'zbooks-for-woocommerce' );
+			}
+		}
+
+		wp_send_json_success( $response );
+	}
+
+	/**
+	 * Get sync configuration for an order based on status mappings.
+	 *
+	 * @param \WC_Order $order WooCommerce order.
+	 * @return array{as_draft: bool, should_apply_payment: bool}
+	 */
+	private function get_sync_config_for_order( \WC_Order $order ): array {
+		$triggers = get_option( 'zbooks_sync_triggers', [] );
+
+		// Use sensible defaults if not configured.
+		if ( empty( $triggers ) ) {
+			$triggers = [
+				'sync_draft'        => 'processing',
+				'sync_submit'       => 'completed',
+				'apply_payment'     => 'completed',
+				'create_creditnote' => 'refunded',
+			];
+		}
+
+		$order_status = $order->get_status();
+
+		// Check if order status matches sync_draft or sync_submit.
+		$as_draft = true; // Default to draft for safety.
+		if ( isset( $triggers['sync_submit'] ) && $triggers['sync_submit'] === $order_status ) {
+			$as_draft = false;
+		} elseif ( isset( $triggers['sync_draft'] ) && $triggers['sync_draft'] === $order_status ) {
+			$as_draft = true;
+		}
+
+		// Check if payment should be applied.
+		$should_apply_payment = false;
+		if ( isset( $triggers['apply_payment'] ) && $triggers['apply_payment'] === $order_status ) {
+			$should_apply_payment = true;
+		}
+
+		return [
+			'as_draft'             => $as_draft,
+			'should_apply_payment' => $should_apply_payment,
+		];
 	}
 
 	/**

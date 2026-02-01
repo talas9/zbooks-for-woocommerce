@@ -61,3 +61,4 @@ firebase-debug.log
 test-results/
 playwright/
 playwright-report/
+restored/

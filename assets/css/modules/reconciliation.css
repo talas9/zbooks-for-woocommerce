@@ -286,10 +286,51 @@
 }
 
 /* ========================================
+   RECONCILIATION SYNC ACTIONS
+======================================== */
+.zbooks-recon-sync {
+	min-width: 55px;
+}
+
+.zbooks-sync-done {
+	display: inline-block;
+	padding: 4px 8px;
+	background: #d4edda;
+	color: #155724;
+	border-radius: 3px;
+	font-size: 11px;
+	font-weight: 600;
+}
+
+.zbooks-recon-sync-error {
+	border-color: #dc3545 !important;
+	color: #dc3545 !important;
+}
+
+tr.zbooks-recon-sync-success {
+	background: #d4edda !important;
+}
+
+tr.zbooks-recon-sync-success td {
+	opacity: 0.8;
+}
+
+.zbooks-sync-all-missing {
+	margin-bottom: 15px;
+}
+
+/* Ensure actions column doesn't wrap */
+.zbooks-modal-discrepancies td:last-child,
+.zbooks-latest-report td:last-child {
+	white-space: nowrap;
+	text-align: center;
+}
+
+/* ========================================
    RESPONSIVE
 ======================================== */
 @media (max-width: 768px) {
-	.zbooks-modal-summary .summary-grid { 
-		grid-template-columns: repeat(2, 1fr); 
+	.zbooks-modal-summary .summary-grid {
+		grid-template-columns: repeat(2, 1fr);
 	}
 }

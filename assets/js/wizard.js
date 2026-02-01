@@ -48,6 +48,30 @@
                 };
                 console.log('Selected datacenter:', domains[dc]);
             });
+
+            // Copy scope button
+            $('.zbooks-copy-scope').on('click', function() {
+                const $btn = $(this);
+                const text = $btn.data('copy-text');
+
+                navigator.clipboard.writeText(text).then(function() {
+                    $btn.text(zbooksWizard.i18n.copied);
+                    setTimeout(function() {
+                        $btn.text(zbooksWizard.i18n.copy);
+                    }, 2000);
+                }).catch(function() {
+                    // Fallback for older browsers
+                    const $temp = $('<textarea>');
+                    $('body').append($temp);
+                    $temp.val(text).select();
+                    document.execCommand('copy');
+                    $temp.remove();
+                    $btn.text(zbooksWizard.i18n.copied);
+                    setTimeout(function() {
+                        $btn.text(zbooksWizard.i18n.copy);
+                    }, 2000);
+                });
+            });
         }
     };
 

@@ -104,3 +104,27 @@
     max-height: 300px;
     overflow-y: auto;
 }
+
+/* ==========================================================================
+   Log Viewer Controls
+   ========================================================================== */
+
+.zbooks-log-controls {
+    margin-bottom: 15px;
+}
+
+.zbooks-log-controls form {
+    display: inline-flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.zbooks-log-controls form + form {
+    display: inline;
+    margin-left: 20px;
+}
+
+.zbooks-clear-all-logs {
+    margin-left: 5px;
+    color: #d63638;
+}

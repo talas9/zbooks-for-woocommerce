@@ -59,6 +59,8 @@ class ReconciliationPage {
 		add_action( 'wp_ajax_zbooks_delete_all_reports', [ $this, 'ajax_delete_all_reports' ] );
 		add_action( 'wp_ajax_zbooks_view_report', [ $this, 'ajax_view_report' ] );
 		add_action( 'wp_ajax_zbooks_export_report_csv', [ $this, 'ajax_export_report_csv' ] );
+		add_action( 'wp_ajax_zbooks_reconciliation_sync', [ $this, 'ajax_reconciliation_sync' ] );
+		add_action( 'wp_ajax_zbooks_reconciliation_bulk_sync', [ $this, 'ajax_reconciliation_bulk_sync' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_assets' ] );
 	}
 
@@ -246,6 +248,28 @@ class ReconciliationPage {
 					<?php if ( $latest_report->has_discrepancies() ) : ?>
 						<div style="margin-top: 20px;">
 							<h3><?php esc_html_e( 'Recent Discrepancies', 'zbooks-for-woocommerce' ); ?></h3>
+							<?php
+							$missing_orders = array_filter(
+								array_slice( $latest_report->get_discrepancies(), 0, 5 ),
+								function ( $d ) {
+									return $d['type'] === 'missing_in_zoho' && ! empty( $d['order_id'] );
+								}
+							);
+							if ( ! empty( $missing_orders ) ) :
+								?>
+								<p style="margin-bottom: 15px;">
+									<button type="button" class="button button-primary zbooks-sync-all-missing"
+										data-report-id="<?php echo esc_attr( $latest_report->get_id() ); ?>">
+										<?php
+										printf(
+											/* translators: %d: Number of missing orders */
+											esc_html__( 'Sync All Missing (%d)', 'zbooks-for-woocommerce' ),
+											count( $missing_orders )
+										);
+										?>
+									</button>
+								</p>
+							<?php endif; ?>
 							<table class="widefat striped" style="margin-top: 10px;">
 								<thead>
 									<tr>
@@ -257,6 +281,7 @@ class ReconciliationPage {
 										<th><?php esc_html_e( 'Payment Status', 'zbooks-for-woocommerce' ); ?></th>
 										<th><?php esc_html_e( 'Date', 'zbooks-for-woocommerce' ); ?></th>
 										<th><?php esc_html_e( 'Details', 'zbooks-for-woocommerce' ); ?></th>
+										<th><?php esc_html_e( 'Actions', 'zbooks-for-woocommerce' ); ?></th>
 									</tr>
 								</thead>
 								<tbody>
@@ -321,6 +346,21 @@ class ReconciliationPage {
 											</td>
 											<td><?php echo esc_html( $discrepancy['order_date'] ?? $discrepancy['invoice_date'] ?? '—' ); ?></td>
 											<td><?php echo wp_kses_post( $discrepancy['message'] ); ?></td>
+											<td>
+												<?php if ( $discrepancy['type'] === 'missing_in_zoho' && ! empty( $discrepancy['order_id'] ) ) : ?>
+													<button type="button" class="button button-small zbooks-recon-sync"
+														data-order-id="<?php echo esc_attr( $discrepancy['order_id'] ); ?>">
+														<?php esc_html_e( 'Sync', 'zbooks-for-woocommerce' ); ?>
+													</button>
+												<?php elseif ( ! empty( $discrepancy['order_id'] ) ) : ?>
+													<a href="<?php echo esc_url( admin_url( 'post.php?post=' . $discrepancy['order_id'] . '&action=edit' ) ); ?>"
+														class="button button-small">
+														<?php esc_html_e( 'View', 'zbooks-for-woocommerce' ); ?>
+													</a>
+												<?php else : ?>
+													—
+												<?php endif; ?>
+											</td>
 										</tr>
 									<?php endforeach; ?>
 								</tbody>
@@ -741,6 +781,7 @@ class ReconciliationPage {
 			$discrepancies_html .= '<th>' . esc_html__( 'Payment Status', 'zbooks-for-woocommerce' ) . '</th>';
 			$discrepancies_html .= '<th>' . esc_html__( 'Date', 'zbooks-for-woocommerce' ) . '</th>';
 			$discrepancies_html .= '<th>' . esc_html__( 'Details', 'zbooks-for-woocommerce' ) . '</th>';
+			$discrepancies_html .= '<th>' . esc_html__( 'Actions', 'zbooks-for-woocommerce' ) . '</th>';
 			$discrepancies_html .= '</tr></thead><tbody>';
 
 			foreach ( $discrepancies as $discrepancy ) {
@@ -797,6 +838,20 @@ class ReconciliationPage {
 				$discrepancies_html .= '<td>' . $payment_status_html . '</td>';
 				$discrepancies_html .= '<td>' . esc_html( $date ) . '</td>';
 				$discrepancies_html .= '<td>' . wp_kses_post( $discrepancy['message'] ) . '</td>';
+
+				// Actions column.
+				$action_html = '—';
+				if ( $discrepancy['type'] === 'missing_in_zoho' && ! empty( $discrepancy['order_id'] ) ) {
+					$action_html = '<button type="button" class="button button-small zbooks-recon-sync" ' .
+						'data-order-id="' . esc_attr( $discrepancy['order_id'] ) . '">' .
+						esc_html__( 'Sync', 'zbooks-for-woocommerce' ) . '</button>';
+				} elseif ( ! empty( $discrepancy['order_id'] ) ) {
+					$action_html = '<a href="' . esc_url( admin_url( 'post.php?post=' . $discrepancy['order_id'] . '&action=edit' ) ) .
+						'" class="button button-small" target="_blank">' .
+						esc_html__( 'View', 'zbooks-for-woocommerce' ) . '</a>';
+				}
+				$discrepancies_html .= '<td>' . $action_html . '</td>';
+
 				$discrepancies_html .= '</tr>';
 			}
 
@@ -918,5 +973,161 @@ class ReconciliationPage {
 
 		fclose( $output );
 		exit;
+	}
+
+	/**
+	 * AJAX handler for syncing a single order from reconciliation.
+	 */
+	public function ajax_reconciliation_sync(): void {
+		check_ajax_referer( 'zbooks_reconciliation', 'nonce' );
+
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'zbooks-for-woocommerce' ) ] );
+		}
+
+		$order_id = absint( $_POST['order_id'] ?? 0 );
+
+		if ( ! $order_id ) {
+			wp_send_json_error( [ 'message' => __( 'Invalid order ID.', 'zbooks-for-woocommerce' ) ] );
+		}
+
+		$order = wc_get_order( $order_id );
+
+		if ( ! $order ) {
+			wp_send_json_error( [ 'message' => __( 'Order not found.', 'zbooks-for-woocommerce' ) ] );
+		}
+
+		// Get sync configuration based on order status (same logic as manual sync).
+		$sync_config = $this->get_sync_config_for_order( $order );
+
+		// Get orchestrator service.
+		$plugin       = \Zbooks\Plugin::get_instance();
+		$orchestrator = $plugin->get_service( 'sync_orchestrator' );
+
+		if ( ! $orchestrator ) {
+			wp_send_json_error( [ 'message' => __( 'Sync service not available.', 'zbooks-for-woocommerce' ) ] );
+		}
+
+		// Execute sync.
+		$result = $orchestrator->sync_order( $order, $sync_config['as_draft'], true );
+
+		if ( ! $result->success ) {
+			wp_send_json_error( [ 'message' => $result->error ] );
+		}
+
+		// Apply payment if configured and invoice was created.
+		if ( $sync_config['should_apply_payment'] && $result->invoice_id ) {
+			$orchestrator->apply_payment( $order );
+		}
+
+		wp_send_json_success( [
+			'message'        => __( 'Order synced successfully.', 'zbooks-for-woocommerce' ),
+			'invoice_id'     => $result->invoice_id,
+			'invoice_number' => $order->get_meta( '_zbooks_zoho_invoice_number' ),
+		] );
+	}
+
+	/**
+	 * Get sync configuration for an order based on status mappings.
+	 *
+	 * @param \WC_Order $order WooCommerce order.
+	 * @return array Sync configuration.
+	 */
+	private function get_sync_config_for_order( \WC_Order $order ): array {
+		$triggers = get_option( 'zbooks_sync_triggers', [] );
+
+		if ( empty( $triggers ) ) {
+			$triggers = [
+				'sync_draft'        => 'processing',
+				'sync_submit'       => 'completed',
+				'apply_payment'     => 'completed',
+				'create_creditnote' => 'refunded',
+			];
+		}
+
+		$order_status = $order->get_status();
+
+		$as_draft = true; // Default to draft for safety.
+		if ( isset( $triggers['sync_submit'] ) && $triggers['sync_submit'] === $order_status ) {
+			$as_draft = false;
+		} elseif ( isset( $triggers['sync_draft'] ) && $triggers['sync_draft'] === $order_status ) {
+			$as_draft = true;
+		}
+
+		$should_apply_payment = false;
+		if ( isset( $triggers['apply_payment'] ) && $triggers['apply_payment'] === $order_status ) {
+			$should_apply_payment = true;
+		}
+
+		return [
+			'as_draft'             => $as_draft,
+			'should_apply_payment' => $should_apply_payment,
+		];
+	}
+
+	/**
+	 * AJAX handler for bulk syncing orders from reconciliation.
+	 */
+	public function ajax_reconciliation_bulk_sync(): void {
+		check_ajax_referer( 'zbooks_reconciliation', 'nonce' );
+
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'zbooks-for-woocommerce' ) ] );
+		}
+
+		$order_ids = isset( $_POST['order_ids'] ) ? array_map( 'absint', (array) $_POST['order_ids'] ) : [];
+
+		if ( empty( $order_ids ) ) {
+			wp_send_json_error( [ 'message' => __( 'No orders to sync.', 'zbooks-for-woocommerce' ) ] );
+		}
+
+		$plugin       = \Zbooks\Plugin::get_instance();
+		$orchestrator = $plugin->get_service( 'sync_orchestrator' );
+
+		if ( ! $orchestrator ) {
+			wp_send_json_error( [ 'message' => __( 'Sync service not available.', 'zbooks-for-woocommerce' ) ] );
+		}
+
+		$success_count = 0;
+		$failed_count  = 0;
+		$results       = [];
+
+		foreach ( $order_ids as $order_id ) {
+			$order = wc_get_order( $order_id );
+
+			if ( ! $order ) {
+				$failed_count++;
+				$results[ $order_id ] = [ 'success' => false, 'error' => 'Order not found' ];
+				continue;
+			}
+
+			$sync_config = $this->get_sync_config_for_order( $order );
+			$result      = $orchestrator->sync_order( $order, $sync_config['as_draft'], true );
+
+			if ( $result->success ) {
+				$success_count++;
+				$results[ $order_id ] = [ 'success' => true, 'invoice_id' => $result->invoice_id ];
+
+				// Apply payment if configured.
+				if ( $sync_config['should_apply_payment'] && $result->invoice_id ) {
+					$orchestrator->apply_payment( $order );
+				}
+			} else {
+				$failed_count++;
+				$results[ $order_id ] = [ 'success' => false, 'error' => $result->error ];
+			}
+		}
+
+		wp_send_json_success( [
+			'message'       => sprintf(
+				/* translators: 1: Success count, 2: Failed count */
+				__( 'Sync complete. %1$d succeeded, %2$d failed.', 'zbooks-for-woocommerce' ),
+				$success_count,
+				$failed_count
+			),
+			'success_count' => $success_count,
+			'failed_count'  => $failed_count,
+			'results'       => $results,
+		] );
 	}
 }

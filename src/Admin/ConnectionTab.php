@@ -200,8 +200,7 @@ class ConnectionTab {
 						<strong><?php esc_html_e( 'Required Scope:', 'zbooks-for-woocommerce' ); ?></strong>
 					</label>
 					<input type="text" value="ZohoBooks.fullaccess.all" readonly
-						class="regular-text" style="background: #f0f0f1; cursor: text;"
-						onclick="this.select();"
+						class="regular-text zbooks-select-on-click"
 						title="<?php esc_attr_e( 'Click to select and copy', 'zbooks-for-woocommerce' ); ?>">
 					<span class="description" style="display: block; margin-top: 5px;">
 						<?php esc_html_e( 'Use this scope when generating your authorization code in the Zoho API Console.', 'zbooks-for-woocommerce' ); ?>
@@ -606,7 +605,7 @@ class ConnectionTab {
 	 * AJAX: Test connection to Zoho Books.
 	 */
 	public function ajax_test_connection(): void {
-		check_ajax_referer( 'zbooks_test_connection', 'nonce' );
+		check_ajax_referer( 'zbooks_ajax_nonce', 'nonce' );
 
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
 			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'zbooks-for-woocommerce' ) ] );

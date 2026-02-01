@@ -33,7 +33,6 @@
         init: function() {
             // Prevent double initialization
             if (this.initialized) {
-                console.log('[ZBooks] Product mapping already initialized');
                 return;
             }
 
@@ -43,23 +42,18 @@
             var isProductsTab = $('#zbooks-select-all-products').length || $('.zbooks-product-checkbox').length;
             var isProductEditPage = $('.zbooks-product-meta-box').length;
 
-            console.log('[ZBooks] Product mapping init - isProductsTab:', isProductsTab, 'isProductEditPage:', isProductEditPage);
-
             if (!isProductsTab && !isProductEditPage) {
-                console.log('[ZBooks] Product mapping: No relevant elements found, skipping init');
                 return;
             }
 
             this.nonce = typeof zbooks_mapping !== 'undefined' ? zbooks_mapping.nonce : '';
-            
+
             if (isProductsTab) {
-                console.log('[ZBooks] Initializing products tab');
                 this.bindEvents();
                 this.initSelect2();
             }
-            
+
             if (isProductEditPage) {
-                console.log('[ZBooks] Initializing product edit page meta box');
                 this.bindMetaBoxEvents();
             }
         },
@@ -434,8 +428,7 @@
                     } else {
                         $status.html('<span style="color: #dba617;">⚠ ' + summaryMsg + '</span>');
                     }
-                    
-                    console.log('Auto-map completed:', mapped, 'mapped,', failed, 'failed');
+
                     return;
                 }
 
@@ -507,23 +500,19 @@
                                 (i18n.unlink || 'Unlink') +
                                 '</button>'
                             );
-                            
-                            console.log('Mapped product', productId, 'to Zoho item', itemId);
                         } else {
                             // Failed to map
                             failed++;
                             $row.css('background-color', '#f8d7da');
-                            console.warn('Failed to map product', productId, ':', response.data ? response.data.message : 'Unknown error');
                         }
                     },
-                    error: function(xhr, status, error) {
+                    error: function() {
                         // Remove grey-out and spinner
                         $row.removeClass('zbooks-mapping-in-progress');
                         $row.find('.zbooks-mapping-spinner').remove();
-                        
+
                         failed++;
                         $row.css('background-color', '#f8d7da');
-                        console.error('AJAX error mapping product', productId, ':', error);
                     },
                     complete: function() {
                         // Move to next product after a short delay
@@ -545,7 +534,6 @@
 
             // Check if Select2 is available
             if (typeof $.fn.select2 === 'undefined') {
-                console.warn('Select2 library not loaded. Falling back to standard dropdowns.');
                 return;
             }
 
@@ -621,12 +609,9 @@
 
             // Get product-specific nonce
             this.productNonce = typeof zbooks_product !== 'undefined' ? zbooks_product.nonce : this.nonce;
-            console.log('[ZBooks] Product meta box events bound, nonce available:', !!this.productNonce);
 
             // Create item button
             $(document).on('click', '.zbooks-create-item-btn', function() {
-                console.log('[ZBooks] Create item button clicked');
-
                 var $btn = $(this);
                 var productId = $btn.data('product-id');
                 var $result = $('.zbooks-product-result');
@@ -647,12 +632,10 @@
 
             // Sync product button
             $(document).on('click', '.zbooks-sync-product-btn', function() {
-                console.log('[ZBooks] Sync product button clicked');
                 var $btn = $(this);
                 var productId = $btn.data('product-id');
                 var $result = $('.zbooks-product-result');
 
-                console.log('[ZBooks] Syncing product ID:', productId);
                 self.syncProductToZoho(productId, $btn, $result);
             });
 
@@ -687,7 +670,6 @@
                     
                     // Update meta box display without reload
                     if (response.data && response.data.item_id) {
-                        console.log('[ZBooks] Item created, updating meta box');
                         self.updateProductMetaBox(response.data);
                     }
                 } else {
@@ -860,7 +842,6 @@
                     $result.html('<span style="color:green;">' + (i18n.item_linked_success || 'Item linked successfully!') + '</span>');
                     
                     // Update meta box display without reload
-                    console.log('[ZBooks] Item linked, fetching details to update meta box');
                     // The response doesn't include full item data, so we'd need to fetch it or just show success
                     // For now, just update the status
                     var $metaBox = $('.zbooks-product-meta-box');
@@ -885,7 +866,6 @@
             var self = this;
             var i18n = (window.ZBooks && window.ZBooks.config && window.ZBooks.config.i18n) || {};
 
-            console.log('[ZBooks] Syncing product to Zoho:', productId);
             $btn.prop('disabled', true).text(i18n.updating || 'Updating...');
             $result.html('');
 
@@ -894,21 +874,18 @@
                 nonce: self.productNonce || self.nonce,
                 product_id: productId
             }, function(response) {
-                console.log('[ZBooks] Product sync response:', response);
                 $btn.prop('disabled', false).text(i18n.update_in_zoho || 'Update in Zoho');
-                
+
                 if (response.success) {
                     $result.html('<span style="color:green;">' + response.data.message + '</span>');
-                    
+
                     // Update product meta box display (no reload needed)
                     self.updateProductMetaBox(response.data);
                 } else {
                     var errorMsg = response.data ? response.data.message : 'Error updating item';
-                    console.error('[ZBooks] Product sync failed:', errorMsg);
                     $result.html('<span style="color:red;">' + errorMsg + '</span>');
                 }
-            }).fail(function(xhr, status, error) {
-                console.error('[ZBooks] Product sync AJAX error:', {status: status, error: error, xhr: xhr});
+            }).fail(function(xhr) {
                 $btn.prop('disabled', false).text(i18n.update_in_zoho || 'Update in Zoho');
                 
                 var errorMsg = 'Network error';
@@ -929,11 +906,8 @@
          */
         updateProductMetaBox: function(data) {
             try {
-                console.log('[ZBooks] Updating product meta box with:', data);
-                
                 var $metaBox = $('.zbooks-product-meta-box');
                 if (!$metaBox.length) {
-                    console.warn('[ZBooks] Product meta box not found');
                     return;
                 }
                 
@@ -985,10 +959,8 @@
                         $statusPara.html('<strong>Item Status:</strong> ' + data.item_status);
                     }
                 }
-                
-                console.log('[ZBooks] Product meta box updated successfully');
             } catch (error) {
-                console.error('[ZBooks] Error updating product meta box:', error);
+                // Silent failure for UI updates
             }
         },
 
@@ -1010,7 +982,6 @@
                 product_id: productId
             }, function(response) {
                 if (response.success) {
-                    console.log('[ZBooks] Item unlinked successfully');
                     $result.html('<span style="color:green;">Item unlinked successfully</span>');
                     
                     // Update meta box status to "Not synced"

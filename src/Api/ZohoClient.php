@@ -450,13 +450,8 @@ class ZohoClient {
 			$args['body'] = wp_json_encode( $data );
 		}
 
-		$this->logger->debug(
-			'Raw API request',
-			[
-				'method'   => $method,
-				'endpoint' => $path,
-			]
-		);
+		// Sanitize URL for logging (hide org_id).
+		$log_url = preg_replace( '/organization_id=\d+/', 'organization_id=***', $url );
 
 		$response = wp_remote_request( $url, $args );
 
@@ -464,9 +459,10 @@ class ZohoClient {
 			$this->logger->error(
 				'Raw API request failed',
 				[
-					'method'   => $method,
-					'endpoint' => $path,
-					'error'    => $response->get_error_message(),
+					'method'      => strtoupper( $method ),
+					'endpoint'    => $path,
+					'request_url' => $log_url,
+					'error'       => $response->get_error_message(),
 				]
 			);
 			throw new \RuntimeException( $response->get_error_message() );
@@ -480,10 +476,11 @@ class ZohoClient {
 			$this->logger->error(
 				'Invalid JSON response from Zoho API',
 				[
-					'method'      => $method,
-					'endpoint'    => $path,
-					'status_code' => $status_code,
-					'raw_body'    => substr( $body, 0, 500 ),
+					'method'        => strtoupper( $method ),
+					'endpoint'      => $path,
+					'request_url'   => $log_url,
+					'status_code'   => $status_code,
+					'response_body' => substr( $body, 0, 500 ),
 				]
 			);
 			throw new \RuntimeException( 'Invalid JSON response from Zoho API' );
@@ -496,15 +493,27 @@ class ZohoClient {
 			$this->logger->error(
 				'Zoho API error',
 				[
-					'method'       => $method,
-					'endpoint'     => $path,
-					'status_code'  => $status_code,
-					'zoho_code'    => $code,
-					'zoho_message' => $message,
+					'method'        => strtoupper( $method ),
+					'endpoint'      => $path,
+					'request_url'   => $log_url,
+					'status_code'   => $status_code,
+					'zoho_code'     => $code,
+					'zoho_message'  => $message,
 				]
 			);
 			throw new \RuntimeException( $message );
 		}
+
+		// Log successful API request at INFO level so it's visible in log viewer.
+		$this->logger->info(
+			'Zoho API request completed',
+			[
+				'method'      => strtoupper( $method ),
+				'endpoint'    => $path,
+				'request_url' => $log_url,
+				'status_code' => $status_code,
+			]
+		);
 
 		return $result;
 	}

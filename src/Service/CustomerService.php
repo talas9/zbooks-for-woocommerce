@@ -434,13 +434,25 @@ class CustomerService {
 		$custom_fields = $this->field_mapping->build_custom_fields( $order, 'customer' );
 		if ( ! empty( $custom_fields ) ) {
 			$contact['custom_fields'] = $custom_fields;
-			$this->logger->debug(
+			$this->logger->info(
 				'Adding custom fields to contact',
 				[
-					'email'              => $order->get_billing_email(),
-					'custom_field_count' => count( $custom_fields ),
+					'email'         => $order->get_billing_email(),
+					'custom_fields' => $custom_fields,
 				]
 			);
+		} else {
+			// Check if mappings are configured but no values extracted.
+			$configured_mappings = $this->field_mapping->get_customer_mappings();
+			if ( ! empty( $configured_mappings ) ) {
+				$this->logger->debug(
+					'Contact has custom field mappings configured but no values extracted',
+					[
+						'email'         => $order->get_billing_email(),
+						'mapping_count' => count( $configured_mappings ),
+					]
+				);
+			}
 		}
 
 		// Add contact person with email and phone.

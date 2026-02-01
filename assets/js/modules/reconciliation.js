@@ -212,6 +212,108 @@
                     }
                 });
             });
+
+            // Single order sync from discrepancy row
+            $(document).on('click', '.zbooks-recon-sync', function() {
+                var $btn = $(this);
+                var orderId = $btn.data('order-id');
+                var $row = $btn.closest('tr');
+
+                $btn.prop('disabled', true).text(i18n.syncing || 'Syncing...');
+
+                $.ajax({
+                    url: ajaxurl,
+                    type: 'POST',
+                    data: {
+                        action: 'zbooks_reconciliation_sync',
+                        nonce: self.nonce,
+                        order_id: orderId
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            $row.addClass('zbooks-recon-sync-success');
+                            $btn.replaceWith('<span class="zbooks-sync-done">' +
+                                (i18n.synced || 'Synced') + '</span>');
+                            self.updateMissingCount(-1);
+                        } else {
+                            $btn.prop('disabled', false)
+                                .text(i18n.retry || 'Retry')
+                                .addClass('zbooks-recon-sync-error');
+                            alert(response.data.message || (i18n.sync_failed || 'Sync failed'));
+                        }
+                    },
+                    error: function() {
+                        $btn.prop('disabled', false).text(i18n.sync || 'Sync');
+                        alert(i18n.sync_failed || 'Sync failed');
+                    }
+                });
+            });
+
+            // Bulk sync all missing orders
+            $(document).on('click', '.zbooks-sync-all-missing', function() {
+                var $btn = $(this);
+
+                if (!confirm(i18n.confirm_bulk_sync || 'Sync all missing orders to Zoho Books?')) {
+                    return;
+                }
+
+                $btn.prop('disabled', true);
+                var originalText = $btn.text();
+                $btn.text(i18n.syncing || 'Syncing...');
+
+                // Collect order IDs from sync buttons
+                var orderIds = [];
+                $('.zbooks-recon-sync').each(function() {
+                    orderIds.push($(this).data('order-id'));
+                });
+
+                if (orderIds.length === 0) {
+                    alert(i18n.no_orders_to_sync || 'No orders to sync');
+                    $btn.prop('disabled', false).text(originalText);
+                    return;
+                }
+
+                $.ajax({
+                    url: ajaxurl,
+                    type: 'POST',
+                    data: {
+                        action: 'zbooks_reconciliation_bulk_sync',
+                        nonce: self.nonce,
+                        order_ids: orderIds
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            alert(response.data.message);
+                            location.reload();
+                        } else {
+                            alert(response.data.message || (i18n.bulk_sync_failed || 'Bulk sync failed'));
+                            $btn.prop('disabled', false).text(originalText);
+                        }
+                    },
+                    error: function() {
+                        alert(i18n.bulk_sync_failed || 'Bulk sync failed');
+                        $btn.prop('disabled', false).text(originalText);
+                    }
+                });
+            });
+        },
+
+        /**
+         * Update the missing orders count in summary cards
+         *
+         * @param {number} delta Change in count (negative to decrease)
+         */
+        updateMissingCount: function(delta) {
+            var $card = $('.zbooks-card-danger .zbooks-card-value, .zbooks-card.zbooks-card-danger .zbooks-card-value');
+            if ($card.length) {
+                var current = parseInt($card.text(), 10) || 0;
+                var newVal = Math.max(0, current + delta);
+                $card.text(newVal);
+
+                if (newVal === 0) {
+                    $card.closest('.zbooks-card').removeClass('zbooks-card-danger').addClass('zbooks-card-neutral');
+                }
+            }
         },
 
         /**

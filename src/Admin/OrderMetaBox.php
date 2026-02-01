@@ -275,30 +275,41 @@ class OrderMetaBox {
 
 			<hr>
 
-			<p>
-				<button type="button"
-					class="button zbooks-sync-btn"
-					data-order-id="<?php echo esc_attr( $order->get_id() ); ?>"
-					data-draft="false">
-					<?php esc_html_e( 'Sync Now', 'zbooks-for-woocommerce' ); ?>
-				</button>
-				<button type="button"
-					class="button zbooks-sync-btn"
-					data-order-id="<?php echo esc_attr( $order->get_id() ); ?>"
-					data-draft="true">
-					<?php esc_html_e( 'Sync as Draft', 'zbooks-for-woocommerce' ); ?>
-				</button>
+			<?php
+			$sync_config = $this->get_sync_config_for_order( $order );
+			?>
+
+			<p class="zbooks-sync-info">
+				<span class="dashicons dashicons-info"></span>
+				<?php echo esc_html( $sync_config['info_message'] ); ?>
 			</p>
 
-			<?php if ( $invoice_id && ! $payment_id && $order->is_paid() ) : ?>
-				<p>
+			<div class="zbooks-sync-actions">
+				<?php if ( ! $invoice_id ) : ?>
 					<button type="button"
-						class="button zbooks-apply-payment-btn"
+						class="button button-primary zbooks-sync-btn"
+						data-order-id="<?php echo esc_attr( $order->get_id() ); ?>">
+						<?php esc_html_e( 'Sync to Zoho', 'zbooks-for-woocommerce' ); ?>
+					</button>
+				<?php elseif ( $invoice_id && ! $payment_id && $order->is_paid() ) : ?>
+					<button type="button"
+						class="button button-primary zbooks-apply-payment-btn"
 						data-order-id="<?php echo esc_attr( $order->get_id() ); ?>">
 						<?php esc_html_e( 'Apply Payment', 'zbooks-for-woocommerce' ); ?>
 					</button>
-				</p>
-			<?php endif; ?>
+					<button type="button"
+						class="button zbooks-sync-btn"
+						data-order-id="<?php echo esc_attr( $order->get_id() ); ?>">
+						<?php esc_html_e( 'Re-sync', 'zbooks-for-woocommerce' ); ?>
+					</button>
+				<?php else : ?>
+					<button type="button"
+						class="button zbooks-sync-btn"
+						data-order-id="<?php echo esc_attr( $order->get_id() ); ?>">
+						<?php esc_html_e( 'Re-sync', 'zbooks-for-woocommerce' ); ?>
+					</button>
+				<?php endif; ?>
+			</div>
 
 			<p class="zbooks-sync-result"></p>
 		</div>
@@ -370,5 +381,59 @@ class OrderMetaBox {
 		} catch ( \Exception $e ) {
 			return null;
 		}
+	}
+
+	/**
+	 * Get sync configuration for an order based on status mappings.
+	 *
+	 * @param \WC_Order $order WooCommerce order.
+	 * @return array Sync configuration with info_message describing what will happen.
+	 */
+	private function get_sync_config_for_order( \WC_Order $order ): array {
+		$triggers = get_option( 'zbooks_sync_triggers', [] );
+
+		if ( empty( $triggers ) ) {
+			$triggers = [
+				'sync_draft'        => 'processing',
+				'sync_submit'       => 'completed',
+				'apply_payment'     => 'completed',
+				'create_creditnote' => 'refunded',
+			];
+		}
+
+		$order_status = $order->get_status();
+		$invoice_id   = $this->repository->get_invoice_id( $order );
+		$payment_id   = $this->repository->get_payment_id( $order );
+
+		$config = [
+			'info_message' => '',
+		];
+
+		// Determine what will happen based on status mappings.
+		$will_submit = isset( $triggers['sync_submit'] ) && $triggers['sync_submit'] === $order_status;
+		$will_draft  = isset( $triggers['sync_draft'] ) && $triggers['sync_draft'] === $order_status;
+		$will_pay    = isset( $triggers['apply_payment'] ) && $triggers['apply_payment'] === $order_status;
+
+		if ( $invoice_id && $payment_id ) {
+			// Already fully synced.
+			$config['info_message'] = __( 'Invoice and payment already synced. Re-sync will update the invoice.', 'zbooks-for-woocommerce' );
+		} elseif ( $invoice_id && ! $payment_id ) {
+			// Invoice exists, no payment yet.
+			if ( $will_pay && $order->is_paid() ) {
+				$config['info_message'] = __( 'Will apply payment to existing invoice.', 'zbooks-for-woocommerce' );
+			} else {
+				$config['info_message'] = __( 'Invoice already synced. Re-sync will update the invoice.', 'zbooks-for-woocommerce' );
+			}
+		} elseif ( $will_submit && $will_pay ) {
+			$config['info_message'] = __( 'Will create submitted invoice and apply payment.', 'zbooks-for-woocommerce' );
+		} elseif ( $will_submit ) {
+			$config['info_message'] = __( 'Will create and submit invoice (marked as sent).', 'zbooks-for-woocommerce' );
+		} elseif ( $will_draft ) {
+			$config['info_message'] = __( 'Will create draft invoice.', 'zbooks-for-woocommerce' );
+		} else {
+			$config['info_message'] = __( 'Will create draft invoice (no mapping matched).', 'zbooks-for-woocommerce' );
+		}
+
+		return $config;
 	}
 }

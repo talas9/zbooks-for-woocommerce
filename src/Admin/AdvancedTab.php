@@ -188,15 +188,6 @@ class AdvancedTab {
 				<?php esc_html_e( 'MB (older entries will be rotated)', 'zbooks-for-woocommerce' ); ?>
 			</label>
 
-			<p class="description">
-				<?php
-				printf(
-					/* translators: %s: Link to Notifications tab */
-					esc_html__( 'Email notifications have moved to the %s tab.', 'zbooks-for-woocommerce' ),
-					'<a href="' . esc_url( admin_url( 'admin.php?page=zbooks&tab=notifications' ) ) . '">' . esc_html__( 'Notifications', 'zbooks-for-woocommerce' ) . '</a>'
-				);
-				?>
-			</p>
 		</fieldset>
 		<?php
 	}

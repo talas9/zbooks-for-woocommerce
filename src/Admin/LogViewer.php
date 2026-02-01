@@ -64,6 +64,34 @@ class LogViewer {
 			[],
 			ZBOOKS_VERSION
 		);
+
+		wp_enqueue_script(
+			'zbooks-log-viewer',
+			ZBOOKS_PLUGIN_URL . 'assets/js/modules/log-viewer.js',
+			[ 'jquery' ],
+			ZBOOKS_VERSION,
+			true
+		);
+
+		wp_localize_script(
+			'zbooks-log-viewer',
+			'zbooksLogViewer',
+			[
+				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+				'nonces'  => [
+					'get_logs'       => wp_create_nonce( 'zbooks_get_logs' ),
+					'clear_logs'     => wp_create_nonce( 'zbooks_clear_logs' ),
+					'clear_all_logs' => wp_create_nonce( 'zbooks_clear_all_logs' ),
+				],
+				'i18n'    => [
+					'refreshing'      => __( 'Refreshing...', 'zbooks-for-woocommerce' ),
+					'clearing'        => __( 'Clearing...', 'zbooks-for-woocommerce' ),
+					'confirm_clear'   => __( 'Are you sure you want to clear old logs?', 'zbooks-for-woocommerce' ),
+					'confirm_clear_all' => __( 'Are you sure you want to clear ALL logs? This cannot be undone.', 'zbooks-for-woocommerce' ),
+					'copied'          => __( 'Copied!', 'zbooks-for-woocommerce' ),
+				],
+			]
+		);
 	}
 
 	/**
@@ -103,7 +131,7 @@ class LogViewer {
 			<h1><?php esc_html_e( 'ZBooks Sync Logs', 'zbooks-for-woocommerce' ); ?></h1>
 
 			<div class="zbooks-log-controls">
-				<form method="get" action="" style="display: inline-flex; gap: 10px; align-items: center;">
+				<form method="get" action="">
 					<input type="hidden" name="page" value="zbooks-logs">
 
 					<label for="date"><?php esc_html_e( 'Date:', 'zbooks-for-woocommerce' ); ?></label>
@@ -139,14 +167,14 @@ class LogViewer {
 
 					<button type="submit" class="button"><?php esc_html_e( 'Filter', 'zbooks-for-woocommerce' ); ?></button>
 
-					<button type="button" class="button" onclick="zbooksRefreshLogs()">
+					<button type="button" class="button zbooks-refresh-logs">
 						<?php esc_html_e( 'Refresh', 'zbooks-for-woocommerce' ); ?>
 					</button>
 				</form>
 
-				<form method="post" action="" style="display: inline; margin-left: 20px;">
+				<form method="post" action="">
 					<?php wp_nonce_field( 'zbooks_clear_logs', 'zbooks_nonce' ); ?>
-					<button type="button" class="button" onclick="zbooksClearOldLogs()">
+					<button type="button" class="button zbooks-clear-old-logs" data-retention-days="<?php echo esc_attr( $this->logger->get_retention_days() ); ?>">
 						<?php
 						$retention_days = absint( $this->logger->get_retention_days() );
 						printf(
@@ -156,7 +184,7 @@ class LogViewer {
 						);
 						?>
 					</button>
-					<button type="button" class="button" onclick="zbooksClearAllLogs()" style="margin-left: 5px; color: #d63638;">
+					<button type="button" class="button zbooks-clear-all-logs">
 						<?php esc_html_e( 'Clear All Logs', 'zbooks-for-woocommerce' ); ?>
 					</button>
 				</form>
@@ -240,6 +268,10 @@ class LogViewer {
 					<div class="zbooks-detail-row">
 						<label><?php esc_html_e( 'Message:', 'zbooks-for-woocommerce' ); ?></label>
 						<div id="zbooks-modal-message"></div>
+					</div>
+					<div class="zbooks-detail-row" id="zbooks-modal-request-row" style="display: none;">
+						<label><?php esc_html_e( 'Request:', 'zbooks-for-woocommerce' ); ?></label>
+						<div id="zbooks-modal-request" style="font-family: monospace; background: #f0f0f1; padding: 8px; border-radius: 4px; word-break: break-all;"></div>
 					</div>
 					<div class="zbooks-detail-row" id="zbooks-modal-context-row">
 						<label><?php esc_html_e( 'Context / Details:', 'zbooks-for-woocommerce' ); ?></label>

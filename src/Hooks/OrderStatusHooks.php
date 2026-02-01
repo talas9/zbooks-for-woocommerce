@@ -92,14 +92,21 @@ class OrderStatusHooks {
 		string $new_status,
 		WC_Order $order
 	): void {
+		// Check if auto-sync is enabled.
+		$auto_sync_enabled = get_option( 'zbooks_auto_sync_enabled', false );
+		if ( ! $auto_sync_enabled ) {
+			return;
+		}
+
 		// Get trigger configuration (action => status).
 		$triggers = get_option( 'zbooks_sync_triggers', [] );
-		// If never configured, default to disabled (not auto-enabled).
+		// If never configured, use sensible defaults.
 		if ( empty( $triggers ) ) {
 			$triggers = [
-				'sync_draft'        => '',
-				'sync_submit'       => '',
-				'create_creditnote' => '',
+				'sync_draft'        => 'processing',
+				'sync_submit'       => 'completed',
+				'apply_payment'     => 'completed',
+				'create_creditnote' => 'refunded',
 			];
 		}
 
@@ -115,10 +122,34 @@ class OrderStatusHooks {
 			return;
 		}
 
+		// Payment application - schedule payment if this is the payment trigger status.
+		if ( $action === 'apply_payment' ) {
+			$this->schedule_apply_payment( $order_id );
+			return;
+		}
+
 		$as_draft = $action === 'sync_draft';
 
 		// Sync in background to avoid blocking the order update.
 		$this->schedule_sync( $order_id, $as_draft );
+	}
+
+	/**
+	 * Schedule payment application.
+	 *
+	 * @param int $order_id Order ID.
+	 */
+	private function schedule_apply_payment( int $order_id ): void {
+		if ( function_exists( 'as_schedule_single_action' ) ) {
+			as_schedule_single_action(
+				time(),
+				'zbooks_apply_payment',
+				[ 'order_id' => $order_id ],
+				'zbooks'
+			);
+		} else {
+			$this->execute_apply_payment( $order_id );
+		}
 	}
 
 	/**
@@ -179,34 +210,17 @@ class OrderStatusHooks {
 	/**
 	 * Handle order completed status.
 	 *
-	 * Applies payment to the synced invoice.
+	 * Note: Payment application is now handled by on_status_changed() based on the
+	 * apply_payment trigger mapping. This hook is kept for backwards compatibility
+	 * but delegates to the unified trigger system.
 	 *
 	 * @param int $order_id Order ID.
 	 */
 	public function on_order_completed( int $order_id ): void {
-		// Check if auto-payment is enabled.
-		$settings = get_option(
-			'zbooks_payment_settings',
-			[
-				'auto_apply_payment' => true,
-			]
-		);
-
-		if ( empty( $settings['auto_apply_payment'] ) ) {
-			return;
-		}
-
-		// Schedule payment application.
-		if ( function_exists( 'as_schedule_single_action' ) ) {
-			as_schedule_single_action(
-				time(),
-				'zbooks_apply_payment',
-				[ 'order_id' => $order_id ],
-				'zbooks'
-			);
-		} else {
-			$this->execute_apply_payment( $order_id );
-		}
+		// Payment is now handled by on_status_changed when order status matches
+		// the apply_payment trigger. This method is kept empty for hook compatibility.
+		// The woocommerce_order_status_changed hook fires before this one, so payment
+		// will already be scheduled if needed.
 	}
 
 	/**

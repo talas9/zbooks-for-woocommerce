@@ -154,7 +154,7 @@ class SettingsPage {
 	private function register_hooks(): void {
 		add_action( 'admin_menu', [ $this, 'add_menu' ] );
 		add_action( 'admin_init', [ $this, 'register_settings' ] );
-		add_action( 'wp_ajax_zbooks_test_connection', [ $this, 'ajax_test_connection' ] );
+		// Note: ajax_test_connection is now handled by ConnectionTab.php
 	}
 
 	/**
@@ -256,53 +256,4 @@ class SettingsPage {
 		}
 	}
 
-	/**
-	 * AJAX: Test Zoho connection.
-	 */
-	public function ajax_test_connection(): void {
-		check_ajax_referer( 'zbooks_ajax_nonce', 'nonce' );
-
-		if ( ! current_user_can( 'manage_woocommerce' ) ) {
-			wp_send_json_error( [ 'message' => __( 'Permission denied.', 'zbooks-for-woocommerce' ) ] );
-		}
-
-		// Get the connection tab's client through a test.
-		try {
-			// We need access to ZohoClient. For now, use a simple option check.
-			$credentials = get_option( 'zbooks_oauth_credentials', [] );
-
-			if ( empty( $credentials['client_id'] ) || empty( $credentials['refresh_token'] ) ) {
-				wp_send_json_error(
-					[
-						'message' => __( 'API credentials not configured. Please enter your Client ID and Refresh Token.', 'zbooks-for-woocommerce' ),
-					]
-				);
-			}
-
-			$org_id = get_option( 'zbooks_organization_id', '' );
-			if ( empty( $org_id ) ) {
-				wp_send_json_error(
-					[
-						'message' => __( 'Organization not selected. Please save credentials and select an organization.', 'zbooks-for-woocommerce' ),
-					]
-				);
-			}
-
-			wp_send_json_success(
-				[
-					'message' => __( 'Connection configured successfully!', 'zbooks-for-woocommerce' ),
-				]
-			);
-		} catch ( \Exception $e ) {
-			wp_send_json_error(
-				[
-					'message' => sprintf(
-						/* translators: %s: Error message */
-						__( 'Connection test failed: %s', 'zbooks-for-woocommerce' ),
-						$e->getMessage()
-					),
-				]
-			);
-		}
-	}
 }

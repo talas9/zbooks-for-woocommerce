@@ -364,6 +364,9 @@ class PaymentService {
 				$payment_method
 			) . "\n\n" . $sync_comment;
 
+			// Get bank charges early to check if we need account mapping.
+			$bank_charges = $this->get_order_bank_charges( $order );
+
 			// Add deposit account (bank/cash account) if mapped.
 			$account_id = $this->mapping_repository->get_zoho_account_id( $wc_method );
 			if ( ! empty( $account_id ) ) {
@@ -371,7 +374,6 @@ class PaymentService {
 
 				// Only add bank charges when account_id is configured.
 				// Zoho requires account_id when bank_charges is specified.
-				$bank_charges = $this->get_order_bank_charges( $order );
 				if ( $bank_charges > 0 ) {
 					$payment['bank_charges'] = $bank_charges;
 
@@ -380,7 +382,29 @@ class PaymentService {
 					if ( ! empty( $fee_account_id ) ) {
 						$payment['bank_charges_account_id'] = $fee_account_id;
 					}
+
+					$this->logger->debug(
+						'Including bank charges in payment',
+						[
+							'order_id'         => $order->get_id(),
+							'bank_charges'     => $bank_charges,
+							'account_id'       => $account_id,
+							'fee_account_id'   => $fee_account_id ?? 'not configured',
+							'payment_method'   => $wc_method,
+						]
+					);
 				}
+			} elseif ( $bank_charges > 0 ) {
+				// Log warning if we have bank charges but no deposit account mapped.
+				$this->logger->warning(
+					'Payment gateway fee detected but cannot record - deposit account not mapped',
+					[
+						'order_id'       => $order->get_id(),
+						'bank_charges'   => $bank_charges,
+						'payment_method' => $wc_method,
+						'help'           => 'Map a deposit account in Settings > Payment Methods to record gateway fees',
+					]
+				);
 			}
 		}
 
@@ -559,14 +583,30 @@ class PaymentService {
 	 */
 	private function extract_raw_fee( WC_Order $order ): float {
 		// Common meta keys used by payment gateways for fees.
+		// Order matters - most specific keys first.
 		$fee_meta_keys = [
-			'_stripe_fee',              // Stripe for WooCommerce.
-			'_paypal_fee',              // PayPal.
-			'_paypal_transaction_fee',  // PayPal alternative.
-			'_wcpay_transaction_fee',   // WooCommerce Payments.
-			'_square_fee',              // Square.
-			'_payment_gateway_fee',     // Generic.
-			'_transaction_fee',         // Generic.
+			// PayPal plugins.
+			'_paypal_fee',                         // PayPal Standard/Express.
+			'_paypal_transaction_fee',             // PayPal Checkout/Commerce.
+			'PayPal Transaction Fee',              // PayPal IPN (some versions store as plain key).
+			'Paypal Transaction Fee',              // Case variation.
+			'_ppcp_paypal_fees',                   // PayPal Commerce Platform (PPCP).
+			'_wc_paypal_checkout_fee',             // WooCommerce PayPal Checkout.
+			'_ppec_paypal_fee',                    // PayPal Express Checkout.
+			// Stripe.
+			'_stripe_fee',                         // Stripe for WooCommerce.
+			'_stripe_charge_captured',             // Some Stripe versions.
+			// WooCommerce Payments.
+			'_wcpay_transaction_fee',              // WooCommerce Payments.
+			// Square.
+			'_square_fee',                         // Square.
+			'_square_charge_captured',             // Square alternative.
+			// Braintree.
+			'_braintree_fee',                      // Braintree.
+			// Generic keys.
+			'_payment_gateway_fee',                // Generic.
+			'_transaction_fee',                    // Generic.
+			'transaction_fee',                     // Some plugins use without underscore.
 		];
 
 		// Allow plugins to add custom meta keys.
@@ -575,8 +615,32 @@ class PaymentService {
 		foreach ( $fee_meta_keys as $meta_key ) {
 			$fee = $order->get_meta( $meta_key );
 			if ( ! empty( $fee ) && is_numeric( $fee ) ) {
-				return round( (float) $fee, 2 );
+				$fee_amount = round( (float) $fee, 2 );
+				$this->logger->debug(
+					'Extracted payment gateway fee',
+					[
+						'order_id'       => $order->get_id(),
+						'meta_key'       => $meta_key,
+						'fee_amount'     => $fee_amount,
+						'payment_method' => $order->get_payment_method(),
+					]
+				);
+				return $fee_amount;
 			}
+		}
+
+		// Log if no fee found for common payment methods that usually have fees.
+		$methods_with_fees = [ 'paypal', 'ppcp-gateway', 'ppcp', 'stripe', 'square', 'braintree' ];
+		$payment_method    = $order->get_payment_method();
+		if ( in_array( $payment_method, $methods_with_fees, true ) ) {
+			$this->logger->debug(
+				'No payment fee found for gateway that typically has fees',
+				[
+					'order_id'       => $order->get_id(),
+					'payment_method' => $payment_method,
+					'checked_keys'   => array_slice( $fee_meta_keys, 0, 10 ), // Log first 10 keys.
+				]
+			);
 		}
 
 		return 0.0;
@@ -592,22 +656,22 @@ class PaymentService {
 	 * @return string|null Fee currency code, or null if same as order.
 	 */
 	private function get_fee_currency( WC_Order $order ): ?string {
-		// Stripe stores the processing currency.
-		$stripe_currency = $order->get_meta( '_stripe_currency' );
-		if ( ! empty( $stripe_currency ) ) {
-			return strtoupper( $stripe_currency );
-		}
+		// Currency meta keys to check (order matters - most specific first).
+		$currency_meta_keys = [
+			'_stripe_currency',          // Stripe for WooCommerce.
+			'_paypal_currency',          // PayPal.
+			'_ppcp_currency',            // PayPal Commerce Platform.
+			'mc_currency',               // PayPal IPN.
+			'_wcpay_currency',           // WooCommerce Payments.
+			'_square_currency',          // Square.
+			'_braintree_currency',       // Braintree.
+		];
 
-		// PayPal may store currency.
-		$paypal_currency = $order->get_meta( '_paypal_currency' );
-		if ( ! empty( $paypal_currency ) ) {
-			return strtoupper( $paypal_currency );
-		}
-
-		// WooCommerce Payments currency.
-		$wcpay_currency = $order->get_meta( '_wcpay_currency' );
-		if ( ! empty( $wcpay_currency ) ) {
-			return strtoupper( $wcpay_currency );
+		foreach ( $currency_meta_keys as $meta_key ) {
+			$currency = $order->get_meta( $meta_key );
+			if ( ! empty( $currency ) ) {
+				return strtoupper( $currency );
+			}
 		}
 
 		// Default: assume fee is in order currency.

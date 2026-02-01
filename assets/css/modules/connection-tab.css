@@ -353,3 +353,9 @@
 	word-break: break-word;
 	white-space: pre-wrap;
 }
+
+/* Select on click input */
+.zbooks-select-on-click {
+	background: #f0f0f1;
+	cursor: text;
+}

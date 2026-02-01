@@ -166,10 +166,10 @@ class InvoiceService {
 			$invoice_response = $response['invoice'] ?? $response;
 			$invoice_id       = (string) ( $invoice_response['invoice_id'] ?? '' );
 
-			// Mark as sent if not draft and setting is enabled.
+			// Mark as sent if not draft (sync_submit trigger always marks as sent).
 			$marked_as_sent     = false;
 			$mark_as_sent_error = null;
-			$should_mark_sent   = ! $as_draft && $this->should_mark_as_sent();
+			$should_mark_sent   = ! $as_draft;
 			if ( $should_mark_sent ) {
 				$marked_as_sent = $this->mark_as_sent( $invoice_id );
 				if ( ! $marked_as_sent ) {
@@ -416,25 +416,6 @@ class InvoiceService {
 	}
 
 	/**
-	 * Check if invoices should be marked as sent after creation.
-	 *
-	 * When disabled, invoices remain as drafts which prevents Zoho from
-	 * sending automatic email notifications to customers.
-	 *
-	 * @return bool
-	 */
-	private function should_mark_as_sent(): bool {
-		$settings = get_option(
-			'zbooks_invoice_numbering',
-			[
-				'mark_as_sent' => true,
-			]
-		);
-
-		return $settings['mark_as_sent'] ?? true;
-	}
-
-	/**
 	 * Check if invoice email should be sent to customer via Zoho Books.
 	 *
 	 * This controls the 'send' parameter in the Zoho API which determines
@@ -554,13 +535,25 @@ class InvoiceService {
 		$custom_fields = $this->field_mapping->build_custom_fields( $order, 'invoice' );
 		if ( ! empty( $custom_fields ) ) {
 			$invoice['custom_fields'] = $custom_fields;
-			$this->logger->debug(
+			$this->logger->info(
 				'Adding custom fields to invoice',
 				[
-					'order_id'           => $order->get_id(),
-					'custom_field_count' => count( $custom_fields ),
+					'order_id'      => $order->get_id(),
+					'custom_fields' => $custom_fields,
 				]
 			);
+		} else {
+			// Check if mappings are configured but no values extracted.
+			$configured_mappings = $this->field_mapping->get_invoice_mappings();
+			if ( ! empty( $configured_mappings ) ) {
+				$this->logger->debug(
+					'Invoice has custom field mappings configured but no values extracted',
+					[
+						'order_id'       => $order->get_id(),
+						'mapping_count'  => count( $configured_mappings ),
+					]
+				);
+			}
 		}
 
 		return $invoice;
@@ -751,10 +744,11 @@ class InvoiceService {
 			];
 		}
 
-		// Compare line item count.
+		// Compare line items in detail.
 		$invoice_items = $invoice['line_items'] ?? [];
 		$order_items   = $order->get_items();
 
+		// First check count.
 		if ( count( $invoice_items ) !== count( $order_items ) ) {
 			$discrepancies[] = [
 				'field'    => 'line_item_count',
@@ -763,6 +757,10 @@ class InvoiceService {
 				'severity' => 'high',
 			];
 		}
+
+		// Compare each line item by item_id (if mapped) or name, plus quantity and rate.
+		$line_item_discrepancies = $this->compare_line_items( $invoice_items, $order_items, $tolerance );
+		$discrepancies           = array_merge( $discrepancies, $line_item_discrepancies );
 
 		// Compare reference number (order number).
 		$invoice_ref  = $invoice['reference_number'] ?? '';
@@ -787,6 +785,143 @@ class InvoiceService {
 				'severity' => 'info',
 				'message'  => 'Invoice is ' . $status . ' and cannot be modified',
 			];
+		}
+
+		return $discrepancies;
+	}
+
+	/**
+	 * Compare invoice line items with order items.
+	 *
+	 * Matching priority:
+	 * 1. If WC product is mapped to Zoho item_id, match by item_id
+	 * 2. Otherwise, match by item name
+	 * 3. Always compare quantity and rate
+	 *
+	 * @param array $invoice_items Zoho invoice line items.
+	 * @param array $order_items   WooCommerce order items.
+	 * @param float $tolerance     Price tolerance for rounding.
+	 * @return array List of discrepancies.
+	 */
+	private function compare_line_items( array $invoice_items, array $order_items, float $tolerance ): array {
+		$discrepancies = [];
+
+		// Build lookup maps for invoice items.
+		$invoice_by_item_id = [];
+		$invoice_by_name    = [];
+		foreach ( $invoice_items as $item ) {
+			$item_id = $item['item_id'] ?? '';
+			$name    = $item['name'] ?? $item['description'] ?? '';
+			if ( ! empty( $item_id ) ) {
+				$invoice_by_item_id[ $item_id ] = $item;
+			}
+			if ( ! empty( $name ) ) {
+				// Use lowercase for case-insensitive matching.
+				$invoice_by_name[ strtolower( trim( $name ) ) ] = $item;
+			}
+		}
+
+		$matched_invoice_items = [];
+
+		foreach ( $order_items as $order_item ) {
+			if ( ! $order_item instanceof \WC_Order_Item_Product ) {
+				continue;
+			}
+
+			$product = $order_item->get_product();
+			if ( ! $product ) {
+				continue;
+			}
+
+			$product_id       = $product->get_id();
+			$order_item_name  = $order_item->get_name();
+			$order_quantity   = $order_item->get_quantity();
+			$order_subtotal   = (float) $order_item->get_subtotal();
+			$order_rate       = $order_quantity > 0 ? round( $order_subtotal / $order_quantity, 2 ) : 0;
+
+			// Check if product is mapped to Zoho item_id.
+			$mapped_item_id = $this->item_mapping->get_zoho_item_id( $product_id );
+			$invoice_item   = null;
+			$matched_by     = '';
+
+			// Priority 1: Match by Zoho item_id if mapped.
+			if ( ! empty( $mapped_item_id ) && isset( $invoice_by_item_id[ $mapped_item_id ] ) ) {
+				$invoice_item = $invoice_by_item_id[ $mapped_item_id ];
+				$matched_by   = 'item_id';
+				$matched_invoice_items[ $mapped_item_id ] = true;
+			}
+			// Priority 2: Match by name.
+			elseif ( isset( $invoice_by_name[ strtolower( trim( $order_item_name ) ) ] ) ) {
+				$invoice_item = $invoice_by_name[ strtolower( trim( $order_item_name ) ) ];
+				$matched_by   = 'name';
+				$matched_invoice_items[ strtolower( trim( $order_item_name ) ) ] = true;
+			}
+
+			if ( $invoice_item === null ) {
+				// Item not found in invoice.
+				$discrepancies[] = [
+					'field'    => 'line_item_missing',
+					'invoice'  => null,
+					'order'    => $order_item_name,
+					'severity' => 'high',
+					'message'  => sprintf( 'Order item "%s" not found in invoice', $order_item_name ),
+				];
+				continue;
+			}
+
+			$invoice_quantity = (int) ( $invoice_item['quantity'] ?? 0 );
+			$invoice_rate     = (float) ( $invoice_item['rate'] ?? 0 );
+			$invoice_item_id  = $invoice_item['item_id'] ?? '';
+
+			// Check if product is now mapped but invoice line item doesn't have the item_id.
+			// This handles the case where invoice was created before product-to-item mapping.
+			if ( ! empty( $mapped_item_id ) && $matched_by === 'name' ) {
+				// Product is mapped to Zoho item, but we matched by name (not item_id).
+				// This means invoice line item either has no item_id or a different one.
+				if ( empty( $invoice_item_id ) ) {
+					$discrepancies[] = [
+						'field'      => 'line_item_item_id_missing',
+						'item'       => $order_item_name,
+						'invoice'    => '(service/no item)',
+						'order'      => $mapped_item_id,
+						'severity'   => 'medium',
+						'message'    => sprintf( 'Invoice line "%s" should use item_id %s', $order_item_name, $mapped_item_id ),
+					];
+				} elseif ( $invoice_item_id !== $mapped_item_id ) {
+					$discrepancies[] = [
+						'field'      => 'line_item_item_id_mismatch',
+						'item'       => $order_item_name,
+						'invoice'    => $invoice_item_id,
+						'order'      => $mapped_item_id,
+						'severity'   => 'medium',
+						'message'    => sprintf( 'Invoice line "%s" has different item_id', $order_item_name ),
+					];
+				}
+			}
+
+			// Compare quantity.
+			if ( $order_quantity !== $invoice_quantity ) {
+				$discrepancies[] = [
+					'field'      => 'line_item_quantity',
+					'item'       => $order_item_name,
+					'matched_by' => $matched_by,
+					'invoice'    => $invoice_quantity,
+					'order'      => $order_quantity,
+					'severity'   => 'high',
+				];
+			}
+
+			// Compare rate/price.
+			if ( abs( $order_rate - $invoice_rate ) > $tolerance ) {
+				$discrepancies[] = [
+					'field'      => 'line_item_rate',
+					'item'       => $order_item_name,
+					'matched_by' => $matched_by,
+					'invoice'    => $invoice_rate,
+					'order'      => $order_rate,
+					'severity'   => 'high',
+				];
+			}
 		}
 
 		return $discrepancies;

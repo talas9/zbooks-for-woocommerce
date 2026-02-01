@@ -69,6 +69,25 @@ class NotificationsTab {
 			ZBOOKS_VERSION
 		);
 
+		// Enqueue notifications JS module.
+		wp_enqueue_script(
+			'zbooks-notifications-tab',
+			ZBOOKS_PLUGIN_URL . 'assets/js/modules/notifications.js',
+			[ 'jquery', 'zbooks-admin' ],
+			ZBOOKS_VERSION,
+			true
+		);
+
+		// Localize script with nonce (WordPress.org compliant).
+		wp_localize_script(
+			'zbooks-notifications-tab',
+			'ZbooksNotificationsConfig',
+			[
+				'nonce'   => wp_create_nonce( 'zbooks_notification_nonce' ),
+				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+			]
+		);
+
 		// Add delivery mode toggle inline script (WordPress.org compliant).
 		$inline_script = "
 		jQuery(document).ready(function($) {

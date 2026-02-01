@@ -198,6 +198,16 @@
     color: #50575e;
 }
 
+.zbooks-scope-code {
+    display: inline-block;
+    padding: 5px 10px;
+    background: #f0f0f1;
+    border-radius: 3px;
+    margin: 5px 0;
+    cursor: pointer;
+    user-select: all;
+}
+
 /* Form Table */
 .zbooks-wizard .form-table {
     margin: 20px 0;

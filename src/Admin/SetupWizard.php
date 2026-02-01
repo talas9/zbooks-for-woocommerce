@@ -200,6 +200,8 @@ class SetupWizard {
 					'loading_orgs' => __( 'Loading organizations...', 'zbooks-for-woocommerce' ),
 					'success'      => __( 'Success!', 'zbooks-for-woocommerce' ),
 					'error'        => __( 'Error:', 'zbooks-for-woocommerce' ),
+					'copied'       => __( 'Copied!', 'zbooks-for-woocommerce' ),
+					'copy'         => __( 'Copy', 'zbooks-for-woocommerce' ),
 				],
 			]
 		);
@@ -726,8 +728,8 @@ class SetupWizard {
 				<li>
 					<?php esc_html_e( 'In "Generate Code" tab, enter this scope:', 'zbooks-for-woocommerce' ); ?>
 					<br>
-					<code id="zoho-scope" style="display: inline-block; padding: 5px 10px; background: #f0f0f1; border-radius: 3px; margin: 5px 0; cursor: pointer; user-select: all;" title="<?php esc_attr_e( 'Click to copy', 'zbooks-for-woocommerce' ); ?>">ZohoBooks.fullaccess.all</code>
-					<button type="button" class="button button-small" onclick="navigator.clipboard.writeText('ZohoBooks.fullaccess.all'); this.textContent='<?php esc_attr_e( 'Copied!', 'zbooks-for-woocommerce' ); ?>'; setTimeout(() => this.textContent='<?php esc_attr_e( 'Copy', 'zbooks-for-woocommerce' ); ?>', 2000);">
+					<code id="zoho-scope" class="zbooks-scope-code" title="<?php esc_attr_e( 'Click to copy', 'zbooks-for-woocommerce' ); ?>">ZohoBooks.fullaccess.all</code>
+					<button type="button" class="button button-small zbooks-copy-scope" data-copy-text="ZohoBooks.fullaccess.all">
 						<?php esc_html_e( 'Copy', 'zbooks-for-woocommerce' ); ?>
 					</button>
 				</li>
